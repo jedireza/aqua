@@ -100,7 +100,7 @@ lab.experiment('Login Actions', function () {
             Code.expect(type).to.be.an.instanceOf(FluxConstant);
 
             if (type === ActionTypes.LOGIN_RESPONSE) {
-                var hostname = 'file://';
+                var hostname = 'about:';
 
                 Code.expect(global.window.location.href).to.equal(hostname + returnUrl);
                 Code.expect(data.success).to.equal(true);
@@ -140,7 +140,7 @@ lab.experiment('Login Actions', function () {
             Code.expect(type).to.be.an.instanceOf(FluxConstant);
 
             if (type === ActionTypes.LOGIN_RESPONSE) {
-                var hostname = 'file://';
+                var hostname = 'about:';
 
                 Code.expect(global.window.location.href).to.equal(hostname + '/admin');
                 Code.expect(data.success).to.equal(true);
@@ -180,7 +180,7 @@ lab.experiment('Login Actions', function () {
             Code.expect(type).to.be.an.instanceOf(FluxConstant);
 
             if (type === ActionTypes.LOGIN_RESPONSE) {
-                var hostname = 'file://';
+                var hostname = 'about:';
 
                 Code.expect(global.window.location.href).to.equal(hostname + '/account');
                 Code.expect(data.success).to.equal(true);

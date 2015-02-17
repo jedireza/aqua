@@ -3,7 +3,6 @@ var Gulp = require('gulp');
 var Newer = require('gulp-newer');
 var Concat = require('gulp-concat');
 var Less = require('gulp-less');
-var Sourcemaps = require('gulp-sourcemaps');
 
 
 Gulp.task('less', function () {
@@ -36,10 +35,8 @@ Gulp.task('less', function () {
     return bundleConfigs.map(function (bundleConfig) {
         return Gulp.src(bundleConfig.entries)
             .pipe(Newer(Path.join(bundleConfig.dest, bundleConfig.outputName)))
-            .pipe(Sourcemaps.init())
-                .pipe(Concat(bundleConfig.outputName))
-                .pipe(Less({ compress: true }))
-            .pipe(Sourcemaps.write('.'))
+            .pipe(Concat(bundleConfig.outputName))
+            .pipe(Less({ compress: true }))
             .pipe(Gulp.dest(bundleConfig.dest));
     });
 });

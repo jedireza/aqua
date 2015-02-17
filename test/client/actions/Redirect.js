@@ -43,11 +43,7 @@ lab.experiment('Redirect Actions', function () {
 
     lab.test('it handles saveReturnUrl when there is a query string', function (done) {
 
-        var originalWindowLocation = global.window.location;
-        global.window.location = {
-            search: '?space=race'
-        };
-
+        global.window.location.search = '?space=race';
         global.window.localStorage = {
             setItem: function () {}
         };
@@ -57,7 +53,6 @@ lab.experiment('Redirect Actions', function () {
             Code.expect(type).to.be.an.instanceOf(FluxConstant);
 
             if (type === ActionTypes.SAVE_RETURN_URL_RESPONSE) {
-                global.window.location = originalWindowLocation;
                 done();
             }
         };

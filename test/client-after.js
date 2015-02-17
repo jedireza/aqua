@@ -9,5 +9,6 @@ lab.after(function (done) {
     delete global.document;
     delete global.window;
     delete global.navigator;
+    delete global.errors;
     done();
 });

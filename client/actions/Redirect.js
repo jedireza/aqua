@@ -13,7 +13,7 @@ var Actions = {
         dispatch(ActionTypes.SAVE_RETURN_URL, data);
 
         var returnUrl = window.location.pathname;
-        if (window.location.search) {
+        if (window.location.search.length > 0) {
             returnUrl += window.location.search;
         }
 
