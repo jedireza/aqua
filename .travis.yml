@@ -7,4 +7,5 @@ node_js:
 services:
   - mongodb
 before_script:
+  - gulp react
   - npm run setup
