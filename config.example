@@ -1,0 +1,83 @@
+var Confidence = require('confidence');
+
+
+var criteria = {
+    env: process.env.NODE_ENV
+};
+
+
+var config = {
+    $meta: 'This file configures the plot device.',
+    projectName: '{{projectName}}',
+    port: {
+        web: {
+            $filter: 'env',
+            test: 9000,
+            $default: 8000
+        }
+    },
+    authAttempts: {
+        forIp: 50,
+        forIpAndUser: 7
+    },
+    cookieSecret: {
+        $filter: 'env',
+        production: process.env.COOKIE_SECRET,
+        $default: '~k3yb04rdK4tz!'
+    },
+    hapiMongoModels: {
+        $filter: 'env',
+        production: {
+            mongodb: {
+                url: process.env.MONGOLAB_URI
+            },
+            autoIndex: false
+        },
+        test: {
+            mongodb: {
+                url: '{{mongodbUrl}}-test'
+            },
+            autoIndex: true
+        },
+        $default: {
+            mongodb: {
+                url: '{{mongodbUrl}}'
+            },
+            autoIndex: true
+        }
+    },
+    nodemailer: {
+        host: '{{smtpHost}}',
+        port: {{smtpPort}},
+        secure: true,
+        auth: {
+            user: '{{smtpUsername}}',
+            pass: '{{smtpPassword}}'
+        }
+    },
+    system: {
+        fromAddress: {
+            name: '{{projectName}}',
+            address: '{{systemEmail}}'
+        },
+        toAddress: {
+            name: '{{projectName}}',
+            address: '{{systemEmail}}'
+        }
+    }
+};
+
+
+var store = new Confidence.Store(config);
+
+
+exports.get = function (key) {
+
+    return store.get(key, criteria);
+};
+
+
+exports.meta = function (key) {
+
+    return store.meta(key, criteria);
+};

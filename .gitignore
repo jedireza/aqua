@@ -1,0 +1,5 @@
+node_modules/*
+public/*
+test/artifacts/*
+*.react.js
+config.js

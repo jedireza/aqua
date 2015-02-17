@@ -1,0 +1,76 @@
+var React = require('react/addons');
+var ReactRouter = require('react-router');
+var ControlGroup = require('../../../../components/form/ControlGroup.react');
+var Button = require('../../../../components/form/Button.react');
+var Spinner = require('../../../../components/form/Spinner.react');
+var Actions = require('../../actions/User');
+
+
+var LinkedState = React.addons.LinkedStateMixin;
+var State = ReactRouter.State;
+var Navigation = ReactRouter.Navigation;
+
+
+var Component = React.createClass({
+    mixins: [ LinkedState, State, Navigation ],
+    getInitialState: function () {
+
+        return {};
+    },
+    handleSubmit: function (event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        Actions.delete({
+            id: this.props.details._id
+        }, this);
+    },
+    onConfirm: function (event) {
+
+        if (!confirm('Are you sure?')) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    },
+    render: function () {
+
+        var alerts;
+        if (this.props.data.error) {
+            alerts = <div className="alert alert-danger">
+                {this.props.data.error}
+            </div>;
+        }
+
+        return (
+            <form onSubmit={this.handleSubmit}>
+                <fieldset>
+                    <legend>Danger zone</legend>
+                    <p>
+                        <span className="label label-danger">Warning</span>
+                        &nbsp;This cannot be undone and could result in
+                        orphaned document relationships.
+                    </p>
+                    {alerts}
+                    <ControlGroup hideLabel={true} hideHelp={true}>
+                        <Button
+                            type="submit"
+                            inputClasses={{'btn-danger': true}}
+                            disabled={this.props.data.loading}
+                            onClick={this.onConfirm}>
+
+                            Delete
+                            <Spinner
+                                space="left"
+                                show={this.props.data.loading}
+                            />
+                        </Button>
+                    </ControlGroup>
+                </fieldset>
+            </form>
+        );
+    }
+});
+
+
+module.exports = Component;
