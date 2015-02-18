@@ -6,6 +6,7 @@ var Manifest = require('../../../manifest');
 var Hapi = require('hapi');
 var HapiAuth = require('hapi-auth-cookie');
 var Proxyquire = require('proxyquire');
+var AuthPlugin = require('../../../server/auth');
 var SignupPlugin = require('../../../server/api/signup');
 var MailerPlugin = require('../../../server/mailer');
 
@@ -32,7 +33,7 @@ lab.beforeEach(function (done) {
         options: Manifest.get('/plugins')['hapi-mongo-models']
     };
 
-    var plugins = [ HapiAuth, ModelsPlugin, MailerPlugin, SignupPlugin ];
+    var plugins = [ HapiAuth, ModelsPlugin, AuthPlugin, MailerPlugin, SignupPlugin ];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
     server.register(plugins, function (err) {
