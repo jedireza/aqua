@@ -13,6 +13,15 @@ exports.register = function (server, options, next) {
         method: 'POST',
         path: options.basePath + '/signup',
         config: {
+            plugins: {
+                'hapi-auth-cookie': {
+                    redirectTo: false
+                }
+            },
+            auth: {
+                mode: 'try',
+                strategy: 'session'
+            },
             validate: {
                 payload: {
                     name: Joi.string().required(),
@@ -149,7 +158,7 @@ exports.register = function (server, options, next) {
                 }],
                 session: ['linkUser', 'linkAccount', function (done, results) {
 
-                    Session.create(request.payload.username, done);
+                    Session.create(results.user._id.toString(), done);
                 }]
             }, function (err, results) {
 
@@ -160,8 +169,7 @@ exports.register = function (server, options, next) {
                 var user = results.linkAccount[0];
                 var credentials = user.username + ':' + results.session.key;
                 var authHeader = 'Basic ' + new Buffer(credentials).toString('base64');
-
-                reply({
+                var result = {
                     user: {
                         _id: user._id,
                         username: user.username,
@@ -170,7 +178,10 @@ exports.register = function (server, options, next) {
                     },
                     session: results.session,
                     authHeader: authHeader
-                });
+                };
+
+                request.auth.session.set(result);
+                reply(result);
             });
         }
     });
