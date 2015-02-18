@@ -17,7 +17,7 @@ The front-end is built with [React](http://facebook.github.io/react/).  We're
 using a totally vanilla [Flux](https://facebook.github.io/flux/)
 implementation. Client side routing is done with [React
 Router](https://github.com/rackt/react-router). We're using
-[Gulp](http://gulpjs.com/) for the build pipeline.
+[Gulp](http://gulpjs.com/) for the asset pipeline.
 
 
 ## Live demo
@@ -28,7 +28,7 @@ Router](https://github.com/rackt/react-router). We're using
 
 __Note:__ The live demo has been modified so you cannot change the root user,
 the root user's linked admin role or the root admin group. This was done in
-order to keep the API ready to use at all times.
+order to keep the app ready to use at all times.
 
 
 ## Requirements
@@ -199,11 +199,11 @@ $ npm test
 #  ..................................................
 #  ......
 
-1006 tests complete
-Test duration: 11004 ms
-No global variable leaks detected
-Coverage: 100.00%
-Linting results: No issues
+# 1006 tests complete
+# Test duration: 11004 ms
+# No global variable leaks detected
+# Coverage: 100.00%
+# Linting results: No issues
 ```
 
 With html code coverage report:
