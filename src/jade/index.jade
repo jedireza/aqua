@@ -1,0 +1,114 @@
+doctype html
+html(lang='en')
+  head
+    title Aqua - A website and user system (Hapi/React/Flux)
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    link(rel='shortcut icon', href='favicon.ico')
+    link(rel='stylesheet', href='public/build.css')
+  body
+    div.jumbotron
+      h1.text-center Aqua
+      h2.text-center A website and user system
+      p.text-center: a.btn.btn-primary.btn-lg(href='https://getaqua.herokuapp.com/')
+        |Live Demo on Heroku
+      ul.project-links
+        li: a(href='https://github.com/jedireza/aqua/') View GitHub Project
+        li Version 1.0.1
+        li: a(href='https://github.com/jedireza/aqua/zipball/master') Download Aqua
+      div.gh-btns
+        iframe(src='http://ghbtns.com/github-btn.html?user=jedireza&repo=aqua&type=watch&count=true&size=large', allowtransparency='true', frameborder='0', scrolling='0', width='135px', height='30px')
+        iframe(src='http://ghbtns.com/github-btn.html?user=jedireza&repo=aqua&type=fork&count=true&size=large', allowtransparency='true', frameborder='0', scrolling='0', width='125px', height='30px')
+        iframe(src='http://ghbtns.com/github-btn.html?user=jedireza&repo=aqua&type=follow&count=false&size=large', allowtransparency='true', frameborder='0', scrolling='0', width='173px', height='30px')
+    div.container.marketing
+      h2.text-center The front-end pages
+      p.lead Home, about, sign-up and contact us
+      div.well.well-video
+        div.video-container
+          iframe(src='https://www.youtube-nocookie.com/embed/4592vS31EOk?rel=0', frameborder='0', width='560', height='315')
+      hr
+      h2.text-center Authentication screens
+      p.lead Login, forgot password and reset password
+      div.well.well-video
+        div.video-container
+          iframe(src='https://www.youtube-nocookie.com/embed/IvbKSzIsCWU?rel=0', frameborder='0', width='560', height='315')
+      hr
+      h2.text-center The account area
+      p.lead Mock dashboard and account settings
+      div.well.well-video
+        div.video-container
+          iframe(src='https://www.youtube-nocookie.com/embed/IyQCcs79Gqk?rel=0', frameborder='0', width='560', height='315')
+      hr
+      h2.text-center The administration area
+      p.lead Manage users, accounts, admins, admin groups, and statuses
+      div.well.well-video
+        div.video-container
+          iframe(src='https://www.youtube-nocookie.com/embed/XbIZ4-fNx5E?rel=0', frameborder='0', width='560', height='315')
+      hr
+      h2.text-center The core api
+      p.lead The essential business logic, totally isolated
+      div.row
+        div.col-sm-4
+          h3
+            i.fa.fa-hand-o-right
+            |  Signup
+          p.
+            The <code>/signup</code> endpoint makes sure the supplied username
+            and email address are unique and creates new <code>User</code> and
+            <code>Account</code> documents.
+        div.col-sm-4
+          h3
+            i.fa.fa-sign-in
+            |  Login
+          p.
+            When supplied valid credentials, the <code>/login</code> endpoint
+            creates a new <code>Session</code>.  We've also included
+            endpoints for resetting a forgotten password.
+        div.col-sm-4
+          h3
+            i.fa.fa-paper-plane
+            |  Email utility
+          p.
+            The <code>/contact</code> endpoint demonstrates the built-in email
+            utility. By composing Handlebars and Markdown, personalized emails
+            with HTML and text parts share one template.
+      div.row
+        div.col-sm-4
+          h3
+            i.fa.fa-user
+            |  Users and roles
+          p.
+            <code>User</code> documents store login credentials and roles.
+            Aqua ships with two roles; <code>Account</code> and
+            <code>Admin</code>.
+        div.col-sm-4
+          h3
+            i.fa.fa-users
+            |  Admin groups
+          p.
+            Aqua also ships with an <code>Admin</code> grouping facility
+            (<code>AdminGroup</code>). Think about these like departments;
+            sales, support, manager, etc...
+        div.col-sm-4
+          h3
+            i.fa.fa-key
+            |  Permissions
+          p.
+            Permissions can be granted to an <code>AdminGroup</code> or
+            individually for an <code>Admin</code>. <code>Admin</code>
+            permissions will win over their group's permission.
+      hr
+      h2.text-center Most importantly
+      p.lead What you build with Aqua is more important than Aqua
+    footer
+      div.container
+        p.
+          Made using the force by <a href='http://twitter.com/jedireza', target='_blank'>@jedireza</a>.
+          Code licensed under The MIT License.
+        p.
+          A special thanks goes to the creators and contributors of the tools
+          Aqua is built with.
+        ul.footer-links
+          li: a(href='https://github.com/jedireza/aqua/issues?state=open') Submit issues
+          li.muted ·
+          li: a(href='#') Back to top
+    script(src='public/build.js')
