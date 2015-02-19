@@ -1,6 +1,6 @@
 # Aqua
 
-A website and user system. Implemented with Hapi, React and Flux.
+A website and user system starter. Implemented with Hapi, React and Flux.
 
 [![Build Status](https://travis-ci.org/jedireza/aqua.svg?branch=master)](https://travis-ci.org/jedireza/aqua)
 [![Dependency Status](https://david-dm.org/jedireza/aqua.svg?style=flat)](https://david-dm.org/jedireza/aqua)
