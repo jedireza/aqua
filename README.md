@@ -1,5 +1,7 @@
 # Aqua
 
+[![Join the chat at https://gitter.im/jedireza/aqua](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jedireza/aqua?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A website and user system starter. Implemented with Hapi, React and Flux.
 
 [![Build Status](https://travis-ci.org/jedireza/aqua.svg?branch=master)](https://travis-ci.org/jedireza/aqua)
