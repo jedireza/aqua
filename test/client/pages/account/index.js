@@ -1,9 +1,11 @@
 var React = require('react/addons');
-var TestLocation = require('react-router/modules/locations/TestLocation');
+var testLocation = require('react-router/lib/locations/TestLocation');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
 
+
+var TestLocation = new testLocation();
 
 var lab = exports.lab = Lab.script();
 var stub = {
