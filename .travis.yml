@@ -6,6 +6,8 @@ node_js:
   - "0.12"
 services:
   - mongodb
+env:
+  - NODE_ENV=test
 before_script:
   - gulp react
   - npm run setup

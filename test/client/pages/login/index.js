@@ -1,10 +1,11 @@
 var React = require('react/addons');
-var TestLocation = require('react-router/modules/locations/TestLocation');
+var RouterTestLocation = require('react-router/lib/locations/TestLocation');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
 
 
+var TestLocation = new RouterTestLocation();
 var lab = exports.lab = Lab.script();
 var stub = {
     ReactRouter: {
