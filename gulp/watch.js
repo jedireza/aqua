@@ -1,4 +1,4 @@
-var Gulp  = require('gulp');
+var Gulp = require('gulp');
 
 
 Gulp.task('watch', function () {

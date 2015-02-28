@@ -139,7 +139,7 @@ exports.register = function (server, options, next) {
                 welcome: ['linkUser', 'linkAccount', function (done, results) {
 
                     var options = {
-                        subject: 'Your ' + Config.get('/projectName')    + ' account',
+                        subject: 'Your ' + Config.get('/projectName') + ' account',
                         to: {
                             name: request.payload.name,
                             address: request.payload.email

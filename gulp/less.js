@@ -14,19 +14,19 @@ Gulp.task('less', function () {
         ],
         dest: './public',
         outputName: 'core.min.css'
-    },{
+    }, {
         entries: './client/layouts/default.less',
         dest: './public/layouts',
         outputName: 'default.min.css'
-    },{
+    }, {
         entries: './client/pages/account/index.less',
         dest: './public/pages',
         outputName: 'account.min.css'
-    },{
+    }, {
         entries: './client/pages/admin/index.less',
         dest: './public/pages',
         outputName: 'admin.min.css'
-    },{
+    }, {
         entries: './client/pages/home/index.less',
         dest: './public/pages',
         outputName: 'home.min.css'
