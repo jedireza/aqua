@@ -53,7 +53,7 @@
     "gulp-less": "^3.0.0",
     "gulp-newer": "^0.5.0",
     "gulp-nodemon": "^1.0.4",
-    "gulp-react": "^2.0.0",
+    "gulp-react": "^3.0.0",
     "gulp-rename": "^1.2.0",
     "gulp-sourcemaps": "^1.2.8",
     "gulp-util": "^3.0.1",
