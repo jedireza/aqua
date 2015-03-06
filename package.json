@@ -27,7 +27,7 @@
     "hapi-mongo-models": "^1.1.0",
     "hapi-react-views": "^2.0.0",
     "hoek": "^2.4.1",
-    "joi": "^5.0.2",
+    "joi": "^6.0.3",
     "lout": "^6.0.0",
     "mongodb": "^1.4.23",
     "node-uuid": "^1.4.1",
