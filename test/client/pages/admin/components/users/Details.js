@@ -13,7 +13,7 @@ var stub = {
     },
     UserStore: {}
 };
-var Details = Proxyquire('../../../../../../client/pages/admin/components/users/Details.react', {
+var Details = Proxyquire('../../../../../../client/pages/admin/components/users/Details', {
     '../../actions/User': stub.Actions,
     '../../stores/User': stub.UserStore
 });

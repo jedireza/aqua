@@ -11,7 +11,7 @@ var stub = {
     Actions: {},
     Store: {}
 };
-var Form = Proxyquire('../../../../client/pages/contact/Form.react', {
+var Form = Proxyquire('../../../../client/pages/contact/Form', {
     './Actions': stub.Actions,
     './Store': stub.Store
 });

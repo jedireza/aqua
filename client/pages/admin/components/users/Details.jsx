@@ -1,9 +1,9 @@
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var IdentityForm = require('./IdentityForm.react');
-var RolesForm = require('./RolesForm.react');
-var PasswordForm = require('./PasswordForm.react');
-var DeleteForm = require('./DeleteForm.react');
+var IdentityForm = require('./IdentityForm');
+var RolesForm = require('./RolesForm');
+var PasswordForm = require('./PasswordForm');
+var DeleteForm = require('./DeleteForm');
 var UserStore = require('../../stores/User');
 var Actions = require('../../actions/User');
 

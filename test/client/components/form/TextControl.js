@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
-var TextControl = require('../../../../client/components/form/TextControl.react');
+var TextControl = require('../../../../client/components/form/TextControl');
 
 
 var lab = exports.lab = Lab.script();

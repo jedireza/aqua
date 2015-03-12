@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var DetailsForm = require('./DetailsForm.react');
-var DeleteForm = require('./DeleteForm.react');
+var DetailsForm = require('./DetailsForm');
+var DeleteForm = require('./DeleteForm');
 var StatusStore = require('../../stores/Status');
 var Actions = require('../../actions/Status');
 

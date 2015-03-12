@@ -1,6 +1,6 @@
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var ControlGroup = require('../../../../components/form/ControlGroup.react');
+var ControlGroup = require('../../../../components/form/ControlGroup');
 
 
 var LinkedState = React.addons.LinkedStateMixin;

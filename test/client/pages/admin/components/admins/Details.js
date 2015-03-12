@@ -17,7 +17,7 @@ var stub = {
     AdminStore: {},
     AdminGroupStore: {}
 };
-var Details = Proxyquire('../../../../../../client/pages/admin/components/admins/Details.react', {
+var Details = Proxyquire('../../../../../../client/pages/admin/components/admins/Details', {
     '../../actions/Admin': stub.Actions,
     '../../actions/AdminGroup': stub.GroupActions,
     '../../stores/Admin': stub.AdminStore,

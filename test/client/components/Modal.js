@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
-var Modal = require('../../../client/components/Modal.react');
+var Modal = require('../../../client/components/Modal');
 
 
 var lab = exports.lab = Lab.script();

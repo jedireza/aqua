@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
-var Component = require('../../../../../../client/pages/admin/components/home/Controller.react');
+var Component = require('../../../../../../client/pages/admin/components/home/Controller');
 
 
 var lab = exports.lab = Lab.script();

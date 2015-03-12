@@ -15,7 +15,7 @@ var stub = {
         HistoryLocation: TestLocation
     }
 };
-var App = Proxyquire('../../../../client/pages/admin/index.react', {
+var App = Proxyquire('../../../../client/pages/admin/index', {
     '../../actions/Redirect': stub.RedirectActions,
     'react-router': stub.ReactRouter
 });

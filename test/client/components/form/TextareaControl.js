@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
-var TextareaControl = require('../../../../client/components/form/TextareaControl.react');
+var TextareaControl = require('../../../../client/components/form/TextareaControl');
 
 
 var lab = exports.lab = Lab.script();

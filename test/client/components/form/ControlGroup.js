@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
-var ControlGroup = require('../../../../client/components/form/ControlGroup.react');
+var ControlGroup = require('../../../../client/components/form/ControlGroup');
 
 
 var lab = exports.lab = Lab.script();

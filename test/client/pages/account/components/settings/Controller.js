@@ -10,7 +10,7 @@ var stub = {
     Actions: {},
     AccountStore: {}
 };
-var Component = Proxyquire('../../../../../../client/pages/account/components/settings/Controller.react', {
+var Component = Proxyquire('../../../../../../client/pages/account/components/settings/Controller', {
     '../../Actions': stub.Actions,
     '../../stores/Account': stub.AccountStore
 });

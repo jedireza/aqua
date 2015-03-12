@@ -17,7 +17,7 @@ var stub = {
     AccountStore: {},
     StatusStore: {}
 };
-var Details = Proxyquire('../../../../../../client/pages/admin/components/accounts/Details.react', {
+var Details = Proxyquire('../../../../../../client/pages/admin/components/accounts/Details', {
     '../../actions/Account': stub.Actions,
     '../../actions/Status': stub.StatusActions,
     '../../stores/Account': stub.AccountStore,

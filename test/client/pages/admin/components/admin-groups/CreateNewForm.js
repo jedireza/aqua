@@ -10,7 +10,7 @@ var TestUtils = React.addons.TestUtils;
 var stub = {
     Actions: {}
 };
-var Form = Proxyquire('../../../../../../client/pages/admin/components/admin-groups/CreateNewForm.react', {
+var Form = Proxyquire('../../../../../../client/pages/admin/components/admin-groups/CreateNewForm', {
     '../../actions/AdminGroup': stub.Actions
 });
 var mockProps;

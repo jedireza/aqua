@@ -1,8 +1,8 @@
 var React = require('react/addons');
-var ControlGroup = require('../../../../components/form/ControlGroup.react');
-var TextControl = require('../../../../components/form/TextControl.react');
-var Button = require('../../../../components/form/Button.react');
-var Spinner = require('../../../../components/form/Spinner.react');
+var ControlGroup = require('../../../../components/form/ControlGroup');
+var TextControl = require('../../../../components/form/TextControl');
+var Button = require('../../../../components/form/Button');
+var Spinner = require('../../../../components/form/Spinner');
 var Actions = require('../../actions/Status');
 
 

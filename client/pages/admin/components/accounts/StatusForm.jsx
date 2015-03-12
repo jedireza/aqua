@@ -1,6 +1,6 @@
 var React = require('react/addons');
-var ControlGroup = require('../../../../components/form/ControlGroup.react');
-var Spinner = require('../../../../components/form/Spinner.react');
+var ControlGroup = require('../../../../components/form/ControlGroup');
+var Spinner = require('../../../../components/form/Spinner');
 var Actions = require('../../actions/Account');
 
 

@@ -13,7 +13,7 @@ var stub = {
     },
     StatusStore: {}
 };
-var Search = Proxyquire('../../../../../../client/pages/admin/components/statuses/Search.react', {
+var Search = Proxyquire('../../../../../../client/pages/admin/components/statuses/Search', {
     '../../actions/Status': stub.Actions,
     '../../stores/Status': stub.StatusStore
 });

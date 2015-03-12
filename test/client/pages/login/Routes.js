@@ -1,6 +1,6 @@
 var Lab = require('lab');
 var Code = require('code');
-var Routes = require('../../../../client/pages/login/Routes.react');
+var Routes = require('../../../../client/pages/login/Routes');
 
 
 var lab = exports.lab = Lab.script();

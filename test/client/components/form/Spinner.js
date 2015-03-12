@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
-var Spinner = require('../../../../client/components/form/Spinner.react');
+var Spinner = require('../../../../client/components/form/Spinner');
 
 
 var lab = exports.lab = Lab.script();

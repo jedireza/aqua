@@ -2,7 +2,7 @@ var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
 var Hoek = require('hoek');
-var Paging = require('../../../client/components/Paging.react');
+var Paging = require('../../../client/components/Paging');
 
 
 var lab = exports.lab = Lab.script();

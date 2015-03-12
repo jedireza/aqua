@@ -1,7 +1,7 @@
 /* global window */
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var Routes = require('./Routes.react');
+var Routes = require('./Routes');
 
 
 var HistoryLocation = ReactRouter.HistoryLocation;

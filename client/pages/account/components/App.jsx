@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var NavBar = require('./NavBar.react');
-var Footer = require('./Footer.react');
+var NavBar = require('./NavBar');
+var Footer = require('./Footer');
 
 
 var Component = React.createClass({

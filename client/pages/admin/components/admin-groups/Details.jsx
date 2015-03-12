@@ -1,8 +1,8 @@
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var DetailsForm = require('./DetailsForm.react');
-var PermissionsForm = require('./PermissionsForm.react');
-var DeleteForm = require('./DeleteForm.react');
+var DetailsForm = require('./DetailsForm');
+var PermissionsForm = require('./PermissionsForm');
+var DeleteForm = require('./DeleteForm');
 var AdminGroupStore = require('../../stores/AdminGroup');
 var Actions = require('../../actions/AdminGroup');
 
