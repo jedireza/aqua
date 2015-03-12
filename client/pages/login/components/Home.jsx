@@ -14,7 +14,7 @@ var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [  LinkedState, Navigation ],
+    mixins: [ LinkedState, Navigation ],
     getInitialState: function () {
 
         LoginStore.reset();

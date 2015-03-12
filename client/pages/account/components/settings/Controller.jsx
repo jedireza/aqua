@@ -25,7 +25,7 @@ var Component = React.createClass({
         return {
             account: AccountStore.getState(),
             user: UserStore.getState(),
-            password: PasswordStore.getState(),
+            password: PasswordStore.getState()
         };
     },
     componentDidMount: function () {
