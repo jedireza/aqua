@@ -9,5 +9,4 @@ services:
 env:
   - NODE_ENV=test
 before_script:
-  - gulp react
   - npm run setup
