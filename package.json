@@ -8,8 +8,8 @@
     "start": "gulp",
     "test": "lab -c -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".jsx\"]}' ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/",
     "test-client": "lab -c -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".jsx\"]}' ./test/client-before.js ./test/client/ ./test/client-after.js",
-    "test-server": "lab -c -L --lint-options '{\"extensions\":[\".jsx\"]}' ./test/misc/ ./test/server/",
-    "test-cover": "lab -c -T ./test/transform.js -r html -o ./test/artifacts/coverage.html ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/ && open ./test/artifacts/coverage.html"
+    "test-server": "lab -c -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".jsx\"]}' ./test/misc/ ./test/server/",
+    "test-cover": "lab -c -S -T ./test/transform.js -r html -o ./test/artifacts/coverage.html ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/ && open ./test/artifacts/coverage.html"
   },
   "author": "Reza Akhavan <jedireza@gmail.com> (http://reza.akhavan.me/)",
   "license": "MIT",
@@ -55,7 +55,6 @@
     "gulp-less": "^3.0.0",
     "gulp-newer": "^0.5.0",
     "gulp-nodemon": "^1.0.4",
-    "gulp-react": "^3.0.0",
     "gulp-rename": "^1.2.0",
     "gulp-sourcemaps": "^1.2.8",
     "gulp-util": "^3.0.1",

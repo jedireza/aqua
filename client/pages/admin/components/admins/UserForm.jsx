@@ -1,3 +1,4 @@
+/* global window */
 var React = require('react/addons');
 var ReactRouter = require('react-router');
 var ControlGroup = require('../../../../components/form/ControlGroup');
@@ -49,7 +50,7 @@ var Component = React.createClass({
     },
     onConfirm: function (event) {
 
-        if (!confirm('Are you sure?')) {
+        if (!window.confirm('Are you sure?')) {
             event.preventDefault();
             event.stopPropagation();
         }
