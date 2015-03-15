@@ -3,6 +3,7 @@
         "jsx": true
     },
     "rules": {
+        "no-alert": 0,
         "consistent-return": 0,
         "vars-on-top": 0,
         "one-var": 0,
