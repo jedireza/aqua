@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
-var Footer = require('../../../../../client/pages/account/components/Footer.react');
+var Footer = require('../../../../../client/pages/account/components/Footer');
 
 
 var lab = exports.lab = Lab.script();

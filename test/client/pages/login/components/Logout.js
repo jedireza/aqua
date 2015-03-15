@@ -14,7 +14,7 @@ var stub = {
     },
     LogoutStore: {}
 };
-var Logout = Proxyquire('../../../../../client/pages/login/components/Logout.react', {
+var Logout = Proxyquire('../../../../../client/pages/login/components/Logout', {
     '../Actions': stub.Actions,
     '../stores/Logout': stub.LogoutStore
 });

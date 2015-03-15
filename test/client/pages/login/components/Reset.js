@@ -12,7 +12,7 @@ var stub = {
     Actions: {},
     ResetStore: {}
 };
-var Reset = Proxyquire('../../../../../client/pages/login/components/Reset.react', {
+var Reset = Proxyquire('../../../../../client/pages/login/components/Reset', {
     '../Actions': stub.Actions,
     '../stores/Reset': stub.ResetStore
 });

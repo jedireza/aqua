@@ -12,7 +12,7 @@ var stub = {
         HistoryLocation: TestLocation
     }
 };
-var App = Proxyquire('../../../../client/pages/login/index.react', {
+var App = Proxyquire('../../../../client/pages/login/index', {
     'react-router': stub.ReactRouter
 });
 var mountNode;

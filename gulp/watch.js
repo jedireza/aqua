@@ -5,5 +5,4 @@ Gulp.task('watch', function () {
 
     global.isWatching = true;
     Gulp.watch('./client/**/*.less', ['less']);
-    Gulp.watch('./client/**/*.jsx', ['react']);
 });

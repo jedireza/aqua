@@ -1,9 +1,9 @@
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var App = require('./components/App.react');
-var Home = require('./components/home/Controller.react');
-var NotFound = require('./components/not-found/Controller.react');
-var Settings = require('./components/settings/Controller.react');
+var App = require('./components/App');
+var Home = require('./components/home/Controller');
+var NotFound = require('./components/not-found/Controller');
+var Settings = require('./components/settings/Controller');
 
 
 var Route = ReactRouter.Route;

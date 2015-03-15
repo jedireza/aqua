@@ -2,7 +2,7 @@ var React = require('react/addons');
 var ReactRouter = require('react-router');
 var Lab = require('lab');
 var Code = require('code');
-var App = require('../../../../../client/pages/admin/components/App.react');
+var App = require('../../../../../client/pages/admin/components/App');
 var RouteHelpers = require('../../../fixtures/RouteHelpers');
 
 

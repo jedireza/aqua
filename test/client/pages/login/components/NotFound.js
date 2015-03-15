@@ -2,7 +2,7 @@ var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
 var StubRouterContext = require('../../../fixtures/StubRouterContext');
-var NotFound = require('../../../../../client/pages/login/components/NotFound.react');
+var NotFound = require('../../../../../client/pages/login/components/NotFound');
 
 
 var lab = exports.lab = Lab.script();

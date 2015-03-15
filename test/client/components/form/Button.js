@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
-var Button = require('../../../../client/components/form/Button.react');
+var Button = require('../../../../client/components/form/Button');
 
 
 var lab = exports.lab = Lab.script();

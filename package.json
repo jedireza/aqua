@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "setup": "./setup.js",
-    "start": "gulp react && gulp",
-    "test": "lab -c -L ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/",
-    "test-client": "lab -c -L ./test/client-before.js ./test/client/ ./test/client-after.js",
-    "test-server": "lab -c -L ./test/misc/ ./test/server/",
-    "test-cover": "lab -c -r html -o ./test/artifacts/coverage.html ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/ && open ./test/artifacts/coverage.html"
+    "start": "gulp",
+    "test": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".jsx\"]}' ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/",
+    "test-client": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".jsx\"]}' ./test/client-before.js ./test/client/ ./test/client-after.js",
+    "test-server": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".jsx\"]}' ./test/misc/ ./test/server/",
+    "test-cover": "lab -t 100 -S -T ./test/transform.js -r html -o ./test/artifacts/coverage.html ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/ && open ./test/artifacts/coverage.html"
   },
   "author": "Reza Akhavan <jedireza@gmail.com> (http://reza.akhavan.me/)",
   "license": "MIT",
@@ -39,6 +39,8 @@
     "visionary": "^2.0.0"
   },
   "devDependencies": {
+    "babel-core": "^4.7.8",
+    "babel-loader": "^4.1.0",
     "bootstrap": "^3.3.1",
     "code": "^1.2.0",
     "cookie": "^0.1.2",
@@ -53,12 +55,11 @@
     "gulp-less": "^3.0.0",
     "gulp-newer": "^0.5.0",
     "gulp-nodemon": "^1.0.4",
-    "gulp-react": "^3.0.0",
     "gulp-rename": "^1.2.0",
     "gulp-sourcemaps": "^1.2.8",
     "gulp-util": "^3.0.1",
     "jsdom": "^3.1.1",
-    "lab": "^5.0.1",
+    "lab": "^5.5.0",
     "lodash": "^3.1.0",
     "merge-stream": "^0.1.6",
     "moment": "^2.8.4",

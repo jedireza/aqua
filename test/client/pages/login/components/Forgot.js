@@ -12,7 +12,7 @@ var stub = {
     Actions: {},
     ForgotStore: {}
 };
-var Forgot = Proxyquire('../../../../../client/pages/login/components/Forgot.react', {
+var Forgot = Proxyquire('../../../../../client/pages/login/components/Forgot', {
     '../Actions': stub.Actions,
     '../stores/Forgot': stub.ForgotStore
 });

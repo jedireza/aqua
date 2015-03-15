@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
-var App = require('../../../../client/pages/signup/index.react');
+var App = require('../../../../client/pages/signup/index');
 
 
 var lab = exports.lab = Lab.script();

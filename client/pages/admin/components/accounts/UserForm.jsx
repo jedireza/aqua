@@ -1,9 +1,10 @@
+/* global window */
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var ControlGroup = require('../../../../components/form/ControlGroup.react');
-var TextControl = require('../../../../components/form/TextControl.react');
-var Button = require('../../../../components/form/Button.react');
-var Spinner = require('../../../../components/form/Spinner.react');
+var ControlGroup = require('../../../../components/form/ControlGroup');
+var TextControl = require('../../../../components/form/TextControl');
+var Button = require('../../../../components/form/Button');
+var Spinner = require('../../../../components/form/Spinner');
 var Actions = require('../../actions/Account');
 
 
@@ -49,7 +50,7 @@ var Component = React.createClass({
     },
     onConfirm: function (event) {
 
-        if (!confirm('Are you sure?')) {
+        if (!window.confirm('Are you sure?')) {
             event.preventDefault();
             event.stopPropagation();
         }

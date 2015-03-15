@@ -12,7 +12,7 @@ var stub = {
     Actions: {},
     LoginStore: {}
 };
-var Home = Proxyquire('../../../../../client/pages/login/components/Home.react', {
+var Home = Proxyquire('../../../../../client/pages/login/components/Home', {
     '../Actions': stub.Actions,
     '../stores/Login': stub.LoginStore
 });

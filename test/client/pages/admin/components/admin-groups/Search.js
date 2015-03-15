@@ -13,7 +13,7 @@ var stub = {
     },
     AdminGroupStore: {}
 };
-var Search = Proxyquire('../../../../../../client/pages/admin/components/admin-groups/Search.react', {
+var Search = Proxyquire('../../../../../../client/pages/admin/components/admin-groups/Search', {
     '../../actions/AdminGroup': stub.Actions,
     '../../stores/AdminGroup': stub.AdminGroupStore
 });

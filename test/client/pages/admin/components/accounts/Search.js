@@ -13,7 +13,7 @@ var stub = {
     },
     AccountStore: {}
 };
-var Search = Proxyquire('../../../../../../client/pages/admin/components/accounts/Search.react', {
+var Search = Proxyquire('../../../../../../client/pages/admin/components/accounts/Search', {
     '../../actions/Account': stub.Actions,
     '../../stores/Account': stub.AccountStore
 });

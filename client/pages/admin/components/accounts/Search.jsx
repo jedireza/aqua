@@ -1,12 +1,12 @@
 /* global window */
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var Paging = require('../../../../components/Paging.react');
+var Paging = require('../../../../components/Paging');
 var Actions = require('../../actions/Account');
 var AccountStore = require('../../stores/Account');
-var FilterForm = require('./FilterForm.react');
-var CreateNewForm = require('./CreateNewForm.react');
-var Results = require('./Results.react');
+var FilterForm = require('./FilterForm');
+var CreateNewForm = require('./CreateNewForm');
+var Results = require('./Results');
 
 
 var State = ReactRouter.State;

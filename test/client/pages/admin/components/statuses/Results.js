@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var Lab = require('lab');
 var Code = require('code');
-var Results = require('../../../../../../client/pages/admin/components/statuses/Results.react');
+var Results = require('../../../../../../client/pages/admin/components/statuses/Results');
 var StubRouterContext = require('../../../../fixtures/StubRouterContext');
 
 

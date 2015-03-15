@@ -13,16 +13,24 @@ Gulp.task('webpack', function (callback) {
     var config = {
         watch: global.isWatching,
         entry: {
-            account: './client/pages/account/index.react',
-            admin: './client/pages/admin/index.react',
-            contact: './client/pages/contact/index.react',
-            login: './client/pages/login/index.react',
-            signup: './client/pages/signup/index.react'
+            account: './client/pages/account/index',
+            admin: './client/pages/admin/index',
+            contact: './client/pages/contact/index',
+            login: './client/pages/login/index',
+            signup: './client/pages/signup/index'
         },
         output: {
             path: './public/pages',
             filename: '[name].min.js',
             sourceMapFilename: '[name].map.js'
+        },
+        resolve: {
+            extensions: ['', '.js', '.jsx']
+        },
+        module: {
+            loaders: [
+                { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel-loader'}
+            ]
         },
         devtool: 'source-map',
         plugins: [

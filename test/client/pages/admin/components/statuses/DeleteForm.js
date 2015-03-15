@@ -10,10 +10,10 @@ var TestUtils = React.addons.TestUtils;
 var stub = {
     Actions: {}
 };
-var Form = Proxyquire('../../../../../../client/pages/admin/components/statuses/DeleteForm.react', {
+var Form = Proxyquire('../../../../../../client/pages/admin/components/statuses/DeleteForm', {
     '../../actions/Status': stub.Actions
 });
-var mockProps;
+var mockProps, originalConfirm;
 
 
 lab.beforeEach(function (done) {
@@ -29,9 +29,16 @@ lab.beforeEach(function (done) {
 });
 
 
+lab.before(function (done) {
+
+    originalConfirm = global.window.confirm;
+    done();
+});
+
+
 lab.after(function (done) {
 
-    delete global.confirm;
+    global.window.confirm = originalConfirm;
     done();
 });
 
@@ -64,7 +71,7 @@ lab.experiment('Admin Status Delete Form', function () {
 
     lab.test('it prevents event propagation when confirm returns false', function (done) {
 
-        global.confirm = function () {
+        global.window.confirm = function () {
 
             return false;
         };
@@ -92,7 +99,7 @@ lab.experiment('Admin Status Delete Form', function () {
 
     lab.test('it allows event propagation when confirm returns true', function (done) {
 
-        global.confirm = function () {
+        global.window.confirm = function () {
 
             done();
             return true;

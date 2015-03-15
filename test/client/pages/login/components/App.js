@@ -2,7 +2,7 @@ var React = require('react/addons');
 var ReactRouter = require('react-router');
 var Lab = require('lab');
 var Code = require('code');
-var App = require('../../../../../client/pages/login/components/App.react');
+var App = require('../../../../../client/pages/login/components/App');
 
 
 var lab = exports.lab = Lab.script();

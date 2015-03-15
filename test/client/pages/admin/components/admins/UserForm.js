@@ -10,10 +10,10 @@ var TestUtils = React.addons.TestUtils;
 var stub = {
     Actions: {}
 };
-var Form = Proxyquire('../../../../../../client/pages/admin/components/admins/UserForm.react', {
+var Form = Proxyquire('../../../../../../client/pages/admin/components/admins/UserForm', {
     '../../actions/Admin': stub.Actions
 });
-var mockProps;
+var mockProps, originalConfirm;
 
 
 lab.beforeEach(function (done) {
@@ -27,6 +27,20 @@ lab.beforeEach(function (done) {
         }
     };
 
+    done();
+});
+
+
+lab.before(function (done) {
+
+    originalConfirm = global.window.confirm;
+    done();
+});
+
+
+lab.after(function (done) {
+
+    global.window.confirm = originalConfirm;
     done();
 });
 
@@ -110,7 +124,7 @@ lab.experiment('Admin Admin User Form', function () {
 
     lab.test('it prevents event propagation when confirm returns false', function (done) {
 
-        global.confirm = function () {
+        global.window.confirm = function () {
 
             return false;
         };
@@ -134,7 +148,7 @@ lab.experiment('Admin Admin User Form', function () {
 
     lab.test('it allows event propagation when confirm returns true', function (done) {
 
-        global.confirm = function () {
+        global.window.confirm = function () {
 
             done();
             return true;

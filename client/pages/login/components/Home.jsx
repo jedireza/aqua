@@ -1,9 +1,9 @@
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var ControlGroup = require('../../../components/form/ControlGroup.react');
-var TextControl = require('../../../components/form/TextControl.react');
-var Button = require('../../../components/form/Button.react');
-var Spinner = require('../../../components/form/Spinner.react');
+var ControlGroup = require('../../../components/form/ControlGroup');
+var TextControl = require('../../../components/form/TextControl');
+var Button = require('../../../components/form/Button');
+var Spinner = require('../../../components/form/Spinner');
 var Actions = require('../Actions');
 var LoginStore = require('../stores/Login');
 
@@ -14,7 +14,7 @@ var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [  LinkedState, Navigation ],
+    mixins: [ LinkedState, Navigation ],
     getInitialState: function () {
 
         LoginStore.reset();

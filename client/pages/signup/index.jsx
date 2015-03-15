@@ -1,6 +1,6 @@
 /* global window */
 var React = require('react/addons');
-var FormView = require('./Form.react');
+var FormView = require('./Form');
 
 
 var App = {

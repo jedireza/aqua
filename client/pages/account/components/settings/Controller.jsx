@@ -3,9 +3,9 @@ var Actions = require('../../Actions');
 var AccountStore = require('../../stores/Account');
 var PasswordStore = require('../../stores/Password');
 var UserStore = require('../../stores/User');
-var AccountForm = require('./AccountForm.react');
-var UserForm = require('./UserForm.react');
-var PasswordForm = require('./PasswordForm.react');
+var AccountForm = require('./AccountForm');
+var UserForm = require('./UserForm');
+var PasswordForm = require('./PasswordForm');
 
 
 var Component = React.createClass({
@@ -25,7 +25,7 @@ var Component = React.createClass({
         return {
             account: AccountStore.getState(),
             user: UserStore.getState(),
-            password: PasswordStore.getState(),
+            password: PasswordStore.getState()
         };
     },
     componentDidMount: function () {

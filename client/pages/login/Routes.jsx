@@ -1,11 +1,11 @@
 var React = require('react/addons');
 var ReactRouter = require('react-router');
-var App = require('./components/App.react');
-var Home = require('./components/Home.react');
-var NotFound = require('./components/NotFound.react');
-var Logout = require('./components/Logout.react');
-var Forgot = require('./components/Forgot.react');
-var Reset = require('./components/Reset.react');
+var App = require('./components/App');
+var Home = require('./components/Home');
+var NotFound = require('./components/NotFound');
+var Logout = require('./components/Logout');
+var Forgot = require('./components/Forgot');
+var Reset = require('./components/Reset');
 
 
 var Route = ReactRouter.Route;

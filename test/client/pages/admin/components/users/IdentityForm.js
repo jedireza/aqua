@@ -9,7 +9,7 @@ var TestUtils = React.addons.TestUtils;
 var stub = {
     Actions: {}
 };
-var Form = Proxyquire('../../../../../../client/pages/admin/components/users/IdentityForm.react', {
+var Form = Proxyquire('../../../../../../client/pages/admin/components/users/IdentityForm', {
     '../../actions/User': stub.Actions
 });
 var mockProps;

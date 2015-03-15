@@ -1,7 +1,7 @@
 var React = require('react/addons');
 var ObjectAssign = require('object-assign');
-var TextControl = require('../../../../components/form/TextControl.react');
-var SelectControl = require('../../../../components/form/SelectControl.react');
+var TextControl = require('../../../../components/form/TextControl');
+var SelectControl = require('../../../../components/form/SelectControl');
 
 
 var Component = React.createClass({
