@@ -6,9 +6,9 @@
   "scripts": {
     "setup": "./setup.js",
     "start": "gulp",
-    "test": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".jsx\"]}' ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/",
-    "test-client": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".jsx\"]}' ./test/client-before.js ./test/client/ ./test/client-after.js",
-    "test-server": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".jsx\"]}' ./test/misc/ ./test/server/",
+    "test": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/",
+    "test-client": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/client-before.js ./test/client/ ./test/client-after.js",
+    "test-server": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/misc/ ./test/server/",
     "test-cover": "lab -t 100 -S -T ./test/transform.js -r html -o ./test/artifacts/coverage.html ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/ && open ./test/artifacts/coverage.html"
   },
   "author": "Reza Akhavan <jedireza@gmail.com> (http://reza.akhavan.me/)",
