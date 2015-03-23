@@ -5,12 +5,10 @@ var ControlGroup = require('../../../../components/form/ControlGroup');
 
 var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
-var State = ReactRouter.State;
-var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState, State, Navigation ],
+    mixins: [ LinkedState ],
     render: function () {
 
         var notice;

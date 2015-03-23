@@ -13,12 +13,13 @@ var GroupActions = require('../../actions/AdminGroup');
 
 var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
-var State = ReactRouter.State;
-var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState, State, Navigation ],
+    mixins: [ LinkedState ],
+    contextTypes: {
+        router: React.PropTypes.object
+    },
     getInitialState: function () {
 
         AdminStore.resetDetails();
@@ -28,7 +29,7 @@ var Component = React.createClass({
         AdminStore.resetDelete();
         AdminGroupStore.resetResults();
 
-        Actions.getDetails(this.getParams());
+        Actions.getDetails(this.context.router.getParams());
         GroupActions.getResults({ fields: 'name', limit: 99 });
 
         return {

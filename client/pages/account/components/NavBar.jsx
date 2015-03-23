@@ -1,15 +1,15 @@
 var React = require('react/addons');
 var ReactRouter = require('react-router');
+var ClassNames = require('classnames');
 
 
 var Link = ReactRouter.Link;
-var State = ReactRouter.State;
-var Navigation = ReactRouter.Navigation;
-var classSet = React.addons.classSet;
 
 
 var Component = React.createClass({
-    mixins: [ State, Navigation ],
+    contextTypes: {
+        router: React.PropTypes.object
+    },
     getInitialState: function () {
 
         return {
@@ -22,10 +22,10 @@ var Component = React.createClass({
     },
     isNavActive: function (routes) {
 
-        return classSet({
+        return ClassNames({
             active: routes.some(function (route) {
 
-                return this.isActive(route);
+                return this.context.router.isActive(route);
             }.bind(this))
         });
     },
@@ -35,7 +35,7 @@ var Component = React.createClass({
     },
     render: function () {
 
-        var navBarCollapse = classSet({
+        var navBarCollapse = ClassNames({
             'navbar-collapse': true,
             collapse: !this.state.navBarOpen
         });

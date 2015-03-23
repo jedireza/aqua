@@ -78,7 +78,7 @@ lab.experiment('Admin Account Search', function () {
         var target = TestUtils.findRenderedComponentWithType(search, Search);
         var form = TestUtils.findRenderedDOMComponentWithTag(target.refs.filters, 'form');
 
-        search.transitionTo = function () {};
+        target.transitionTo = function () {};
 
         TestUtils.Simulate.submit(form.getDOMNode());
 
@@ -92,10 +92,11 @@ lab.experiment('Admin Account Search', function () {
         var ComponentWithContext = StubRouterContext(Search);
         var SearchEl = React.createElement(ComponentWithContext, {});
         var search = TestUtils.renderIntoDocument(SearchEl);
+        var target = TestUtils.findRenderedComponentWithType(search, Search);
         var selects = TestUtils.scryRenderedDOMComponentsWithTag(search, 'select');
         var limit = selects[selects.length - 1];
 
-        search.transitionTo = function () {};
+        target.transitionTo = function () {};
 
         TestUtils.Simulate.change(limit, { target: { value: 10 } });
 
@@ -133,7 +134,7 @@ lab.experiment('Admin Account Search', function () {
 
         var next = target.refs.paging.refs.next;
 
-        search.transitionTo = function () {};
+        target.transitionTo = function () {};
 
         TestUtils.Simulate.click(next.getDOMNode());
 

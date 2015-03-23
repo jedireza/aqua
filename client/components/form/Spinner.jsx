@@ -1,7 +1,5 @@
 var React = require('react/addons');
-
-
-var classSet = React.addons.classSet;
+var ClassNames = require('classnames');
 
 
 var View = React.createClass({
@@ -17,7 +15,7 @@ var View = React.createClass({
             spaceRight = '\u00A0\u00A0';
         }
 
-        var spinnerClasses = classSet({
+        var spinnerClasses = ClassNames({
             hidden: !this.props.show
         });
 

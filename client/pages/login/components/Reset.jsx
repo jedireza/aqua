@@ -10,12 +10,13 @@ var ResetStore = require('../stores/Reset');
 
 var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
-var State = ReactRouter.State;
-var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState, State, Navigation ],
+    mixins: [ LinkedState ],
+    contextTypes: {
+        router: React.PropTypes.object
+    },
     getInitialState: function () {
 
         ResetStore.reset();
@@ -40,8 +41,8 @@ var Component = React.createClass({
         event.stopPropagation();
 
         Actions.reset({
-            email: this.getParams().email,
-            key: this.getParams().key,
+            email: this.context.router.getParams().email,
+            key: this.context.router.getParams().key,
             password: this.state.password
         });
     },
@@ -79,7 +80,7 @@ var Component = React.createClass({
                     name="_key"
                     label="Key"
                     hasError={this.state.hasError.key}
-                    value={this.getParams().key}
+                    value={this.context.router.getParams().key}
                     help={this.state.help.key}
                     disabled={true}
                 />
@@ -87,7 +88,7 @@ var Component = React.createClass({
                     name="_email"
                     label="Email"
                     hasError={this.state.hasError.email}
-                    value={this.getParams().email}
+                    value={this.context.router.getParams().email}
                     help={this.state.help.email}
                     disabled={true}
                 />

@@ -13,12 +13,13 @@ var StatusActions = require('../../actions/Status');
 
 var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
-var State = ReactRouter.State;
-var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState, State, Navigation ],
+    mixins: [ LinkedState ],
+    contextTypes: {
+        router: React.PropTypes.object
+    },
     getInitialState: function () {
 
         AccountStore.resetDetails();
@@ -28,7 +29,7 @@ var Component = React.createClass({
         AccountStore.resetDelete();
         StatusStore.resetResults();
 
-        Actions.getDetails(this.getParams());
+        Actions.getDetails(this.context.router.getParams());
         StatusActions.getResults({ pivot: 'Account', limit: 99 });
 
         return {

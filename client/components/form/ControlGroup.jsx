@@ -1,23 +1,21 @@
 var React = require('react/addons');
 var ObjectAssign = require('object-assign');
-
-
-var classSet = React.addons.classSet;
+var ClassNames = require('classnames');
 
 
 var View = React.createClass({
     render: function () {
 
-        var groupClasses = classSet(ObjectAssign({
+        var groupClasses = ClassNames(ObjectAssign({
             'form-group': true,
             'has-error': this.props.hasError
         }, this.props.groupClasses));
 
-        var labelClasses = classSet(ObjectAssign({
+        var labelClasses = ClassNames(ObjectAssign({
             'control-label': true
         }, this.props.labelClasses));
 
-        var helpClasses = classSet(ObjectAssign({
+        var helpClasses = ClassNames(ObjectAssign({
             'help-block': true
         }, this.props.helpClasses));
 

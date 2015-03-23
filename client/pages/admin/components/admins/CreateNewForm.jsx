@@ -1,5 +1,4 @@
 var React = require('react/addons');
-var ReactRouter = require('react-router');
 var Modal = require('../../../../components/Modal');
 var ControlGroup = require('../../../../components/form/ControlGroup');
 var TextControl = require('../../../../components/form/TextControl');
@@ -9,12 +8,13 @@ var Actions = require('../../actions/Admin');
 
 
 var LinkedState = React.addons.LinkedStateMixin;
-var State = ReactRouter.State;
-var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState, State, Navigation ],
+    mixins: [ LinkedState ],
+    contextTypes: {
+        router: React.PropTypes.object
+    },
     getDefaultProps: function () {
 
         return {
@@ -51,7 +51,7 @@ var Component = React.createClass({
 
         Actions.createNew({
             name: this.state.name
-        }, this);
+        }, this.context.router);
     },
     render: function () {
 

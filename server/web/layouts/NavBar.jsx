@@ -1,13 +1,11 @@
 var React = require('react/addons');
-
-
-var classSet = React.addons.classSet;
+var ClassNames = require('classnames');
 
 
 var Component = React.createClass({
     tabClass: function (tab) {
 
-        return classSet({
+        return ClassNames({
             active: this.props.activeTab === tab
         });
     },

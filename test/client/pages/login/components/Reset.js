@@ -17,7 +17,7 @@ var Reset = Proxyquire('../../../../../client/pages/login/components/Reset', {
     '../stores/Reset': stub.ResetStore
 });
 var RouterStubs = {
-    getCurrentParams: function () {
+    getParams: function () {
 
         return {};
     }
