@@ -1,8 +1,8 @@
 var Gulp = require('gulp');
-var Clean = require('gulp-clean');
+var Rimraf = require('gulp-rimraf');
 
 
 Gulp.task('clean', function () {
 
-    return Gulp.src('./public', { read: false }).pipe(Clean());
+    return Gulp.src('./public', { read: false }).pipe(Rimraf());
 });
