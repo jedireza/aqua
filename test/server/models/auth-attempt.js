@@ -92,7 +92,7 @@ lab.experiment('AuthAttempt Class Methods', function () {
             });
         };
 
-        for (var i = 0 ; i < authAttemptsConfig.forIpAndUser ; i++) {
+        for (var i = 0; i < authAttemptsConfig.forIpAndUser; i++) {
             authSpam.push(authRequest);
         }
 
@@ -125,7 +125,7 @@ lab.experiment('AuthAttempt Class Methods', function () {
             });
         };
 
-        for (var i = 0 ; i < authAttemptsConfig.forIp ; i++) {
+        for (var i = 0; i < authAttemptsConfig.forIp; i++) {
             authSpam.push(authRequest);
         }
 
