@@ -22,7 +22,7 @@ lab.experiment('Login Forgot Form', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Forgot);
+        var ComponentWithContext = StubRouterContext(Forgot, {});
         var ForgotEl = React.createElement(ComponentWithContext, {});
         var forgot = TestUtils.renderIntoDocument(ForgotEl);
 
@@ -34,7 +34,7 @@ lab.experiment('Login Forgot Form', function () {
     lab.test('it handles unmounting', function (done) {
 
         var container = global.document.createElement('div');
-        var ComponentWithContext = StubRouterContext(Forgot);
+        var ComponentWithContext = StubRouterContext(Forgot, {});
         var ForgotEl = React.createElement(ComponentWithContext, {});
 
         React.render(ForgotEl, container);
@@ -46,7 +46,7 @@ lab.experiment('Login Forgot Form', function () {
 
     lab.test('it handles a store change', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Forgot);
+        var ComponentWithContext = StubRouterContext(Forgot, {});
         var ForgotEl = React.createElement(ComponentWithContext, {});
 
         TestUtils.renderIntoDocument(ForgotEl);
@@ -63,7 +63,7 @@ lab.experiment('Login Forgot Form', function () {
             done();
         };
 
-        var ComponentWithContext = StubRouterContext(Forgot);
+        var ComponentWithContext = StubRouterContext(Forgot, {});
         var ForgotEl = React.createElement(ComponentWithContext, {});
         var forgot = TestUtils.renderIntoDocument(ForgotEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(forgot, 'form');
@@ -74,7 +74,7 @@ lab.experiment('Login Forgot Form', function () {
 
     lab.test('it renders with loading state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Forgot);
+        var ComponentWithContext = StubRouterContext(Forgot, {});
         var ForgotEl = React.createElement(ComponentWithContext, {});
         var forgot = TestUtils.renderIntoDocument(ForgotEl);
         var button = TestUtils.findRenderedDOMComponentWithTag(forgot, 'button');
@@ -92,7 +92,7 @@ lab.experiment('Login Forgot Form', function () {
 
     lab.test('it renders with success state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Forgot);
+        var ComponentWithContext = StubRouterContext(Forgot, {});
         var ForgotEl = React.createElement(ComponentWithContext, {});
         var forgot = TestUtils.renderIntoDocument(ForgotEl);
 
@@ -114,7 +114,7 @@ lab.experiment('Login Forgot Form', function () {
 
     lab.test('it renders with error state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Forgot);
+        var ComponentWithContext = StubRouterContext(Forgot, {});
         var ForgotEl = React.createElement(ComponentWithContext, {});
         var forgot = TestUtils.renderIntoDocument(ForgotEl);
 

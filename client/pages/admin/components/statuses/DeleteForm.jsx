@@ -12,7 +12,7 @@ var LinkedState = React.addons.LinkedStateMixin;
 var Component = React.createClass({
     mixins: [ LinkedState ],
     contextTypes: {
-        router: React.PropTypes.object
+        router: React.PropTypes.func
     },
     getInitialState: function () {
 

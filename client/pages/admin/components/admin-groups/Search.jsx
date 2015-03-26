@@ -10,7 +10,7 @@ var Results = require('./Results');
 
 var Component = React.createClass({
     contextTypes: {
-        router: React.PropTypes.object
+        router: React.PropTypes.func
     },
     getInitialState: function () {
 

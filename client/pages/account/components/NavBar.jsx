@@ -8,7 +8,7 @@ var Link = ReactRouter.Link;
 
 var Component = React.createClass({
     contextTypes: {
-        router: React.PropTypes.object
+        router: React.PropTypes.func
     },
     getInitialState: function () {
 

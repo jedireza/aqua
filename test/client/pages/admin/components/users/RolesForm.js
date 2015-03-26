@@ -33,7 +33,7 @@ lab.experiment('Admin User Roles Form', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
@@ -45,7 +45,7 @@ lab.experiment('Admin User Roles Form', function () {
     lab.test('it handles unmounting', function (done) {
 
         var container = global.document.createElement('div');
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
 
         React.render(FormEl, container);
@@ -59,7 +59,7 @@ lab.experiment('Admin User Roles Form', function () {
 
         mockProps.data.hydrated = true;
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
@@ -82,7 +82,7 @@ lab.experiment('Admin User Roles Form', function () {
             }
         };
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 

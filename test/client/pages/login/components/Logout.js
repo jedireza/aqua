@@ -24,7 +24,7 @@ lab.experiment('Login Logout Form', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Logout);
+        var ComponentWithContext = StubRouterContext(Logout, {});
         var LogoutEl = React.createElement(ComponentWithContext, {});
         var logout = TestUtils.renderIntoDocument(LogoutEl);
 
@@ -36,7 +36,7 @@ lab.experiment('Login Logout Form', function () {
     lab.test('it handles unmounting', function (done) {
 
         var container = global.document.createElement('div');
-        var ComponentWithContext = StubRouterContext(Logout);
+        var ComponentWithContext = StubRouterContext(Logout, {});
         var LogoutEl = React.createElement(ComponentWithContext, {});
 
         React.render(LogoutEl, container);
@@ -48,7 +48,7 @@ lab.experiment('Login Logout Form', function () {
 
     lab.test('it handles a store change', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Logout);
+        var ComponentWithContext = StubRouterContext(Logout, {});
         var LogoutEl = React.createElement(ComponentWithContext, {});
 
         TestUtils.renderIntoDocument(LogoutEl);
@@ -60,7 +60,7 @@ lab.experiment('Login Logout Form', function () {
 
     lab.test('it renders with success state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Logout);
+        var ComponentWithContext = StubRouterContext(Logout, {});
         var LogoutEl = React.createElement(ComponentWithContext, {});
         var logout = TestUtils.renderIntoDocument(LogoutEl);
 
@@ -82,7 +82,7 @@ lab.experiment('Login Logout Form', function () {
 
     lab.test('it renders with error state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Logout);
+        var ComponentWithContext = StubRouterContext(Logout, {});
         var LogoutEl = React.createElement(ComponentWithContext, {});
         var logout = TestUtils.renderIntoDocument(LogoutEl);
 

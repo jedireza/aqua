@@ -23,7 +23,7 @@ lab.experiment('Admin Status Search', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Search);
+        var ComponentWithContext = StubRouterContext(Search, {});
         var SearchEl = React.createElement(ComponentWithContext, {});
         var search = TestUtils.renderIntoDocument(SearchEl);
 
@@ -35,7 +35,7 @@ lab.experiment('Admin Status Search', function () {
     lab.test('it handles unmounting', function (done) {
 
         var container = global.document.createElement('div');
-        var ComponentWithContext = StubRouterContext(Search);
+        var ComponentWithContext = StubRouterContext(Search, {});
         var SearchEl = React.createElement(ComponentWithContext, {});
 
         React.render(SearchEl, container);
@@ -47,7 +47,7 @@ lab.experiment('Admin Status Search', function () {
 
     lab.test('it receives new props', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Search);
+        var ComponentWithContext = StubRouterContext(Search, {});
         var SearchEl = React.createElement(ComponentWithContext, {});
         var search = TestUtils.renderIntoDocument(SearchEl);
 
@@ -60,7 +60,7 @@ lab.experiment('Admin Status Search', function () {
 
     lab.test('it handles a store change', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Search);
+        var ComponentWithContext = StubRouterContext(Search, {});
         var SearchEl = React.createElement(ComponentWithContext, {});
 
         TestUtils.renderIntoDocument(SearchEl);
@@ -72,7 +72,7 @@ lab.experiment('Admin Status Search', function () {
 
     lab.test('it handles a filter change (from a submit event)', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Search);
+        var ComponentWithContext = StubRouterContext(Search, {});
         var SearchEl = React.createElement(ComponentWithContext, {});
         var search = TestUtils.renderIntoDocument(SearchEl);
         var target = TestUtils.findRenderedComponentWithType(search, Search);
@@ -89,7 +89,7 @@ lab.experiment('Admin Status Search', function () {
 
     lab.test('it handles a filter change (from an input event)', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Search);
+        var ComponentWithContext = StubRouterContext(Search, {});
         var SearchEl = React.createElement(ComponentWithContext, {});
         var search = TestUtils.renderIntoDocument(SearchEl);
         var target = TestUtils.findRenderedComponentWithType(search, Search);
@@ -107,7 +107,7 @@ lab.experiment('Admin Status Search', function () {
 
     lab.test('it handles a page change', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Search);
+        var ComponentWithContext = StubRouterContext(Search, {});
         var SearchEl = React.createElement(ComponentWithContext, {});
         var search = TestUtils.renderIntoDocument(SearchEl);
         var target = TestUtils.findRenderedComponentWithType(search, Search);
@@ -145,7 +145,7 @@ lab.experiment('Admin Status Search', function () {
 
     lab.test('it handles a create new click', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Search);
+        var ComponentWithContext = StubRouterContext(Search, {});
         var SearchEl = React.createElement(ComponentWithContext, {});
         var search = TestUtils.renderIntoDocument(SearchEl);
         var target = TestUtils.findRenderedComponentWithType(search, Search);

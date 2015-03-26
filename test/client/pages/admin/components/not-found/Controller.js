@@ -13,7 +13,7 @@ lab.experiment('Login Not Found Component', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var ComponentWithContext = StubRouterContext(NotFound);
+        var ComponentWithContext = StubRouterContext(NotFound, {});
         var NotFoundEl = React.createElement(ComponentWithContext, {});
         var notFound = TestUtils.renderIntoDocument(NotFoundEl);
 
@@ -25,7 +25,7 @@ lab.experiment('Login Not Found Component', function () {
     lab.test('it handles unmounting', function (done) {
 
         var container = global.document.createElement('div');
-        var ComponentWithContext = StubRouterContext(NotFound);
+        var ComponentWithContext = StubRouterContext(NotFound, {});
         var NotFoundEl = React.createElement(ComponentWithContext, {});
 
         React.render(NotFoundEl, container);

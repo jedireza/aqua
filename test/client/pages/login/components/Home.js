@@ -22,7 +22,7 @@ lab.experiment('Login Home Form', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Home);
+        var ComponentWithContext = StubRouterContext(Home, {});
         var HomeEl = React.createElement(ComponentWithContext, {});
         var home = TestUtils.renderIntoDocument(HomeEl);
 
@@ -34,7 +34,7 @@ lab.experiment('Login Home Form', function () {
     lab.test('it handles unmounting', function (done) {
 
         var container = global.document.createElement('div');
-        var ComponentWithContext = StubRouterContext(Home);
+        var ComponentWithContext = StubRouterContext(Home, {});
         var HomeEl = React.createElement(ComponentWithContext, {});
 
         React.render(HomeEl, container);
@@ -46,7 +46,7 @@ lab.experiment('Login Home Form', function () {
 
     lab.test('it handles a store change', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Home);
+        var ComponentWithContext = StubRouterContext(Home, {});
         var HomeEl = React.createElement(ComponentWithContext, {});
 
         TestUtils.renderIntoDocument(HomeEl);
@@ -63,7 +63,7 @@ lab.experiment('Login Home Form', function () {
             done();
         };
 
-        var ComponentWithContext = StubRouterContext(Home);
+        var ComponentWithContext = StubRouterContext(Home, {});
         var HomeEl = React.createElement(ComponentWithContext, {});
         var home = TestUtils.renderIntoDocument(HomeEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(home, 'form');
@@ -74,7 +74,7 @@ lab.experiment('Login Home Form', function () {
 
     lab.test('it renders with loading state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Home);
+        var ComponentWithContext = StubRouterContext(Home, {});
         var HomeEl = React.createElement(ComponentWithContext, {});
         var home = TestUtils.renderIntoDocument(HomeEl);
         var button = TestUtils.findRenderedDOMComponentWithTag(home, 'button');
@@ -92,7 +92,7 @@ lab.experiment('Login Home Form', function () {
 
     lab.test('it renders with success state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Home);
+        var ComponentWithContext = StubRouterContext(Home, {});
         var HomeEl = React.createElement(ComponentWithContext, {});
         var home = TestUtils.renderIntoDocument(HomeEl);
 
@@ -114,7 +114,7 @@ lab.experiment('Login Home Form', function () {
 
     lab.test('it renders with error state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Home);
+        var ComponentWithContext = StubRouterContext(Home, {});
         var HomeEl = React.createElement(ComponentWithContext, {});
         var home = TestUtils.renderIntoDocument(HomeEl);
 

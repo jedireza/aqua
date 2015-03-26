@@ -18,7 +18,7 @@ var Link = ReactRouter.Link;
 var Component = React.createClass({
     mixins: [ LinkedState ],
     contextTypes: {
-        router: React.PropTypes.object
+        router: React.PropTypes.func
     },
     getInitialState: function () {
 

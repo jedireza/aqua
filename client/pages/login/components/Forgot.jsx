@@ -10,11 +10,13 @@ var ForgotStore = require('../stores/Forgot');
 
 var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
-var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState, Navigation ],
+    mixins: [ LinkedState ],
+    contextTypes: {
+        router: React.PropTypes.func
+    },
     getInitialState: function () {
 
         ForgotStore.reset();
