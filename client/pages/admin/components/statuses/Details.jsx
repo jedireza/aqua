@@ -20,7 +20,7 @@ var Component = React.createClass({
         StatusStore.resetDetails();
         StatusStore.resetDelete();
 
-        Actions.getDetails(this.context.router.getParams());
+        Actions.getDetails(this.context.router.getCurrentParams());
 
         return {
             details: StatusStore.getDetails(),

@@ -23,7 +23,7 @@ var Component = React.createClass({
         UserStore.resetPassword();
         UserStore.resetDelete();
 
-        Actions.getIdentity(this.context.router.getParams());
+        Actions.getIdentity(this.context.router.getCurrentParams());
 
         return {
             identity: UserStore.getIdentity(),

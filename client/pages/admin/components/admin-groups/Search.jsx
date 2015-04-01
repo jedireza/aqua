@@ -17,7 +17,7 @@ var Component = React.createClass({
         AdminGroupStore.resetResults();
         AdminGroupStore.resetCreateNew();
 
-        Actions.getResults(this.context.router.getQuery());
+        Actions.getResults(this.context.router.getCurrentQuery());
 
         return {
             results: AdminGroupStore.getResults(),
@@ -26,7 +26,7 @@ var Component = React.createClass({
     },
     componentWillReceiveProps: function(nextProps) {
 
-        Actions.getResults(this.context.router.getQuery());
+        Actions.getResults(this.context.router.getCurrentQuery());
     },
     componentDidMount: function () {
 
@@ -77,7 +77,7 @@ var Component = React.createClass({
                 </div>
                 <FilterForm
                     ref="filters"
-                    query={this.context.router.getQuery()}
+                    query={this.context.router.getCurrentQuery()}
                     loading={this.state.results.loading}
                     onChange={this.onFiltersChange}
                 />

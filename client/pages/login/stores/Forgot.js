@@ -2,6 +2,7 @@ var Dispatcher = require('flux-dispatcher');
 var FluxStore = require('flux-store');
 var CloneDeep = require('lodash/lang/cloneDeep');
 var Constants = require('../Constants');
+var ParseValidation = require('../../../helpers/parseValidation');
 
 
 var ActionTypes = Constants.ActionTypes;
@@ -39,18 +40,13 @@ var Store = FluxStore.extend({
         }
 
         if (ActionTypes.FORGOT_RESPONSE === action.type) {
+            var validation = ParseValidation(action.data.validation, action.data.message);
+
             this.state.loading = false;
             this.state.success = action.data.success;
-
-            var validation = action.data.validation;
-            if (validation && validation.keys) {
-                var forField = validation.keys.pop();
-                this.state.hasError[forField] = true;
-                this.state.help[forField] = action.data.message;
-            }
-            else if (action.data.message) {
-                this.state.error = action.data.message;
-            }
+            this.state.hasError = validation.hasError;
+            this.state.help = validation.help;
+            this.state.error = validation.error;
 
             this.emitChange();
         }

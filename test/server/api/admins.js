@@ -252,10 +252,8 @@ lab.experiment('Admins Plugin Update', function () {
             method: 'PUT',
             url: '/admins/93EP150D35',
             payload: {
-                name: {
-                    first: 'Ren',
-                    last: 'Höek'
-                }
+                nameFirst: 'Ren',
+                nameLast: 'Höek'
             },
             credentials: AuthenticatedUser
         };

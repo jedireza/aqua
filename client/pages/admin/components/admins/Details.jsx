@@ -29,7 +29,7 @@ var Component = React.createClass({
         AdminStore.resetDelete();
         AdminGroupStore.resetResults();
 
-        Actions.getDetails(this.context.router.getParams());
+        Actions.getDetails(this.context.router.getCurrentParams());
         GroupActions.getResults({ fields: 'name', limit: 99 });
 
         return {

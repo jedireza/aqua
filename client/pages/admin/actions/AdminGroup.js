@@ -76,7 +76,7 @@ var Actions = {
                 response.success = true;
 
                 if (router) {
-                    Actions.getResults(router.getQuery());
+                    Actions.getResults(router.getCurrentQuery());
                 }
             }
 

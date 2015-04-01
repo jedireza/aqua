@@ -22,7 +22,7 @@ var Component = React.createClass({
         AdminGroupStore.resetPermissions();
         AdminGroupStore.resetDelete();
 
-        Actions.getDetails(this.context.router.getParams());
+        Actions.getDetails(this.context.router.getCurrentParams());
 
         return {
             details: AdminGroupStore.getDetails(),

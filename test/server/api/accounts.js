@@ -328,10 +328,8 @@ lab.experiment('Accounts Plugin Update', function () {
             method: 'PUT',
             url: '/accounts/93EP150D35',
             payload: {
-                name: {
-                    first: 'Muddy',
-                    last: 'Mudskipper'
-                }
+                nameFirst: 'Muddy',
+                nameLast: 'Mudskipper'
             },
             credentials: AuthenticatedAdmin
         };
@@ -396,10 +394,8 @@ lab.experiment('Accounts Plugin (My) Update', function () {
             method: 'PUT',
             url: '/accounts/my',
             payload: {
-                name: {
-                    first: 'Mud',
-                    last: 'Skipper'
-                }
+                nameFirst: 'Mud',
+                nameLast: 'Skipper'
             },
             credentials: AuthenticatedAccount
         };

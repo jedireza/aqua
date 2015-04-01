@@ -16,9 +16,7 @@ var StubRouterContext = function (Component, stubs) {
         getCurrentRoutes: function () {},
         getCurrentPathname: function () {},
         getCurrentParams: function () {},
-        getParams: function () {},
         getCurrentQuery: function () {},
-        getQuery: function () {},
         isActive: function () {}
     }, stubs);
 

@@ -26,13 +26,13 @@ exports.register = function (server, options, next) {
             var credentials = request.auth.credentials || { session: {} };
             var session = credentials.session || {};
 
-            Session.findByIdAndDelete(session._id, function (err, count) {
+            Session.findByIdAndDelete(session._id, function (err, session) {
 
                 if (err) {
                     return reply(err);
                 }
 
-                if (count === 0) {
+                if (!session) {
                     return reply({ message: 'Session not found.' }).code(404);
                 }
 

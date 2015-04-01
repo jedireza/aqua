@@ -41,8 +41,8 @@ var Component = React.createClass({
         event.stopPropagation();
 
         Actions.reset({
-            email: this.context.router.getParams().email,
-            key: this.context.router.getParams().key,
+            email: this.context.router.getCurrentParams().email,
+            key: this.context.router.getCurrentParams().key,
             password: this.state.password
         });
     },
@@ -80,7 +80,7 @@ var Component = React.createClass({
                     name="_key"
                     label="Key"
                     hasError={this.state.hasError.key}
-                    value={this.context.router.getParams().key}
+                    value={this.context.router.getCurrentParams().key}
                     help={this.state.help.key}
                     disabled={true}
                 />
@@ -88,7 +88,7 @@ var Component = React.createClass({
                     name="_email"
                     label="Email"
                     hasError={this.state.hasError.email}
-                    value={this.context.router.getParams().email}
+                    value={this.context.router.getCurrentParams().email}
                     help={this.state.help.email}
                     disabled={true}
                 />

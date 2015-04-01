@@ -29,7 +29,7 @@ var Component = React.createClass({
         AccountStore.resetDelete();
         StatusStore.resetResults();
 
-        Actions.getDetails(this.context.router.getParams());
+        Actions.getDetails(this.context.router.getCurrentParams());
         StatusActions.getResults({ pivot: 'Account', limit: 99 });
 
         return {

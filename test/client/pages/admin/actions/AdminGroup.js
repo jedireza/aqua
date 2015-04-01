@@ -195,7 +195,7 @@ lab.experiment('Admin Admin Group Actions', function () {
         };
 
         var mockCaller = {
-            getQuery: function () {}
+            getCurrentQuery: function () {}
         };
 
         Actions.createNew({}, mockCaller);
