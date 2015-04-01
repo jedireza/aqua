@@ -39,13 +39,13 @@ Status.create = function (pivot, name, callback) {
         name: name
     };
 
-    this.insert(document, function (err, statuses) {
+    this.insertOne(document, function (err, docs) {
 
         if (err) {
             return callback(err);
         }
 
-        callback(null, statuses[0]);
+        callback(null, docs[0]);
     });
 };
 

@@ -38,7 +38,7 @@ AuthAttempt.create = function (ip, username, callback) {
         time: new Date()
     };
 
-    this.insert(document, function (err, docs) {
+    this.insertOne(document, function (err, docs) {
 
         if (err) {
             return callback(err);

@@ -25,7 +25,7 @@ lab.experiment('Session Class Methods', function () {
 
     lab.after(function (done) {
 
-        Session.remove({}, function (err, result) {
+        Session.deleteMany({}, function (err, count) {
 
             Session.disconnect();
 
@@ -81,8 +81,8 @@ lab.experiment('Session Class Methods', function () {
 
     lab.test('it returns an error when create fails', function (done) {
 
-        var realInsert = Session.insert;
-        Session.insert = function () {
+        var realInsertOne = Session.insertOne;
+        Session.insertOne = function () {
 
             var args = Array.prototype.slice.call(arguments);
             var callback = args.pop();
@@ -95,7 +95,7 @@ lab.experiment('Session Class Methods', function () {
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
 
-            Session.insert = realInsert;
+            Session.insertOne = realInsertOne;
 
             done();
         });

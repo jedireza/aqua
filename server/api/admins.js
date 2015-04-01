@@ -157,6 +157,10 @@ exports.register = function (server, options, next) {
                     return reply(err);
                 }
 
+                if (!admin) {
+                    return reply({ message: 'Document not found.' }).code(404);
+                }
+
                 reply(admin);
             });
         }
@@ -479,13 +483,13 @@ exports.register = function (server, options, next) {
 
             var Admin = request.server.plugins['hapi-mongo-models'].Admin;
 
-            Admin.findByIdAndRemove(request.params.id, function (err, count) {
+            Admin.findByIdAndDelete(request.params.id, function (err, admin) {
 
                 if (err) {
                     return reply(err);
                 }
 
-                if (count === 0) {
+                if (!admin) {
                     return reply({ message: 'Document not found.' }).code(404);
                 }
 

@@ -124,13 +124,13 @@ Admin.create = function (name, callback) {
         timeCreated: new Date()
     };
 
-    this.insert(document, function (err, admins) {
+    this.insertOne(document, function (err, docs) {
 
         if (err) {
             return callback(err);
         }
 
-        callback(null, admins[0]);
+        callback(null, docs[0]);
     });
 };
 

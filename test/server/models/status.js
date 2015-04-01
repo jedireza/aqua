@@ -20,7 +20,7 @@ lab.experiment('Status Class Methods', function () {
 
     lab.after(function (done) {
 
-        Status.remove({}, function (err, result) {
+        Status.deleteMany({}, function (err, count) {
 
             Status.disconnect();
 
@@ -43,8 +43,8 @@ lab.experiment('Status Class Methods', function () {
 
     lab.test('it returns an error when create fails', function (done) {
 
-        var realInsert = Status.insert;
-        Status.insert = function () {
+        var realInsertOne = Status.insertOne;
+        Status.insertOne = function () {
 
             var args = Array.prototype.slice.call(arguments);
             var callback = args.pop();
@@ -57,7 +57,7 @@ lab.experiment('Status Class Methods', function () {
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
 
-            Status.insert = realInsert;
+            Status.insertOne = realInsertOne;
 
             done();
         });

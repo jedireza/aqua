@@ -140,7 +140,7 @@ User.create = function (username, password, email, callback) {
                 timeCreated: new Date()
             };
 
-            self.insert(document, done);
+            self.insertOne(document, done);
         }]
     }, function (err, results) {
 

@@ -71,7 +71,7 @@ Session.create = function (userId, callback) {
                 time: new Date()
             };
 
-            self.insert(document, done);
+            self.insertOne(document, done);
         }],
         clean: ['newSession', function (done, results) {
 
@@ -80,7 +80,7 @@ Session.create = function (userId, callback) {
                 key: { $ne: results.keyHash.hash }
             };
 
-            self.remove(query, done);
+            self.deleteOne(query, done);
         }]
     }, function (err, results) {
 

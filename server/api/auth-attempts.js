@@ -97,13 +97,13 @@ exports.register = function (server, options, next) {
 
             var AuthAttempt = request.server.plugins['hapi-mongo-models'].AuthAttempt;
 
-            AuthAttempt.findByIdAndRemove(request.params.id, function (err, count) {
+            AuthAttempt.findByIdAndDelete(request.params.id, function (err, authAttempt) {
 
                 if (err) {
                     return reply(err);
                 }
 
-                if (count === 0) {
+                if (!authAttempt) {
                     return reply({ message: 'Document not found.' }).code(404);
                 }
 

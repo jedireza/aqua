@@ -26,7 +26,7 @@ exports.register = function (server, options, next) {
             var credentials = request.auth.credentials || { session: {} };
             var session = credentials.session || {};
 
-            Session.findByIdAndRemove(session._id, function (err, count) {
+            Session.findByIdAndDelete(session._id, function (err, count) {
 
                 if (err) {
                     return reply(err);
