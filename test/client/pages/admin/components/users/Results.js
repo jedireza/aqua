@@ -38,7 +38,7 @@ lab.experiment('Admin User Results', function () {
         var mockProps = {
             data: [{ _id: '1D', isActive: true }, { _id: '2D', isActive: false }]
         };
-        var ResultsWithContext = StubRouterContext(Results);
+        var ResultsWithContext = StubRouterContext(Results, {});
         var ResultsEl = React.createElement(ResultsWithContext, mockProps);
         var results = TestUtils.renderIntoDocument(ResultsEl);
 

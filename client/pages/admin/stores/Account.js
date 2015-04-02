@@ -3,6 +3,7 @@ var FluxStore = require('flux-store');
 var Moment = require('moment');
 var CloneDeep = require('lodash/lang/cloneDeep');
 var Constants = require('../constants/Account');
+var ParseValidation = require('../../../helpers/parseValidation');
 
 
 var ActionTypes = Constants.ActionTypes;
@@ -153,15 +154,11 @@ var Store = FluxStore.extend({
     },
     handleValidationErrors: function (pivot, data) {
 
-        var validation = data.validation;
-        if (validation && validation.keys) {
-            var forField = validation.keys.pop();
-            this.state[pivot].hasError[forField] = true;
-            this.state[pivot].help[forField] = data.message;
-        }
-        else if (data.message) {
-            this.state[pivot].error = data.message;
-        }
+        var validation = ParseValidation(data.validation, data.message);
+
+        this.state[pivot].hasError = validation.hasError;
+        this.state[pivot].help = validation.help;
+        this.state[pivot].error = validation.error;
     },
     convertStatusDetails: function (status) {
 

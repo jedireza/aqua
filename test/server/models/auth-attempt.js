@@ -21,7 +21,7 @@ lab.experiment('AuthAttempt Class Methods', function () {
 
     lab.after(function (done) {
 
-        AuthAttempt.remove({}, function (err, result) {
+        AuthAttempt.deleteMany({}, function (err, count) {
 
             AuthAttempt.disconnect();
 
@@ -44,8 +44,8 @@ lab.experiment('AuthAttempt Class Methods', function () {
 
     lab.test('it returns an error when create fails', function (done) {
 
-        var realInsert = AuthAttempt.insert;
-        AuthAttempt.insert = function () {
+        var realInsertOne = AuthAttempt.insertOne;
+        AuthAttempt.insertOne = function () {
 
             var args = Array.prototype.slice.call(arguments);
             var callback = args.pop();
@@ -58,7 +58,7 @@ lab.experiment('AuthAttempt Class Methods', function () {
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
 
-            AuthAttempt.insert = realInsert;
+            AuthAttempt.insertOne = realInsertOne;
 
             done();
         });
@@ -92,7 +92,7 @@ lab.experiment('AuthAttempt Class Methods', function () {
             });
         };
 
-        for (var i = 0 ; i < authAttemptsConfig.forIpAndUser ; i++) {
+        for (var i = 0; i < authAttemptsConfig.forIpAndUser; i++) {
             authSpam.push(authRequest);
         }
 
@@ -125,7 +125,7 @@ lab.experiment('AuthAttempt Class Methods', function () {
             });
         };
 
-        for (var i = 0 ; i < authAttemptsConfig.forIp ; i++) {
+        for (var i = 0; i < authAttemptsConfig.forIp; i++) {
             authSpam.push(authRequest);
         }
 

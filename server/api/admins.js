@@ -130,11 +130,9 @@ exports.register = function (server, options, next) {
             },
             validate: {
                 payload: {
-                    name: Joi.object().keys({
-                        first: Joi.string().required(),
-                        middle: Joi.string().allow(['', null]),
-                        last: Joi.string().required()
-                    }).required()
+                    nameFirst: Joi.string().required(),
+                    nameMiddle: Joi.string().allow(['', null]),
+                    nameLast: Joi.string().required()
                 }
             },
             pre: [
@@ -147,7 +145,11 @@ exports.register = function (server, options, next) {
             var id = request.params.id;
             var update = {
                 $set: {
-                    name: request.payload.name
+                    name: {
+                        first: request.payload.nameFirst,
+                        middle: request.payload.nameMiddle,
+                        last: request.payload.nameLast
+                    }
                 }
             };
 
@@ -155,6 +157,10 @@ exports.register = function (server, options, next) {
 
                 if (err) {
                     return reply(err);
+                }
+
+                if (!admin) {
+                    return reply({ message: 'Document not found.' }).code(404);
                 }
 
                 reply(admin);
@@ -479,13 +485,13 @@ exports.register = function (server, options, next) {
 
             var Admin = request.server.plugins['hapi-mongo-models'].Admin;
 
-            Admin.findByIdAndRemove(request.params.id, function (err, count) {
+            Admin.findByIdAndDelete(request.params.id, function (err, admin) {
 
                 if (err) {
                     return reply(err);
                 }
 
-                if (count === 0) {
+                if (!admin) {
                     return reply({ message: 'Document not found.' }).code(404);
                 }
 

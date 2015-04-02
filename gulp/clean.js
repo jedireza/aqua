@@ -1,8 +1,8 @@
 var Gulp = require('gulp');
-var Clean = require('gulp-clean');
+var Del = require('del');
 
 
-Gulp.task('clean', function () {
+Gulp.task('clean', function (cb) {
 
-    return Gulp.src('./public', { read: false }).pipe(Clean());
+    Del('./public', cb);
 });

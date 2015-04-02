@@ -30,11 +30,9 @@ var Component = React.createClass({
 
         Actions.saveDetails({
             id: this.props.data._id,
-            name: {
-                first: this.state.nameFirst,
-                middle: this.state.nameMiddle,
-                last: this.state.nameLast
-            }
+            nameFirst: this.state.nameFirst,
+            nameMiddle: this.state.nameMiddle,
+            nameLast: this.state.nameLast
         });
     },
     render: function () {
@@ -66,25 +64,25 @@ var Component = React.createClass({
                 <TextControl
                     name="nameFirst"
                     label="First name"
-                    hasError={this.props.data.hasError['name.first']}
+                    hasError={this.props.data.hasError.nameFirst}
                     valueLink={this.linkState('nameFirst')}
-                    help={this.props.data.help['name.first']}
+                    help={this.props.data.help.nameFirst}
                     disabled={this.props.data.loading}
                 />
                 <TextControl
                     name="nameMiddle"
                     label="Middle name"
-                    hasError={this.props.data.hasError['name.middle']}
+                    hasError={this.props.data.hasError.nameMiddle}
                     valueLink={this.linkState('nameMiddle')}
-                    help={this.props.data.help['name.middle']}
+                    help={this.props.data.help.nameMiddle}
                     disabled={this.props.data.loading}
                 />
                 <TextControl
                     name="nameLast"
                     label="Last name"
-                    hasError={this.props.data.hasError['name.last']}
+                    hasError={this.props.data.hasError.nameLast}
                     valueLink={this.linkState('nameLast')}
-                    help={this.props.data.help['name.last']}
+                    help={this.props.data.help.nameLast}
                     disabled={this.props.data.loading}
                 />
                 <ControlGroup hideLabel={true} hideHelp={true}>

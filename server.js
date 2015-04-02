@@ -9,6 +9,6 @@ Composer(function (err, server) {
 
     server.start(function () {
 
-        console.log('Started the plot device.');
+        console.log('Started the plot device on port ' + server.info.port);
     });
 });

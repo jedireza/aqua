@@ -1,6 +1,5 @@
 /* global window */
 var React = require('react/addons');
-var ReactRouter = require('react-router');
 var ControlGroup = require('../../../../components/form/ControlGroup');
 var Button = require('../../../../components/form/Button');
 var Spinner = require('../../../../components/form/Spinner');
@@ -8,12 +7,13 @@ var Actions = require('../../actions/AdminGroup');
 
 
 var LinkedState = React.addons.LinkedStateMixin;
-var State = ReactRouter.State;
-var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState, State, Navigation ],
+    mixins: [ LinkedState ],
+    contextTypes: {
+        router: React.PropTypes.func
+    },
     getInitialState: function () {
 
         return {};
@@ -25,7 +25,7 @@ var Component = React.createClass({
 
         Actions.delete({
             id: this.props.details._id
-        }, this);
+        }, this.context.router);
     },
     onConfirm: function (event) {
 

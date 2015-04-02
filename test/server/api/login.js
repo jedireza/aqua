@@ -19,7 +19,7 @@ var lab = exports.lab = Lab.script();
 var ModelsPlugin, request, server, stub;
 
 
-lab.beforeEach(function (done) {
+lab.before(function (done) {
 
     stub = {
         AuthAttempt: {},
@@ -51,10 +51,9 @@ lab.beforeEach(function (done) {
 });
 
 
-lab.afterEach(function (done) {
+lab.after(function (done) {
 
     server.plugins['hapi-mongo-models'].BaseModel.disconnect();
-
     done();
 });
 
@@ -86,7 +85,6 @@ lab.experiment('Login Plugin (Create Session)', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -124,7 +122,6 @@ lab.experiment('Login Plugin (Create Session)', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -150,7 +147,6 @@ lab.experiment('Login Plugin (Create Session)', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -208,7 +204,6 @@ lab.experiment('Login Plugin (Create Session)', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -273,7 +268,6 @@ lab.experiment('Login Plugin Forgot Password', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -289,7 +283,6 @@ lab.experiment('Login Plugin Forgot Password', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(200);
-
             done();
         });
     });
@@ -314,7 +307,6 @@ lab.experiment('Login Plugin Forgot Password', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -382,7 +374,6 @@ lab.experiment('Login Plugin Reset Password', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -398,7 +389,6 @@ lab.experiment('Login Plugin Reset Password', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(400);
-
             done();
         });
     });

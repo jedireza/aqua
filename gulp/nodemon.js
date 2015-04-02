@@ -4,6 +4,11 @@ var Nodemon = require('gulp-nodemon');
 
 Gulp.task('nodemon', function () {
 
+    var nodeArgs = [];
+    if (process.env.DEBUGGER) {
+        nodeArgs.push('--debug');
+    }
+
     Nodemon({
         script: 'server.js',
         ext: 'js md',
@@ -11,7 +16,8 @@ Gulp.task('nodemon', function () {
             'client/**/*',
             'gulp/**/*',
             'public/**/*'
-        ]
+        ],
+        nodeArgs: nodeArgs
     })
     .on('restart', function (files) {
 

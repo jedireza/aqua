@@ -29,7 +29,7 @@ lab.experiment('Admin Account Details', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Details);
+        var ComponentWithContext = StubRouterContext(Details, {});
         var DetailsEl = React.createElement(ComponentWithContext, {});
         var details = TestUtils.renderIntoDocument(DetailsEl);
 
@@ -41,7 +41,7 @@ lab.experiment('Admin Account Details', function () {
     lab.test('it handles unmounting', function (done) {
 
         var container = global.document.createElement('div');
-        var ComponentWithContext = StubRouterContext(Details);
+        var ComponentWithContext = StubRouterContext(Details, {});
         var DetailsEl = React.createElement(ComponentWithContext, {});
 
         React.render(DetailsEl, container);
@@ -53,7 +53,7 @@ lab.experiment('Admin Account Details', function () {
 
     lab.test('it handles a store change', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Details);
+        var ComponentWithContext = StubRouterContext(Details, {});
         var DetailsEl = React.createElement(ComponentWithContext, {});
 
         TestUtils.renderIntoDocument(DetailsEl);
@@ -65,7 +65,7 @@ lab.experiment('Admin Account Details', function () {
 
     lab.test('it handles a fetch error', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Details);
+        var ComponentWithContext = StubRouterContext(Details, {});
         var DetailsEl = React.createElement(ComponentWithContext, {});
         var details = TestUtils.renderIntoDocument(DetailsEl);
         var target = TestUtils.findRenderedComponentWithType(details, Details);

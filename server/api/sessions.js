@@ -97,13 +97,13 @@ exports.register = function (server, options, next) {
 
             var Session = request.server.plugins['hapi-mongo-models'].Session;
 
-            Session.findByIdAndRemove(request.params.id, function (err, count) {
+            Session.findByIdAndDelete(request.params.id, function (err, session) {
 
                 if (err) {
                     return reply(err);
                 }
 
-                if (count === 0) {
+                if (!session) {
                     return reply({ message: 'Document not found.' }).code(404);
                 }
 

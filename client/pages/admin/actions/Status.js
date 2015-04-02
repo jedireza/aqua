@@ -59,7 +59,7 @@ var Actions = {
 
         dispatch(VIEW_ACTION, Types.HIDE_CREATE_NEW, data);
     },
-    createNew: function (data, caller) {
+    createNew: function (data, router) {
 
         dispatch(VIEW_ACTION, Types.CREATE_NEW, data);
 
@@ -75,8 +75,8 @@ var Actions = {
             if (!err) {
                 response.success = true;
 
-                if (caller) {
-                    Actions.getResults(caller.getQuery());
+                if (router) {
+                    Actions.getResults(router.getCurrentQuery());
                 }
             }
 
@@ -106,7 +106,7 @@ var Actions = {
             dispatch(SERVER_ACTION, Types.SAVE_DETAILS_RESPONSE, response);
         });
     },
-    delete: function (data, caller) {
+    delete: function (data, router) {
 
         dispatch(VIEW_ACTION, Types.DELETE, data);
 
@@ -125,8 +125,8 @@ var Actions = {
             if (!err) {
                 response.success = true;
 
-                if (caller) {
-                    caller.transitionTo('statuses');
+                if (router) {
+                    router.transitionTo('statuses');
                     window.scrollTo(0, 0);
                 }
             }

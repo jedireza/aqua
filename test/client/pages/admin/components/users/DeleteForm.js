@@ -47,7 +47,7 @@ lab.experiment('Admin User Delete Form', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
@@ -59,7 +59,7 @@ lab.experiment('Admin User Delete Form', function () {
     lab.test('it handles unmounting', function (done) {
 
         var container = global.document.createElement('div');
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
 
         React.render(FormEl, container);
@@ -76,7 +76,7 @@ lab.experiment('Admin User Delete Form', function () {
             return false;
         };
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
@@ -105,7 +105,7 @@ lab.experiment('Admin User Delete Form', function () {
             return true;
         };
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
@@ -128,7 +128,7 @@ lab.experiment('Admin User Delete Form', function () {
             done();
         };
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
@@ -146,7 +146,7 @@ lab.experiment('Admin User Delete Form', function () {
 
     lab.test('it renders with error state', function (done) {
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 

@@ -49,7 +49,7 @@ lab.experiment('Admin Account User Form', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
@@ -61,7 +61,7 @@ lab.experiment('Admin Account User Form', function () {
     lab.test('it handles unmounting', function (done) {
 
         var container = global.document.createElement('div');
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
 
         React.render(FormEl, container);
@@ -73,7 +73,7 @@ lab.experiment('Admin Account User Form', function () {
 
     lab.test('it updates state when receiving new props when hydrated is false', function (done) {
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
@@ -95,7 +95,7 @@ lab.experiment('Admin Account User Form', function () {
             done();
         };
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
@@ -113,7 +113,7 @@ lab.experiment('Admin Account User Form', function () {
 
         mockProps.details.user = {};
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
@@ -132,7 +132,7 @@ lab.experiment('Admin Account User Form', function () {
         mockProps.details.hydrated = true;
         mockProps.details.user = {};
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
         var buttonTag = TestUtils.findRenderedDOMComponentWithTag(form, 'button');
@@ -157,7 +157,7 @@ lab.experiment('Admin Account User Form', function () {
         mockProps.details.hydrated = true;
         mockProps.details.user = {};
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
         var buttonTag = TestUtils.findRenderedDOMComponentWithTag(form, 'button');
@@ -168,7 +168,7 @@ lab.experiment('Admin Account User Form', function () {
 
     lab.test('it renders with success state', function (done) {
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
@@ -185,7 +185,7 @@ lab.experiment('Admin Account User Form', function () {
 
     lab.test('it renders with error state', function (done) {
 
-        var FormWithContext = StubRouterContext(Form);
+        var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 

@@ -15,7 +15,7 @@ var lab = exports.lab = Lab.script();
 var ModelsPlugin, request, server, stub;
 
 
-lab.beforeEach(function (done) {
+lab.before(function (done) {
 
     stub = {
         AdminGroup: {}
@@ -43,10 +43,9 @@ lab.beforeEach(function (done) {
 });
 
 
-lab.afterEach(function (done) {
+lab.after(function (done) {
 
     server.plugins['hapi-mongo-models'].BaseModel.disconnect();
-
     done();
 });
 
@@ -78,7 +77,6 @@ lab.experiment('Admin Groups Plugin Result List', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -153,7 +151,6 @@ lab.experiment('Admin Groups Plugin Read', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -221,7 +218,6 @@ lab.experiment('Admin Groups Plugin Create', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -272,7 +268,21 @@ lab.experiment('Admin Groups Plugin Update', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
+            done();
+        });
+    });
 
+
+    lab.test('it returns not found when find by id misses', function (done) {
+
+        stub.AdminGroup.findByIdAndUpdate = function (id, update, callback) {
+
+            callback(null, undefined);
+        };
+
+        server.inject(request, function (response) {
+
+            Code.expect(response.statusCode).to.equal(404);
             done();
         });
     });
@@ -323,7 +333,6 @@ lab.experiment('Admin Groups Plugin Update Permissions', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -361,27 +370,26 @@ lab.experiment('Admin Groups Plugin Delete', function () {
     });
 
 
-    lab.test('it returns an error when remove by id fails', function (done) {
+    lab.test('it returns an error when delete by id fails', function (done) {
 
-        stub.AdminGroup.findByIdAndRemove = function (id, callback) {
+        stub.AdminGroup.findByIdAndDelete = function (id, callback) {
 
-            callback(Error('remove by id failed'));
+            callback(Error('delete by id failed'));
         };
 
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
 
 
-    lab.test('it returns a not found when remove by id misses', function (done) {
+    lab.test('it returns a not found when delete by id misses', function (done) {
 
-        stub.AdminGroup.findByIdAndRemove = function (id, callback) {
+        stub.AdminGroup.findByIdAndDelete = function (id, callback) {
 
-            callback(null, 0);
+            callback(null, undefined);
         };
 
         server.inject(request, function (response) {
@@ -394,9 +402,9 @@ lab.experiment('Admin Groups Plugin Delete', function () {
     });
 
 
-    lab.test('it removes a document successfully', function (done) {
+    lab.test('it deletes a document successfully', function (done) {
 
-        stub.AdminGroup.findByIdAndRemove = function (id, callback) {
+        stub.AdminGroup.findByIdAndDelete = function (id, callback) {
 
             callback(null, 1);
         };

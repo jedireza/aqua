@@ -13,7 +13,7 @@ var Routes = React.createElement(Route, {
 });
 
 
-lab.experiment('Login App', function () {
+lab.experiment('Login App Component', function () {
 
     lab.test('it renders normally', function (done) {
 

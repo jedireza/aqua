@@ -13,7 +13,7 @@ lab.experiment('Account NavBar', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var ComponentWithContext = StubRouterContext(NavBar);
+        var ComponentWithContext = StubRouterContext(NavBar, {});
         var NavBarEl = React.createElement(ComponentWithContext, {});
         var mainElement = TestUtils.renderIntoDocument(NavBarEl);
 
@@ -24,7 +24,7 @@ lab.experiment('Account NavBar', function () {
 
     lab.test('it toggles the menu', function (done) {
 
-        var ComponentWithContext = StubRouterContext(NavBar);
+        var ComponentWithContext = StubRouterContext(NavBar, {});
         var NavBarEl = React.createElement(ComponentWithContext, {});
         var mainElement = TestUtils.renderIntoDocument(NavBarEl);
         var button = TestUtils.findRenderedDOMComponentWithTag(mainElement, 'button');
@@ -42,7 +42,7 @@ lab.experiment('Account NavBar', function () {
 
     lab.test('it receives new props', function (done) {
 
-        var ComponentWithContext = StubRouterContext(NavBar);
+        var ComponentWithContext = StubRouterContext(NavBar, {});
         var NavBarEl = React.createElement(ComponentWithContext, {});
         var mainElement = TestUtils.renderIntoDocument(NavBarEl);
 

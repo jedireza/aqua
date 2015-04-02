@@ -9,19 +9,20 @@ var Actions = require('../../actions/AdminGroup');
 
 var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
-var State = ReactRouter.State;
-var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState, State, Navigation ],
+    mixins: [ LinkedState ],
+    contextTypes: {
+        router: React.PropTypes.func
+    },
     getInitialState: function () {
 
         AdminGroupStore.resetDetails();
         AdminGroupStore.resetPermissions();
         AdminGroupStore.resetDelete();
 
-        Actions.getDetails(this.getParams());
+        Actions.getDetails(this.context.router.getCurrentParams());
 
         return {
             details: AdminGroupStore.getDetails(),

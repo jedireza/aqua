@@ -1,6 +1,5 @@
 /* global window */
 var React = require('react/addons');
-var ReactRouter = require('react-router');
 var Paging = require('../../../../components/Paging');
 var Actions = require('../../actions/Status');
 var StatusStore = require('../../stores/Status');
@@ -9,18 +8,16 @@ var CreateNewForm = require('./CreateNewForm');
 var Results = require('./Results');
 
 
-var State = ReactRouter.State;
-var Navigation = ReactRouter.Navigation;
-
-
 var Component = React.createClass({
-    mixins: [ State, Navigation ],
+    contextTypes: {
+        router: React.PropTypes.func
+    },
     getInitialState: function () {
 
         StatusStore.resetResults();
         StatusStore.resetCreateNew();
 
-        Actions.getResults(this.getQuery());
+        Actions.getResults(this.context.router.getCurrentQuery());
 
         return {
             results: StatusStore.getResults(),
@@ -29,7 +26,7 @@ var Component = React.createClass({
     },
     componentWillReceiveProps: function(nextProps) {
 
-        Actions.getResults(this.getQuery());
+        Actions.getResults(this.context.router.getCurrentQuery());
     },
     componentDidMount: function () {
 
@@ -80,7 +77,7 @@ var Component = React.createClass({
                 </div>
                 <FilterForm
                     ref="filters"
-                    query={this.getQuery()}
+                    query={this.context.router.getCurrentQuery()}
                     loading={this.state.results.loading}
                     onChange={this.onFiltersChange}
                 />

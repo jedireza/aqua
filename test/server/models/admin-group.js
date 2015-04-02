@@ -20,7 +20,7 @@ lab.experiment('AdminGroup Class Methods', function () {
 
     lab.after(function (done) {
 
-        AdminGroup.remove({}, function (err, result) {
+        AdminGroup.deleteMany({}, function (err, count) {
 
             AdminGroup.disconnect();
 
@@ -43,8 +43,8 @@ lab.experiment('AdminGroup Class Methods', function () {
 
     lab.test('it returns an error when create fails', function (done) {
 
-        var realInsert = AdminGroup.insert;
-        AdminGroup.insert = function () {
+        var realInsertOne = AdminGroup.insertOne;
+        AdminGroup.insertOne = function () {
 
             var args = Array.prototype.slice.call(arguments);
             var callback = args.pop();
@@ -57,7 +57,7 @@ lab.experiment('AdminGroup Class Methods', function () {
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
 
-            AdminGroup.insert = realInsert;
+            AdminGroup.insertOne = realInsertOne;
 
             done();
         });
@@ -78,7 +78,7 @@ lab.experiment('AdminGroup Instance Methods', function () {
 
     lab.after(function (done) {
 
-        AdminGroup.remove({}, function (err, result) {
+        AdminGroup.deleteMany({}, function (err, result) {
 
             AdminGroup.disconnect();
 

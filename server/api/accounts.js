@@ -152,11 +152,9 @@ exports.register = function (server, options, next) {
             },
             validate: {
                 payload: {
-                    name: Joi.object().keys({
-                        first: Joi.string().required(),
-                        middle: Joi.string().allow(''),
-                        last: Joi.string().required()
-                    }).required()
+                    nameFirst: Joi.string().required(),
+                    nameMiddle: Joi.string().allow('', null),
+                    nameLast: Joi.string().required()
                 }
             }
         },
@@ -166,7 +164,11 @@ exports.register = function (server, options, next) {
             var id = request.params.id;
             var update = {
                 $set: {
-                    name: request.payload.name
+                    name: {
+                        first: request.payload.nameFirst,
+                        middle: request.payload.nameMiddle,
+                        last: request.payload.nameLast
+                    }
                 }
             };
 
@@ -174,6 +176,10 @@ exports.register = function (server, options, next) {
 
                 if (err) {
                     return reply(err);
+                }
+
+                if (!account) {
+                    return reply({ message: 'Document not found.' }).code(404);
                 }
 
                 reply(account);
@@ -192,11 +198,9 @@ exports.register = function (server, options, next) {
             },
             validate: {
                 payload: {
-                    name: Joi.object().keys({
-                        first: Joi.string().required(),
-                        middle: Joi.string().allow(''),
-                        last: Joi.string().required()
-                    }).required()
+                    nameFirst: Joi.string().required(),
+                    nameMiddle: Joi.string().allow(''),
+                    nameLast: Joi.string().required()
                 }
             }
         },
@@ -206,7 +210,11 @@ exports.register = function (server, options, next) {
             var id = request.auth.credentials.roles.account._id.toString();
             var update = {
                 $set: {
-                    name: request.payload.name
+                    name: {
+                        first: request.payload.nameFirst,
+                        middle: request.payload.nameMiddle,
+                        last: request.payload.nameLast
+                    }
                 }
             };
             var options = {
@@ -564,13 +572,13 @@ exports.register = function (server, options, next) {
 
             var Account = request.server.plugins['hapi-mongo-models'].Account;
 
-            Account.findByIdAndRemove(request.params.id, function (err, count) {
+            Account.findByIdAndDelete(request.params.id, function (err, account) {
 
                 if (err) {
                     return reply(err);
                 }
 
-                if (count === 0) {
+                if (!account) {
                     return reply({ message: 'Document not found.' }).code(404);
                 }
 

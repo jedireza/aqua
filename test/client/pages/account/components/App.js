@@ -21,7 +21,7 @@ var Routes = React.createElement(Route,
 );
 
 
-lab.experiment('Account App', function () {
+lab.experiment('Account App Component', function () {
 
     lab.test('it renders normally', function (done) {
 

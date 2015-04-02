@@ -16,7 +16,7 @@ var lab = exports.lab = Lab.script();
 var ModelsPlugin, request, server, stub;
 
 
-lab.beforeEach(function (done) {
+lab.before(function (done) {
 
     stub = {
         Account: {},
@@ -48,10 +48,9 @@ lab.beforeEach(function (done) {
 });
 
 
-lab.afterEach(function (done) {
+lab.after(function (done) {
 
     server.plugins['hapi-mongo-models'].BaseModel.disconnect();
-
     done();
 });
 
@@ -158,7 +157,6 @@ lab.experiment('Accounts Plugin Read', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -226,7 +224,6 @@ lab.experiment('Accounts Plugin (My) Read', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -300,7 +297,6 @@ lab.experiment('Accounts Plugin Create', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -332,10 +328,8 @@ lab.experiment('Accounts Plugin Update', function () {
             method: 'PUT',
             url: '/accounts/93EP150D35',
             payload: {
-                name: {
-                    first: 'Muddy',
-                    last: 'Mudskipper'
-                }
+                nameFirst: 'Muddy',
+                nameLast: 'Mudskipper'
             },
             credentials: AuthenticatedAdmin
         };
@@ -354,7 +348,21 @@ lab.experiment('Accounts Plugin Update', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
+            done();
+        });
+    });
 
+
+    lab.test('it returns not found when find by id misses', function (done) {
+
+        stub.Account.findByIdAndUpdate = function (id, update, callback) {
+
+            callback(null, undefined);
+        };
+
+        server.inject(request, function (response) {
+
+            Code.expect(response.statusCode).to.equal(404);
             done();
         });
     });
@@ -386,10 +394,8 @@ lab.experiment('Accounts Plugin (My) Update', function () {
             method: 'PUT',
             url: '/accounts/my',
             payload: {
-                name: {
-                    first: 'Mud',
-                    last: 'Skipper'
-                }
+                nameFirst: 'Mud',
+                nameLast: 'Skipper'
             },
             credentials: AuthenticatedAccount
         };
@@ -411,7 +417,6 @@ lab.experiment('Accounts Plugin (My) Update', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -481,7 +486,6 @@ lab.experiment('Accounts Plugin Link User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(404);
-
             done();
         });
     });
@@ -502,7 +506,6 @@ lab.experiment('Accounts Plugin Link User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -523,7 +526,6 @@ lab.experiment('Accounts Plugin Link User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(404);
-
             done();
         });
     });
@@ -553,7 +555,6 @@ lab.experiment('Accounts Plugin Link User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(409);
-
             done();
         });
     });
@@ -592,7 +593,6 @@ lab.experiment('Accounts Plugin Link User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(409);
-
             done();
         });
     });
@@ -636,7 +636,6 @@ lab.experiment('Accounts Plugin Link User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -680,7 +679,6 @@ lab.experiment('Accounts Plugin Link User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(200);
-
             done();
         });
     });
@@ -714,7 +712,6 @@ lab.experiment('Accounts Plugin Add Note', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -730,7 +727,6 @@ lab.experiment('Accounts Plugin Add Note', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(200);
-
             done();
         });
     });
@@ -764,7 +760,6 @@ lab.experiment('Accounts Plugin Update Status', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -785,7 +780,6 @@ lab.experiment('Accounts Plugin Update Status', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -806,7 +800,6 @@ lab.experiment('Accounts Plugin Update Status', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(200);
-
             done();
         });
     });
@@ -837,7 +830,6 @@ lab.experiment('Accounts Plugin Unlink User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -853,7 +845,6 @@ lab.experiment('Accounts Plugin Unlink User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(404);
-
             done();
         });
     });
@@ -869,7 +860,6 @@ lab.experiment('Accounts Plugin Unlink User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(200);
-
             done();
         });
     });
@@ -885,7 +875,6 @@ lab.experiment('Accounts Plugin Unlink User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(200);
-
             done();
         });
     });
@@ -913,7 +902,6 @@ lab.experiment('Accounts Plugin Unlink User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -990,7 +978,6 @@ lab.experiment('Accounts Plugin Unlink User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
@@ -1038,7 +1025,6 @@ lab.experiment('Accounts Plugin Unlink User', function () {
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(200);
-
             done();
         });
     });
@@ -1059,27 +1045,26 @@ lab.experiment('Accounts Plugin Delete', function () {
     });
 
 
-    lab.test('it returns an error when remove by id fails', function (done) {
+    lab.test('it returns an error when delete by id fails', function (done) {
 
-        stub.Account.findByIdAndRemove = function (id, callback) {
+        stub.Account.findByIdAndDelete = function (id, callback) {
 
-            callback(Error('remove by id failed'));
+            callback(Error('delete by id failed'));
         };
 
         server.inject(request, function (response) {
 
             Code.expect(response.statusCode).to.equal(500);
-
             done();
         });
     });
 
 
-    lab.test('it returns a not found when remove by id misses', function (done) {
+    lab.test('it returns a not found when delete by id misses', function (done) {
 
-        stub.Account.findByIdAndRemove = function (id, callback) {
+        stub.Account.findByIdAndDelete = function (id, callback) {
 
-            callback(null, 0);
+            callback(null, undefined);
         };
 
         server.inject(request, function (response) {
@@ -1092,9 +1077,9 @@ lab.experiment('Accounts Plugin Delete', function () {
     });
 
 
-    lab.test('it removes a document successfully', function (done) {
+    lab.test('it deletes a document successfully', function (done) {
 
-        stub.Account.findByIdAndRemove = function (id, callback) {
+        stub.Account.findByIdAndDelete = function (id, callback) {
 
             callback(null, 1);
         };

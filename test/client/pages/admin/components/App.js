@@ -33,7 +33,7 @@ var Routes = React.createElement(Route,
 );
 
 
-lab.experiment('Admin App', function () {
+lab.experiment('Admin App Component', function () {
 
     lab.test('it renders normally', function (done) {
 

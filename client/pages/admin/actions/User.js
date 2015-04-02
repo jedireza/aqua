@@ -59,7 +59,7 @@ var Actions = {
 
         dispatch(VIEW_ACTION, Types.HIDE_CREATE_NEW, data);
     },
-    createNew: function (data, caller) {
+    createNew: function (data, router) {
 
         dispatch(VIEW_ACTION, Types.CREATE_NEW, data);
 
@@ -75,8 +75,8 @@ var Actions = {
             if (!err) {
                 response.success = true;
 
-                if (caller) {
-                    caller.transitionTo('userDetails', { id: response._id });
+                if (router) {
+                    router.transitionTo('userDetails', { id: response._id });
                     window.scrollTo(0, 0);
                 }
             }
@@ -139,7 +139,7 @@ var Actions = {
             dispatch(SERVER_ACTION, Types.SAVE_PASSWORD_RESPONSE, response);
         });
     },
-    delete: function (data, caller) {
+    delete: function (data, router) {
 
         dispatch(VIEW_ACTION, Types.DELETE, data);
 
@@ -158,8 +158,8 @@ var Actions = {
             if (!err) {
                 response.success = true;
 
-                if (caller) {
-                    caller.transitionTo('users');
+                if (router) {
+                    router.transitionTo('users');
                     window.scrollTo(0, 0);
                 }
             }

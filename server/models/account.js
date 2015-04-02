@@ -59,13 +59,13 @@ Account.create = function (name, callback) {
         timeCreated: new Date()
     };
 
-    this.insert(document, function (err, accounts) {
+    this.insertOne(document, function (err, docs) {
 
         if (err) {
             return callback(err);
         }
 
-        callback(null, accounts[0]);
+        callback(null, docs[0]);
     });
 };
 

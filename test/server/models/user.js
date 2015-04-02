@@ -33,7 +33,7 @@ lab.experiment('User Class Methods', function () {
 
     lab.after(function (done) {
 
-        User.remove({}, function (err, result) {
+        User.deleteMany({}, function (err, count) {
 
             User.disconnect();
 
@@ -90,8 +90,8 @@ lab.experiment('User Class Methods', function () {
 
     lab.test('it returns an error when create fails', function (done) {
 
-        var realInsert = User.insert;
-        User.insert = function () {
+        var realInsertOne = User.insertOne;
+        User.insertOne = function () {
 
             var args = Array.prototype.slice.call(arguments);
             var callback = args.pop();
@@ -104,7 +104,7 @@ lab.experiment('User Class Methods', function () {
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
 
-            User.insert = realInsert;
+            User.insertOne = realInsertOne;
 
             done();
         });

@@ -8,18 +8,19 @@ var Actions = require('../../actions/Status');
 
 var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
-var State = ReactRouter.State;
-var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState, State, Navigation ],
+    mixins: [ LinkedState ],
+    contextTypes: {
+        router: React.PropTypes.func
+    },
     getInitialState: function () {
 
         StatusStore.resetDetails();
         StatusStore.resetDelete();
 
-        Actions.getDetails(this.getParams());
+        Actions.getDetails(this.context.router.getCurrentParams());
 
         return {
             details: StatusStore.getDetails(),

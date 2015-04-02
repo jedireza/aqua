@@ -123,9 +123,9 @@ Async.auto({
             clean: ['connect', function (done) {
 
                 Async.parallel([
-                    User.remove.bind(User, {}),
-                    Admin.remove.bind(Admin, {}),
-                    AdminGroup.remove.bind(AdminGroup, {})
+                    User.deleteMany.bind(User, {}),
+                    Admin.deleteMany.bind(Admin, {}),
+                    AdminGroup.deleteMany.bind(AdminGroup, {})
                 ], done);
             }],
             adminGroup: ['clean', function (done) {

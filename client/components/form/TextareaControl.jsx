@@ -1,15 +1,13 @@
 var React = require('react/addons');
 var ObjectAssign = require('object-assign');
 var ControlGroup = require('../../components/form/ControlGroup');
-
-
-var classSet = React.addons.classSet;
+var ClassNames = require('classnames');
 
 
 var View = React.createClass({
     render: function () {
 
-        var inputClasses = classSet(ObjectAssign({
+        var inputClasses = ClassNames(ObjectAssign({
             'form-control': true
         }, this.props.inputClasses));
 

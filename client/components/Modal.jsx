@@ -1,8 +1,6 @@
 /* global document, window */
 var React = require('react/addons');
-
-
-var classSet = React.addons.classSet;
+var ClassNames = require('classnames');
 
 
 var Component = React.createClass({
@@ -57,7 +55,7 @@ var Component = React.createClass({
     },
     render: function () {
 
-        var modalClasses = classSet({
+        var modalClasses = ClassNames({
             modal: true
         });
 
