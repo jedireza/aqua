@@ -5,6 +5,7 @@ var criteria = {
     env: process.env.NODE_ENV
 };
 
+var port = process.env.PORT || 8000;
 
 var config = {
     $meta: 'This file configures the plot device.',
@@ -13,7 +14,7 @@ var config = {
         web: {
             $filter: 'env',
             test: 9000,
-            $default: 8000
+            $default: port
         }
     },
     authAttempts: {
