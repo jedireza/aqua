@@ -13,7 +13,7 @@ Server side, Aqua is built with the [hapi.js](https://hapijs.com/) framework
 and toolset. We're using [MongoDB](http://www.mongodb.org/) as a data store. We
 also use [Nodemailer](http://www.nodemailer.com/) for email transport.
 
-The front-end is built with [React](http://facebook.github.io/react/).  We're
+The front-end is built with [React](http://facebook.github.io/react/). We're
 using a totally vanilla [Flux](https://facebook.github.io/flux/)
 implementation. Client side routing is done with [React
 Router](https://github.com/rackt/react-router). We're using
