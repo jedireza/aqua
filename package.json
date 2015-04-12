@@ -40,8 +40,8 @@
     "visionary": "^2.x.x"
   },
   "devDependencies": {
-    "babel-core": "^4.x.x",
-    "babel-loader": "^4.x.x",
+    "babel-core": "^5.x.x",
+    "babel-loader": "^5.x.x",
     "bootstrap": "^3.x.x",
     "code": "^1.x.x",
     "cookie": "^0.1.x",
@@ -55,7 +55,7 @@
     "gulp-concat": "^2.x.x",
     "gulp-less": "^3.x.x",
     "gulp-newer": "^0.5.x",
-    "gulp-nodemon": "^1.x.x",
+    "gulp-nodemon": "^2.x.x",
     "gulp-rename": "^1.x.x",
     "gulp-sourcemaps": "^1.x.x",
     "gulp-util": "^3.x.x",
@@ -69,7 +69,7 @@
     "proxyquire": "^1.x.x",
     "qs": "^2.x.x",
     "react-router": "^0.13.x",
-    "require-dir": "^0.1.x",
+    "require-dir": "^0.3.x",
     "webpack": "^1.x.x",
     "xhr": "^2.x.x"
   }
