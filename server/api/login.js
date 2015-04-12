@@ -197,7 +197,7 @@ exports.register = function (server, options, next) {
                     };
                     var template = 'forgot-password';
                     var context = {
-                        baseHref: request.server.info.uri + '/login/reset',
+                        baseHref: Config.get('/baseUrl') + '/login/reset',
                         email: request.payload.email,
                         key: results.keyHash.key
                     };
