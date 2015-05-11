@@ -114,6 +114,7 @@ Async.auto({
         var User = require('./server/models/user');
         var Admin = require('./server/models/admin');
         var AdminGroup = require('./server/models/admin-group');
+        var Account = require('./server/models/account');
 
         Async.auto({
             connect: function (done) {
@@ -125,7 +126,8 @@ Async.auto({
                 Async.parallel([
                     User.deleteMany.bind(User, {}),
                     Admin.deleteMany.bind(Admin, {}),
-                    AdminGroup.deleteMany.bind(AdminGroup, {})
+                    AdminGroup.deleteMany.bind(AdminGroup, {}),
+                    Account.deleteMany.bind(Account, {})
                 ], done);
             }],
             adminGroup: ['clean', function (done) {
