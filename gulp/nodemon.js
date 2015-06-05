@@ -15,7 +15,8 @@ Gulp.task('nodemon', function () {
         ignore: [
             'client/**/*',
             'gulp/**/*',
-            'public/**/*'
+            'public/**/*',
+            'node_modules/**/*'
         ],
         nodeArgs: nodeArgs
     })
