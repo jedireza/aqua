@@ -1,4 +1,4 @@
-module.exports = function parseValidation(validation, message) {
+module.exports = function parseValidation (validation, message) {
 
     var response = {
         error: undefined,

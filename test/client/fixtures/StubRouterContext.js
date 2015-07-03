@@ -4,7 +4,7 @@ var ObjectAssign = require('object-assign');
 
 var StubRouterContext = function (Component, stubs) {
 
-    var RouterStub = function RouterStub() {};
+    var RouterStub = function RouterStub () {};
 
     ObjectAssign(RouterStub, {
         makePath: function () {},

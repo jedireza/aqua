@@ -33,6 +33,7 @@ Gulp.task('less', function () {
     }];
 
     return bundleConfigs.map(function (bundleConfig) {
+
         return Gulp.src(bundleConfig.entries)
             .pipe(Newer(Path.join(bundleConfig.dest, bundleConfig.outputName)))
             .pipe(Concat(bundleConfig.outputName))

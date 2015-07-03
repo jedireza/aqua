@@ -7,7 +7,7 @@ var Config = require('../config');
 
 
 var transport = Nodemailer.createTransport(Config.get('/nodemailer'));
-    transport.use('compile', Markdown({ useEmbeddedImages: true }));
+transport.use('compile', Markdown({ useEmbeddedImages: true }));
 
 
 var templateCache = {};
@@ -34,7 +34,7 @@ var renderTemplate = function (signature, context, callback) {
 };
 
 
-var sendEmail = exports.sendEmail = function(options, template, context, callback) {
+var sendEmail = exports.sendEmail = function (options, template, context, callback) {
 
     renderTemplate(template, context, function (err, content) {
 

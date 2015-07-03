@@ -36,11 +36,11 @@ Async.auto({
     },
     mongodbUrl: ['projectName', function (done, results) {
 
-        var options = {
+        var promptOptions = {
             default: 'mongodb://localhost:27017/aqua'
         };
 
-        Promptly.prompt('MongoDB URL: (mongodb://localhost:27017/aqua)', options, done);
+        Promptly.prompt('MongoDB URL: (mongodb://localhost:27017/aqua)', promptOptions, done);
     }],
     testMongo: ['rootPassword', function (done, results) {
 
@@ -65,11 +65,11 @@ Async.auto({
     }],
     systemEmail: ['rootPassword', function (done, results) {
 
-        var options = {
+        var promptOptions = {
             default: results.rootEmail
         };
 
-        Promptly.prompt('System email: (' + results.rootEmail + ')', options, done);
+        Promptly.prompt('System email: (' + results.rootEmail + ')', promptOptions, done);
     }],
     smtpHost: ['systemEmail', function (done, results) {
 
@@ -81,11 +81,11 @@ Async.auto({
     }],
     smtpUsername: ['smtpPort', function (done, results) {
 
-        var options = {
+        var promptOptions = {
             default: results.systemEmail
         };
 
-        Promptly.prompt('SMTP username: (' + results.systemEmail + ')', options, done);
+        Promptly.prompt('SMTP username: (' + results.systemEmail + ')', promptOptions, done);
     }],
     smtpPassword: ['smtpUsername', function (done, results) {
 
@@ -93,18 +93,16 @@ Async.auto({
     }],
     createConfig: ['smtpPassword', function (done, results) {
 
-        var configTemplatePath = Path.resolve(__dirname, 'config.example');
-        var configPath = Path.resolve(__dirname, 'config.js');
-        var options = { encoding: 'utf-8' };
+        var fsOptions = { encoding: 'utf-8' };
 
-        Fs.readFile(configTemplatePath, options, function (err, source) {
+        Fs.readFile(configTemplatePath, fsOptions, function (err, src) {
 
             if (err) {
                 console.error('Failed to read config template.');
                 return done(err);
             }
 
-            var configTemplate = Handlebars.compile(source);
+            configTemplate = Handlebars.compile(src);
             Fs.writeFile(configPath, configTemplate(results), done);
         });
     }],

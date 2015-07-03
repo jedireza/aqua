@@ -24,7 +24,7 @@ var Component = React.createClass({
             createNew: AdminStore.getCreateNew()
         };
     },
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps: function (nextProps) {
 
         Actions.getResults(this.context.router.getCurrentQuery());
     },

@@ -2,13 +2,16 @@
     "ecmaFeatures": {
         "jsx": true
     },
+    "plugins": [
+        "eslint-plugin-hapi"
+    ],
     "rules": {
-        "no-alert": 0,
         "consistent-return": 0,
         "vars-on-top": 0,
         "one-var": 0,
         "strict": 0,
         "new-cap": 0,
+        "no-alert": 0,
         "no-console": 0,
         "no-constant-condition": 0,
         "no-empty": 0,
@@ -20,12 +23,17 @@
         "no-use-before-define": 0,
         "no-unused-expressions": 0,
         "no-regex-spaces": 0,
-        "no-shadow": 0,
+        "no-catch-shadow": 0,
         "global-strict": 0,
         "handle-callback-err": 0,
         "no-lonely-if": 0,
         "space-in-brackets": 0,
         "brace-style": 0,
+        "no-shadow": 0,
+        "hapi/no-shadow-relaxed": [1, { "ignore": ["err", "done"] }],
+        "hapi/hapi-capitalize-modules": [1, "global-scope-only"],
+        "hapi/hapi-scope-start": 1,
+        "array-bracket-spacing": 1,
         "dot-notation": 1,
         "eol-last": 1,
         "camelcase": 1,
@@ -58,6 +66,11 @@
         "no-new-wrappers": 2,
         "no-comma-dangle": 2,
         "no-sparse-arrays": 2,
-        "no-ex-assign": 2
+        "no-ex-assign": 2,
+        "indent": [2, 4],
+        "space-before-function-paren": 2,
+        "func-style": [2, "expression"],
+        "object-curly-spacing": [2, "always"],
+        "spaced-comment": [2, "always",{"markers":[","]}]
     }
 }

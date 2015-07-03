@@ -9,7 +9,7 @@ var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ Navigation ],
+    mixins: [Navigation],
     getInitialState: function () {
 
         LogoutStore.reset();

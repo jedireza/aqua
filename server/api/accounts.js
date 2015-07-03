@@ -217,11 +217,11 @@ exports.register = function (server, options, next) {
                     }
                 }
             };
-            var options = {
+            var findOptions = {
                 fields: Account.fieldsAdapter('user name timeCreated')
             };
 
-            Account.findByIdAndUpdate(id, update, options, function (err, account) {
+            Account.findByIdAndUpdate(id, update, findOptions, function (err, account) {
 
                 if (err) {
                     return reply(err);

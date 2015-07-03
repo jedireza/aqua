@@ -20,7 +20,7 @@ var ModelsPlugin = {
 
 lab.beforeEach(function (done) {
 
-    var plugins = [ HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin ];
+    var plugins = [HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
     server.views({

@@ -20,7 +20,7 @@ var mountNode;
 
 lab.beforeEach(function (done) {
 
-    TestLocation.history = [ '/login' ];
+    TestLocation.history = ['/login'];
     done();
 });
 

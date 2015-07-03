@@ -12,7 +12,7 @@ var request, server;
 
 lab.beforeEach(function (done) {
 
-    var plugins = [ MailerPlugin, ContactPlugin ];
+    var plugins = [MailerPlugin, ContactPlugin];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
     server.register(plugins, function (err) {

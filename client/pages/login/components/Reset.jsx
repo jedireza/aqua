@@ -13,7 +13,7 @@ var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState ],
+    mixins: [LinkedState],
     contextTypes: {
         router: React.PropTypes.func
     },
@@ -95,7 +95,7 @@ var Component = React.createClass({
                 <ControlGroup hideLabel={true} hideHelp={true}>
                     <Button
                         type="submit"
-                        inputClasses={{'btn-primary': true}}
+                        inputClasses={{ 'btn-primary': true }}
                         disabled={this.state.loading}>
 
                         Set password

@@ -22,7 +22,7 @@ var ModelsPlugin = {
 
 lab.before(function (done) {
 
-    var plugins = [ HapiAuth, ModelsPlugin, AuthPlugin, LoginPlugin ];
+    var plugins = [HapiAuth, ModelsPlugin, AuthPlugin, LoginPlugin];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
     server.views({

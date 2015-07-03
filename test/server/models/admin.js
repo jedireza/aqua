@@ -323,6 +323,7 @@ lab.experiment('Admin Instance Methods', function () {
 
         var realHydrateGroups = Admin.prototype.hydrateGroups;
         Admin.prototype.hydrateGroups = function (callback) {
+
             callback(Error('hydrate groups failed'));
         };
 
