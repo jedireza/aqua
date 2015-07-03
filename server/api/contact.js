@@ -23,7 +23,7 @@ exports.register = function (server, options, next) {
         handler: function (request, reply) {
 
             var mailer = request.server.plugins.mailer;
-            var options = {
+            var emailOptions = {
                 subject: Config.get('/projectName') + ' contact form',
                 to: Config.get('/system/toAddress'),
                 replyTo: {
@@ -33,7 +33,7 @@ exports.register = function (server, options, next) {
             };
             var template = 'contact';
 
-            mailer.sendEmail(options, template, request.payload, function (err, info) {
+            mailer.sendEmail(emailOptions, template, request.payload, function (err, info) {
 
                 if (err) {
                     return reply(err);

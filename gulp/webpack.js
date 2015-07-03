@@ -29,7 +29,7 @@ Gulp.task('webpack', function (callback) {
         },
         module: {
             loaders: [
-                { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel-loader'}
+                { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel-loader' }
             ]
         },
         devtool: 'source-map',

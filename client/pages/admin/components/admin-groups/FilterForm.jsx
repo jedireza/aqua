@@ -5,7 +5,7 @@ var SelectControl = require('../../../../components/form/SelectControl');
 
 
 var Component = React.createClass({
-    mixins: [ React.addons.LinkedStateMixin ],
+    mixins: [React.addons.LinkedStateMixin],
     defaultState: {
         name: '',
         sort: '_id',
@@ -16,7 +16,7 @@ var Component = React.createClass({
 
         return ObjectAssign({}, this.defaultState, this.props.query);
     },
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps: function (nextProps) {
 
         var nextState = ObjectAssign({}, this.defaultState, nextProps.query);
         this.setState(nextState);

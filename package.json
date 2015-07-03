@@ -48,6 +48,7 @@
     "cookie": "^0.1.x",
     "david": "^6.x.x",
     "del": "^1.x.x",
+    "eslint-plugin-hapi": "^1.2.0",
     "flux": "^2.x.x",
     "flux-constant": "^1.x.x",
     "flux-dispatcher": "^1.x.x",

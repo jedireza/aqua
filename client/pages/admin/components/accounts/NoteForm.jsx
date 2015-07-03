@@ -5,7 +5,7 @@ var Actions = require('../../actions/Account');
 
 
 var Component = React.createClass({
-    mixins: [ React.addons.LinkedStateMixin ],
+    mixins: [React.addons.LinkedStateMixin],
     getInitialState: function () {
 
         return {};

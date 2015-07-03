@@ -13,7 +13,7 @@ var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState ],
+    mixins: [LinkedState],
     getInitialState: function () {
 
         return {};

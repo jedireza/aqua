@@ -14,7 +14,7 @@ var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState, Navigation ],
+    mixins: [LinkedState, Navigation],
     getInitialState: function () {
 
         LoginStore.reset();
@@ -81,7 +81,7 @@ var Component = React.createClass({
                 <ControlGroup hideLabel={true} hideHelp={true}>
                     <Button
                         type="submit"
-                        inputClasses={{'btn-primary': true}}
+                        inputClasses={{ 'btn-primary': true }}
                         disabled={this.state.loading}>
 
                         Sign in

@@ -8,7 +8,7 @@ var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState ],
+    mixins: [LinkedState],
     render: function () {
 
         var notice;

@@ -5,7 +5,7 @@ var Cookie = require('cookie');
 var RedirectActions = require('../actions/Redirect');
 
 
-module.exports = function jsonFetch(options, callback) {
+module.exports = function jsonFetch (options, callback) {
 
     var cookies = Cookie.parse(document.cookie);
     var config = {

@@ -10,7 +10,7 @@ var LinkedState = React.addons.LinkedStateMixin;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState ],
+    mixins: [LinkedState],
     contextTypes: {
         router: React.PropTypes.func
     },
@@ -56,7 +56,7 @@ var Component = React.createClass({
                     <ControlGroup hideLabel={true} hideHelp={true}>
                         <Button
                             type="submit"
-                            inputClasses={{'btn-danger': true}}
+                            inputClasses={{ 'btn-danger': true }}
                             disabled={this.props.data.loading}
                             onClick={this.onConfirm}>
 

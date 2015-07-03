@@ -12,7 +12,7 @@ var request, server;
 
 lab.beforeEach(function (done) {
 
-    var plugins = [ AboutPlugin ];
+    var plugins = [AboutPlugin];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
     server.views({

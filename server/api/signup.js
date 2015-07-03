@@ -138,7 +138,7 @@ exports.register = function (server, options, next) {
                 }],
                 welcome: ['linkUser', 'linkAccount', function (done, results) {
 
-                    var options = {
+                    var emailOptions = {
                         subject: 'Your ' + Config.get('/projectName') + ' account',
                         to: {
                             name: request.payload.name,
@@ -147,7 +147,7 @@ exports.register = function (server, options, next) {
                     };
                     var template = 'welcome';
 
-                    mailer.sendEmail(options, template, request.payload, function (err) {
+                    mailer.sendEmail(emailOptions, template, request.payload, function (err) {
 
                         if (err) {
                             console.warn('sending welcome email failed:', err.stack);

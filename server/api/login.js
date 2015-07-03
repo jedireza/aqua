@@ -191,7 +191,7 @@ exports.register = function (server, options, next) {
                 }],
                 email: ['user', function (done, results) {
 
-                    var options = {
+                    var emailOptions = {
                         subject: 'Reset your ' + Config.get('/projectName') + ' password',
                         to: request.payload.email
                     };
@@ -202,7 +202,7 @@ exports.register = function (server, options, next) {
                         key: results.keyHash.key
                     };
 
-                    mailer.sendEmail(options, template, context, done);
+                    mailer.sendEmail(emailOptions, template, context, done);
                 }]
             }, function (err, results) {
 

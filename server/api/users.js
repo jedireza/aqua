@@ -398,11 +398,11 @@ exports.register = function (server, options, next) {
                     email: request.payload.email
                 }
             };
-            var options = {
+            var findOptions = {
                 fields: User.fieldsAdapter('username email roles')
             };
 
-            User.findByIdAndUpdate(id, update, options, function (err, user) {
+            User.findByIdAndUpdate(id, update, findOptions, function (err, user) {
 
                 if (err) {
                     return reply(err);
@@ -508,11 +508,11 @@ exports.register = function (server, options, next) {
                     password: request.pre.password.hash
                 }
             };
-            var options = {
+            var findOptions = {
                 fields: User.fieldsAdapter('username email')
             };
 
-            User.findByIdAndUpdate(id, update, options, function (err, user) {
+            User.findByIdAndUpdate(id, update, findOptions, function (err, user) {
 
                 if (err) {
                     return reply(err);

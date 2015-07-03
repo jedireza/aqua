@@ -11,7 +11,7 @@ var LinkedState = React.addons.LinkedStateMixin;
 
 
 var Component = React.createClass({
-    mixins: [ LinkedState ],
+    mixins: [LinkedState],
     contextTypes: {
         router: React.PropTypes.func
     },
@@ -32,7 +32,7 @@ var Component = React.createClass({
 
         clearTimeout(this.timeout);
     },
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps: function (nextProps) {
 
         if (!nextProps.data.show) {
             this.replaceState({});
@@ -85,7 +85,7 @@ var Component = React.createClass({
                 <ControlGroup hideLabel={true} hideHelp={true}>
                     <Button
                         type="submit"
-                        inputClasses={{'btn-primary': true}}
+                        inputClasses={{ 'btn-primary': true }}
                         disabled={this.props.data.loading}>
 
                         Create new

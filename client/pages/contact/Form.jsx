@@ -9,7 +9,7 @@ var Store = require('./Store');
 
 
 var Component = React.createClass({
-    mixins: [ React.addons.LinkedStateMixin ],
+    mixins: [React.addons.LinkedStateMixin],
     getInitialState: function () {
 
         Store.reset();
@@ -85,7 +85,7 @@ var Component = React.createClass({
                 <ControlGroup hideLabel={true} hideHelp={true}>
                     <Button
                         type="submit"
-                        inputClasses={{'btn-primary': true}}
+                        inputClasses={{ 'btn-primary': true }}
                         disabled={this.state.loading}>
 
                         Send message

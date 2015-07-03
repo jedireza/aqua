@@ -6,7 +6,7 @@ var Actions = require('../../actions/AdminGroup');
 
 
 var Component = React.createClass({
-    mixins: [ React.addons.LinkedStateMixin ],
+    mixins: [React.addons.LinkedStateMixin],
     getInitialState: function () {
 
         return {};
@@ -189,7 +189,7 @@ var Component = React.createClass({
                 <ControlGroup hideLabel={true} hideHelp={true}>
                     <Button
                         type="submit"
-                        inputClasses={{'btn-primary': true}}
+                        inputClasses={{ 'btn-primary': true }}
                         disabled={this.props.data.loading}>
 
                         Save changes
