@@ -13,7 +13,7 @@ exports.register = function (server, options, next) {
         cookie: 'sid-aqua',
         isSecure: false,
         redirectTo: '/login',
-        validateFunc: function (data, callback) {
+        validateFunc: function (request, data, callback) {
 
             Async.auto({
                 session: function (done) {
