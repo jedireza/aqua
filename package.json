@@ -1,6 +1,6 @@
 {
   "name": "aqua",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "A website and user system for Node.js",
   "main": "index.js",
   "scripts": {
