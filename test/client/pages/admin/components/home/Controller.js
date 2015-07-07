@@ -8,13 +8,6 @@ var lab = exports.lab = Lab.script();
 var container = global.document.createElement('div');
 
 
-lab.afterEach(function (done) {
-
-    React.unmountComponentAtNode(container);
-    done();
-});
-
-
 lab.experiment('Admin Home Component', function () {
 
     lab.test('it renders normally', function (done) {
@@ -24,6 +17,7 @@ lab.experiment('Admin Home Component', function () {
 
         Code.expect(component).to.exist();
         done();
+        React.unmountComponentAtNode(container);
     });
 
 
@@ -38,6 +32,7 @@ lab.experiment('Admin Home Component', function () {
                 handler();
                 setInterval = realSetInterval;
                 done();
+                React.unmountComponentAtNode(container);
             });
         };
 
