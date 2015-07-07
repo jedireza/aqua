@@ -50,7 +50,7 @@ var Component = React.createClass({
             event.stopPropagation();
         }
 
-        this.transitionTo('users', {}, this.refs.filters.state);
+        this.context.router.transitionTo('users', {}, this.refs.filters.state);
         window.scrollTo(0, 0);
     },
     onPageChange: function (page) {

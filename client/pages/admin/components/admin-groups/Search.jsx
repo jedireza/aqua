@@ -50,7 +50,7 @@ var Component = React.createClass({
             event.stopPropagation();
         }
 
-        this.transitionTo('adminGroups', {}, this.refs.filters.state);
+        this.context.router.transitionTo('adminGroups', {}, this.refs.filters.state);
         window.scrollTo(0, 0);
     },
     onPageChange: function (page) {
