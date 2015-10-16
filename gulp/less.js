@@ -37,7 +37,10 @@ Gulp.task('less', function () {
         return Gulp.src(bundleConfig.entries)
             .pipe(Newer(Path.join(bundleConfig.dest, bundleConfig.outputName)))
             .pipe(Concat(bundleConfig.outputName))
-            .pipe(Less({ compress: true }))
+            .pipe(Less({
+              compress: true,
+              paths: [ process.env.NODE_PATH || './node_modules' ]
+            }))
             .pipe(Gulp.dest(bundleConfig.dest));
     });
 });
