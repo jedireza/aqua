@@ -30,7 +30,6 @@
         "space-in-brackets": 0,
         "brace-style": 0,
         "no-shadow": 0,
-        "hapi/no-shadow-relaxed": [1, { "ignore": ["err", "done"] }],
         "hapi/hapi-capitalize-modules": [1, "global-scope-only"],
         "hapi/hapi-scope-start": 1,
         "array-bracket-spacing": 1,
