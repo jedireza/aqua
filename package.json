@@ -10,6 +10,7 @@
     "test-client": "lab -t 100 -S $npm_package_config_transformer_option -L $npm_package_config_lint_option $npm_package_config_server_tests",
     "test-server": "lab -t 100 -S $npm_package_config_transformer_option -L $npm_package_config_lint_option' $npm_package_config_client_tests",
     "test-cover": "lab -t 100 -S $npm_package_config_transformer_option -r html -o ./test/artifacts/coverage.html $npm_package_config_client_tests $npm_package_config_server_tests && open ./test/artifacts/coverage.html",
+    "coverage": "lab -s $npm_package_config_transformer_option $npm_package_config_server_tests $npm_package_config_client_tests -r lcov | coveralls",
     "update": "david update"
   },
   "author": "Reza Akhavan <jedireza@gmail.com> (http://reza.akhavan.me/)",
@@ -56,6 +57,7 @@
     "bootstrap": "^3.x.x",
     "code": "^1.x.x",
     "cookie": "^0.1.x",
+    "coveralls": "^2.11.6",
     "david": "^6.x.x",
     "del": "^1.x.x",
     "eslint-plugin-hapi": "^1.2.0",
