@@ -13,6 +13,7 @@
     "update": "david update"
   },
   "author": "Reza Akhavan <jedireza@gmail.com> (http://reza.akhavan.me/)",
+  "repository": "https://github.com/jedireza/aqua",
   "license": "MIT",
   "engines": {
     "node": ">=0.10.0"
