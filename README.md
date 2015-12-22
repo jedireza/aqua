@@ -3,6 +3,7 @@
 A website and user system starter. Implemented with Hapi, React and Flux.
 
 [![Build Status](https://travis-ci.org/jedireza/aqua.svg?branch=master)](https://travis-ci.org/jedireza/aqua)
+[![Coverage Status](https://coveralls.io/repos/jedireza/aqua/badge.svg?branch=master&service=github&style=flat)](https://coveralls.io/github/jedireza/aqua?branch=master)
 [![Dependency Status](https://david-dm.org/jedireza/aqua.svg?style=flat)](https://david-dm.org/jedireza/aqua)
 [![devDependency Status](https://david-dm.org/jedireza/aqua/dev-status.svg?style=flat)](https://david-dm.org/jedireza/aqua#info=devDependencies)
 
