@@ -6,14 +6,25 @@
   "scripts": {
     "setup": "./setup.js",
     "start": "gulp",
-    "test": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/",
-    "test-client": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/client-before.js ./test/client/ ./test/client-after.js",
-    "test-server": "lab -t 100 -S -T ./test/transform.js -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/misc/ ./test/server/",
-    "test-cover": "lab -t 100 -S -T ./test/transform.js -r html -o ./test/artifacts/coverage.html ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/ && open ./test/artifacts/coverage.html",
+    "test": "lab -t 100 -S  -L $npm_package_config_transformer_option $npm_package_config_lint_option $npm_package_config_server_tests $npm_package_config_client_tests",
+    "test-client": "lab -t 100 -S $npm_package_config_transformer_option -L $npm_package_config_lint_option $npm_package_config_server_tests",
+    "test-server": "lab -t 100 -S $npm_package_config_transformer_option -L $npm_package_config_lint_option' $npm_package_config_client_tests",
+    "test-cover": "lab -t 100 -S $npm_package_config_transformer_option -r html -o ./test/artifacts/coverage.html $npm_package_config_client_tests $npm_package_config_server_tests && open ./test/artifacts/coverage.html",
+    "coverage": "lab -s $npm_package_config_transformer_option $npm_package_config_server_tests $npm_package_config_client_tests -r lcov | coveralls",
     "update": "david update"
   },
   "author": "Reza Akhavan <jedireza@gmail.com> (http://reza.akhavan.me/)",
+  "repository": "https://github.com/jedireza/aqua",
   "license": "MIT",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "config": {
+    "transformer_option": "-T ./test/transform.js",
+    "lint_option": "--lint-options {\"extensions\":[\".js\",\".jsx\"]}",
+    "server_tests": "./test/misc/ ./test/server/",
+    "client_tests": "./test/client-before.js ./test/client/ ./test/client-after.js"
+  },
   "dependencies": {
     "async": "^1.x.x",
     "bcrypt": "^0.8.x",
@@ -46,6 +57,7 @@
     "bootstrap": "^3.x.x",
     "code": "^1.x.x",
     "cookie": "^0.1.x",
+    "coveralls": "^2.11.6",
     "david": "^6.x.x",
     "del": "^1.x.x",
     "eslint-plugin-hapi": "^1.2.0",
@@ -63,7 +75,7 @@
     "gulp-sourcemaps": "^1.x.x",
     "gulp-util": "^3.x.x",
     "jsdom": "^3.x.x",
-    "lab": "^5.x.x",
+    "lab": "^6.2.0",
     "lodash": "^3.x.x",
     "merge-stream": "^0.1.x",
     "moment": "^2.x.x",
