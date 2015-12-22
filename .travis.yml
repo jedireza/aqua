@@ -1,5 +1,6 @@
-sudo: false
 language: node_js
+sudo: false
+
 node_js:
   - "0.10"
   - "0.11"
@@ -8,8 +9,17 @@ node_js:
   - "5"
 services:
   - mongodb
+
+addons:
+# cf https://docs.travis-ci.com/user/languages/javascript-with-nodejs#Node.js-v4-(or-io.js-v3)-compiler-requirements
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+
 env:
-  - NODE_ENV=test
+  - NODE_ENV=test  CXX=g++-4.8
 
 before_script:
   npm run setup
