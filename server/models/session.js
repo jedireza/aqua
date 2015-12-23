@@ -1,12 +1,14 @@
-var Joi = require('joi');
-var Uuid = require('node-uuid');
-var Async = require('async');
-var Bcrypt = require('bcrypt');
-var ObjectAssign = require('object-assign');
-var BaseModel = require('hapi-mongo-models').BaseModel;
+'use strict';
+
+const Joi = require('joi');
+const Uuid = require('node-uuid');
+const Async = require('async');
+const Bcrypt = require('bcrypt');
+const ObjectAssign = require('object-assign');
+const BaseModel = require('hapi-mongo-models').BaseModel;
 
 
-var Session = BaseModel.extend({
+const Session = BaseModel.extend({
     constructor: function (attrs) {
 
         ObjectAssign(this, attrs);
@@ -26,13 +28,13 @@ Session.schema = Joi.object().keys({
 
 
 Session.indexes = [
-    [{ userId: 1 }]
+    { key: { userId: 1 } }
 ];
 
 
 Session.generateKeyHash = function (callback) {
 
-    var key = Uuid.v4();
+    const key = Uuid.v4();
 
     Async.auto({
         salt: function (done) {
@@ -43,7 +45,7 @@ Session.generateKeyHash = function (callback) {
 
             Bcrypt.hash(key, results.salt, done);
         }]
-    }, function (err, results) {
+    }, (err, results) => {
 
         if (err) {
             return callback(err);
@@ -59,13 +61,13 @@ Session.generateKeyHash = function (callback) {
 
 Session.create = function (userId, callback) {
 
-    var self = this;
+    const self = this;
 
     Async.auto({
         keyHash: this.generateKeyHash.bind(this),
         newSession: ['keyHash', function (done, results) {
 
-            var document = {
+            const document = {
                 userId: userId,
                 key: results.keyHash.hash,
                 time: new Date()
@@ -75,14 +77,14 @@ Session.create = function (userId, callback) {
         }],
         clean: ['newSession', function (done, results) {
 
-            var query = {
+            const query = {
                 userId: userId,
                 key: { $ne: results.keyHash.hash }
             };
 
             self.deleteOne(query, done);
         }]
-    }, function (err, results) {
+    }, (err, results) => {
 
         if (err) {
             return callback(err);
@@ -97,7 +99,7 @@ Session.create = function (userId, callback) {
 
 Session.findByCredentials = function (id, key, callback) {
 
-    var self = this;
+    const self = this;
 
     Async.auto({
         session: function (done) {
@@ -110,10 +112,10 @@ Session.findByCredentials = function (id, key, callback) {
                 return done(null, false);
             }
 
-            var source = results.session.key;
+            const source = results.session.key;
             Bcrypt.compare(key, source, done);
         }]
-    }, function (err, results) {
+    }, (err, results) => {
 
         if (err) {
             return callback(err);

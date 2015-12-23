@@ -1,28 +1,25 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
-var DetailsForm = require('./DetailsForm');
-var PermissionsForm = require('./PermissionsForm');
-var DeleteForm = require('./DeleteForm');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var DetailsForm = require('./DetailsForm.jsx');
+var PermissionsForm = require('./PermissionsForm.jsx');
+var DeleteForm = require('./DeleteForm.jsx');
 var AdminGroupStore = require('../../stores/AdminGroup');
 var Actions = require('../../actions/AdminGroup');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [LinkedState],
-    contextTypes: {
-        router: React.PropTypes.func
-    },
+    mixins: [LinkedStateMixin],
     getInitialState: function () {
 
         AdminGroupStore.resetDetails();
         AdminGroupStore.resetPermissions();
         AdminGroupStore.resetDelete();
 
-        Actions.getDetails(this.context.router.getCurrentParams());
+        Actions.getDetails(this.props.params);
 
         return {
             details: AdminGroupStore.getDetails(),
@@ -52,7 +49,7 @@ var Component = React.createClass({
             return (
                 <section className="section-admin-group-details container">
                     <h1 className="page-header">
-                        <Link to="adminGroups">Admin Groups</Link> / Error
+                        <Link to="/admin/admin-groups">Admin Groups</Link> / Error
                     </h1>
                     <div className="alert alert-danger">
                         {this.state.details.error}
@@ -64,7 +61,7 @@ var Component = React.createClass({
         return (
             <section className="section-admin-group-details container">
                 <h1 className="page-header">
-                    <Link to="adminGroups">Admin Groups</Link> / {this.state.details.name}
+                    <Link to="/admin/admin-groups">Admin Groups</Link> / {this.state.details.name}
                 </h1>
                 <div className="row">
                     <div className="col-sm-6">

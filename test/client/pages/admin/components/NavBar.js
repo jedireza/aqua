@@ -1,7 +1,7 @@
-var React = require('react/addons');
+var React = require('react');
 var Lab = require('lab');
 var Code = require('code');
-var NavBar = require('../../../../../client/pages/admin/components/NavBar');
+var NavBar = require('../../../../../client/pages/admin/components/NavBar.jsx');
 var StubRouterContext = require('../../../fixtures/StubRouterContext');
 
 

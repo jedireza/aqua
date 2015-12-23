@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
 var ClassNames = require('classnames');
 
@@ -8,7 +8,7 @@ var Link = ReactRouter.Link;
 
 var Component = React.createClass({
     contextTypes: {
-        router: React.PropTypes.func
+        location: React.PropTypes.object
     },
     getInitialState: function () {
 
@@ -20,13 +20,10 @@ var Component = React.createClass({
 
         this.setState({ navBarOpen: false });
     },
-    isNavActive: function (routes) {
+    isPathActive: function (path) {
 
         return ClassNames({
-            active: routes.some(function (route) {
-
-                return this.context.router.isActive(route);
-            }.bind(this))
+            active: this.context.location.pathname === path
         });
     },
     toggleMenu: function () {
@@ -59,11 +56,11 @@ var Component = React.createClass({
                     </div>
                     <div className={navBarCollapse}>
                         <ul className="nav navbar-nav">
-                            <li className={this.isNavActive(['home'])}>
-                                <Link to="home">My account</Link>
+                            <li className={this.isPathActive('/account')}>
+                                <Link to="/account">My account</Link>
                             </li>
-                            <li className={this.isNavActive(['settings'])}>
-                                <Link to="settings">Settings</Link>
+                            <li className={this.isPathActive('/account/settings')}>
+                                <Link to="/account/settings">Settings</Link>
                             </li>
                         </ul>
                         <ul className="nav navbar-nav navbar-right">

@@ -1,19 +1,17 @@
-var React = require('react/addons');
-var Modal = require('../../../../components/Modal');
-var ControlGroup = require('../../../../components/form/ControlGroup');
-var TextControl = require('../../../../components/form/TextControl');
-var Button = require('../../../../components/form/Button');
-var Spinner = require('../../../../components/form/Spinner');
+var React = require('react');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var Modal = require('../../../../components/Modal.jsx');
+var ControlGroup = require('../../../../components/form/ControlGroup.jsx');
+var TextControl = require('../../../../components/form/TextControl.jsx');
+var Button = require('../../../../components/form/Button.jsx');
+var Spinner = require('../../../../components/form/Spinner.jsx');
 var Actions = require('../../actions/Account');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
-
-
 var Component = React.createClass({
-    mixins: [LinkedState],
+    mixins: [LinkedStateMixin],
     contextTypes: {
-        router: React.PropTypes.func
+        history: React.PropTypes.object
     },
     getDefaultProps: function () {
 
@@ -40,7 +38,7 @@ var Component = React.createClass({
         else {
             this.timeout = setTimeout(function () {
 
-                this.refs.name.refs.inputField.getDOMNode().focus();
+                this.refs.name.refs.inputField.focus();
             }.bind(this), 100);
         }
     },
@@ -51,7 +49,7 @@ var Component = React.createClass({
 
         Actions.createNew({
             name: this.state.name
-        }, this.context.router);
+        }, this.context.history);
     },
     render: function () {
 

@@ -1,17 +1,24 @@
-var Joi = require('joi');
-var Hoek = require('hoek');
-var Async = require('async');
-var Config = require('../../config');
+'use strict';
+
+const Boom = require('boom');
+const Joi = require('joi');
+const Async = require('async');
+const Config = require('../../config');
 
 
-exports.register = function (server, options, next) {
+const internals = {};
 
-    options = Hoek.applyToDefaults({ basePath: '' }, options);
+
+internals.applyRoutes = function (server, next) {
+
+    const Account = server.plugins['hapi-mongo-models'].Account;
+    const Session = server.plugins['hapi-mongo-models'].Session;
+    const User = server.plugins['hapi-mongo-models'].User;
 
 
     server.route({
         method: 'POST',
-        path: options.basePath + '/signup',
+        path: '/signup',
         config: {
             plugins: {
                 'hapi-auth-cookie': {
@@ -34,23 +41,18 @@ exports.register = function (server, options, next) {
                 assign: 'usernameCheck',
                 method: function (request, reply) {
 
-                    var User = request.server.plugins['hapi-mongo-models'].User;
-                    var conditions = {
+                    const conditions = {
                         username: request.payload.username
                     };
 
-                    User.findOne(conditions, function (err, user) {
+                    User.findOne(conditions, (err, user) => {
 
                         if (err) {
                             return reply(err);
                         }
 
                         if (user) {
-                            var response = {
-                                message: 'Username already in use.'
-                            };
-
-                            return reply(response).takeover().code(409);
+                            return reply(Boom.conflict('Username already in use.'));
                         }
 
                         reply(true);
@@ -60,23 +62,18 @@ exports.register = function (server, options, next) {
                 assign: 'emailCheck',
                 method: function (request, reply) {
 
-                    var User = request.server.plugins['hapi-mongo-models'].User;
-                    var conditions = {
+                    const conditions = {
                         email: request.payload.email
                     };
 
-                    User.findOne(conditions, function (err, user) {
+                    User.findOne(conditions, (err, user) => {
 
                         if (err) {
                             return reply(err);
                         }
 
                         if (user) {
-                            var response = {
-                                message: 'Email already in use.'
-                            };
-
-                            return reply(response).takeover().code(409);
+                            return reply(Boom.conflict('Email already in use.'));
                         }
 
                         reply(true);
@@ -86,30 +83,27 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var Account = request.server.plugins['hapi-mongo-models'].Account;
-            var User = request.server.plugins['hapi-mongo-models'].User;
-            var Session = request.server.plugins['hapi-mongo-models'].Session;
-            var mailer = request.server.plugins.mailer;
+            const mailer = request.server.plugins.mailer;
 
             Async.auto({
                 user: function (done) {
 
-                    var username = request.payload.username;
-                    var password = request.payload.password;
-                    var email = request.payload.email;
+                    const username = request.payload.username;
+                    const password = request.payload.password;
+                    const email = request.payload.email;
 
                     User.create(username, password, email, done);
                 },
                 account: ['user', function (done, results) {
 
-                    var name = request.payload.name;
+                    const name = request.payload.name;
 
                     Account.create(name, done);
                 }],
                 linkUser: ['account', function (done, results) {
 
-                    var id = results.account._id.toString();
-                    var update = {
+                    const id = results.account._id.toString();
+                    const update = {
                         $set: {
                             user: {
                                 id: results.user._id.toString(),
@@ -122,8 +116,8 @@ exports.register = function (server, options, next) {
                 }],
                 linkAccount: ['account', function (done, results) {
 
-                    var id = results.user._id.toString();
-                    var update = {
+                    const id = results.user._id.toString();
+                    const update = {
                         $set: {
                             roles: {
                                 account: {
@@ -138,16 +132,16 @@ exports.register = function (server, options, next) {
                 }],
                 welcome: ['linkUser', 'linkAccount', function (done, results) {
 
-                    var emailOptions = {
+                    const emailOptions = {
                         subject: 'Your ' + Config.get('/projectName') + ' account',
                         to: {
                             name: request.payload.name,
                             address: request.payload.email
                         }
                     };
-                    var template = 'welcome';
+                    const template = 'welcome';
 
-                    mailer.sendEmail(emailOptions, template, request.payload, function (err) {
+                    mailer.sendEmail(emailOptions, template, request.payload, (err) => {
 
                         if (err) {
                             console.warn('sending welcome email failed:', err.stack);
@@ -160,16 +154,16 @@ exports.register = function (server, options, next) {
 
                     Session.create(results.user._id.toString(), done);
                 }]
-            }, function (err, results) {
+            }, (err, results) => {
 
                 if (err) {
                     return reply(err);
                 }
 
-                var user = results.linkAccount;
-                var credentials = user.username + ':' + results.session.key;
-                var authHeader = 'Basic ' + new Buffer(credentials).toString('base64');
-                var result = {
+                const user = results.linkAccount;
+                const credentials = user.username + ':' + results.session.key;
+                const authHeader = 'Basic ' + new Buffer(credentials).toString('base64');
+                const result = {
                     user: {
                         _id: user._id,
                         username: user.username,
@@ -186,6 +180,14 @@ exports.register = function (server, options, next) {
         }
     });
 
+
+    next();
+};
+
+
+exports.register = function (server, options, next) {
+
+    server.dependency(['mailer', 'hapi-mongo-models'], internals.applyRoutes);
 
     next();
 };

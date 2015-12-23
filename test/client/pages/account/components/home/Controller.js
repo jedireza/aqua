@@ -1,7 +1,8 @@
-var React = require('react/addons');
+var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
-var Component = require('../../../../../../client/pages/account/components/home/Controller');
+var Component = require('../../../../../../client/pages/account/components/home/Controller.jsx');
 
 
 var lab = exports.lab = Lab.script();
@@ -13,10 +14,10 @@ lab.experiment('Account Home Component', function () {
     lab.test('it renders normally', function (done) {
 
         var ComponentEl = React.createElement(Component, {});
-        var component = React.render(ComponentEl, container);
+        var component = ReactDOM.render(ComponentEl, container);
 
         Code.expect(component).to.exist();
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
         done();
     });
 
@@ -31,13 +32,13 @@ lab.experiment('Account Home Component', function () {
 
                 handler();
                 setInterval = realSetInterval;
-                React.unmountComponentAtNode(container);
+                ReactDOM.unmountComponentAtNode(container);
                 done();
             });
         };
 
         var ComponentEl = React.createElement(Component, {});
 
-        React.render(ComponentEl, container);
+        ReactDOM.render(ComponentEl, container);
     });
 });

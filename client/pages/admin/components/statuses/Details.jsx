@@ -1,26 +1,23 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
-var DetailsForm = require('./DetailsForm');
-var DeleteForm = require('./DeleteForm');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var DetailsForm = require('./DetailsForm.jsx');
+var DeleteForm = require('./DeleteForm.jsx');
 var StatusStore = require('../../stores/Status');
 var Actions = require('../../actions/Status');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [LinkedState],
-    contextTypes: {
-        router: React.PropTypes.func
-    },
+    mixins: [LinkedStateMixin],
     getInitialState: function () {
 
         StatusStore.resetDetails();
         StatusStore.resetDelete();
 
-        Actions.getDetails(this.context.router.getCurrentParams());
+        Actions.getDetails(this.props.params);
 
         return {
             details: StatusStore.getDetails(),
@@ -48,7 +45,7 @@ var Component = React.createClass({
             return (
                 <section className="section-status-details container">
                     <h1 className="page-header">
-                        <Link to="statuses">Statuses</Link> / Error
+                        <Link to="/admin/statuses">Statuses</Link> / Error
                     </h1>
                     <div className="alert alert-danger">
                         {this.state.details.error}
@@ -60,7 +57,7 @@ var Component = React.createClass({
         return (
             <section className="section-status-details container">
                 <h1 className="page-header">
-                    <Link to="statuses">Statuses</Link> / {this.state.details.name}
+                    <Link to="/admin/statuses">Statuses</Link> / {this.state.details.name}
                 </h1>
                 <div className="row">
                     <div className="col-sm-6">

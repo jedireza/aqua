@@ -1,24 +1,27 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
-var App = require('./components/App');
-var Home = require('./components/home/Controller');
-var NotFound = require('./components/not-found/Controller');
-var Settings = require('./components/settings/Controller');
+var CreateBrowserHistory = require('history/lib/createBrowserHistory');
+var App = require('./components/App.jsx');
+var Home = require('./components/home/Controller.jsx');
+var NotFound = require('./components/not-found/Controller.jsx');
+var Settings = require('./components/settings/Controller.jsx');
 
 
+var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
-var DefaultRoute = ReactRouter.DefaultRoute;
-var NotFoundRoute = ReactRouter.NotFoundRoute;
+var IndexRoute = ReactRouter.IndexRoute;
+var History = CreateBrowserHistory();
 
 
-var routes = (
-    <Route path="/account" name="app" handler={App}>
-        <DefaultRoute name="home" handler={Home} />
-        <NotFoundRoute name="notFound" handler={NotFound} />
-
-        <Route path="settings" name="settings" handler={Settings} />
-    </Route>
+var Routes = (
+    <Router history={History}>
+        <Route path="/account" component={App}>
+            <IndexRoute component={Home} />
+            <Route path="settings" component={Settings} />
+            <Route path="*" component={NotFound} />
+        </Route>
+    </Router>
 );
 
 
-module.exports = routes;
+module.exports = Routes;

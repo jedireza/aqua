@@ -1,7 +1,9 @@
-var React = require('react/addons');
+'use strict';
+
+const React = require('react');
 
 
-var Component = React.createClass({
+const Component = React.createClass({
     render: function () {
 
         return (

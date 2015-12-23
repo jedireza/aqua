@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var ObjectAssign = require('object-assign');
 
 
@@ -7,27 +7,24 @@ var StubRouterContext = function (Component, stubs) {
     var RouterStub = function RouterStub () {};
 
     ObjectAssign(RouterStub, {
-        makePath: function () {},
-        makeHref: function () {},
-        transitionTo: function () {},
-        replaceWith: function () {},
-        goBack: function () {},
-        getCurrentPath: function () {},
-        getCurrentRoutes: function () {},
-        getCurrentPathname: function () {},
-        getCurrentParams: function () {},
-        getCurrentQuery: function () {},
-        isActive: function () {}
+        history: {
+            createHref: function () {}
+        },
+        location: {
+            pathname: ''
+        }
     }, stubs);
 
     return React.createClass({
         childContextTypes: {
-            router: React.PropTypes.func
+            history: React.PropTypes.object,
+            location: React.PropTypes.object
         },
         getChildContext: function () {
 
             return {
-                router: RouterStub
+                history: RouterStub.history,
+                location: RouterStub.location
             };
         },
         render: function () {

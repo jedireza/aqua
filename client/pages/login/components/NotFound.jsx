@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
 
 
@@ -12,7 +12,7 @@ var Component = React.createClass({
             <section className="section-not-found container">
                 <h1 className="page-header">Not Found</h1>
                 <p>That route didn't match any handlers.</p>
-                <Link to="home">Back to login</Link>
+                <Link to="/login">Back to login</Link>
             </section>
         );
     }

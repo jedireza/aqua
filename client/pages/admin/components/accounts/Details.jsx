@@ -1,25 +1,22 @@
-var React = require('react/addons');
+var React = require('react');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
 var ReactRouter = require('react-router');
-var DetailsForm = require('./DetailsForm');
-var UserForm = require('./UserForm');
-var StatusForm = require('./StatusForm');
-var NoteForm = require('./NoteForm');
-var DeleteForm = require('./DeleteForm');
+var DetailsForm = require('./DetailsForm.jsx');
+var UserForm = require('./UserForm.jsx');
+var StatusForm = require('./StatusForm.jsx');
+var NoteForm = require('./NoteForm.jsx');
+var DeleteForm = require('./DeleteForm.jsx');
 var AccountStore = require('../../stores/Account');
 var StatusStore = require('../../stores/Status');
 var Actions = require('../../actions/Account');
 var StatusActions = require('../../actions/Status');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [LinkedState],
-    contextTypes: {
-        router: React.PropTypes.func
-    },
+    mixins: [LinkedStateMixin],
     getInitialState: function () {
 
         AccountStore.resetDetails();
@@ -29,7 +26,7 @@ var Component = React.createClass({
         AccountStore.resetDelete();
         StatusStore.resetResults();
 
-        Actions.getDetails(this.context.router.getCurrentParams());
+        Actions.getDetails(this.props.params);
         StatusActions.getResults({ pivot: 'Account', limit: 99 });
 
         return {
@@ -68,7 +65,7 @@ var Component = React.createClass({
             return (
                 <section className="section-account-details container">
                     <h1 className="page-header">
-                        <Link to="accounts">Accounts</Link> / Error
+                        <Link to="/admin/accounts">Accounts</Link> / Error
                     </h1>
                     <div className="alert alert-danger">
                         {this.state.details.error}
@@ -80,7 +77,7 @@ var Component = React.createClass({
         return (
             <section className="section-account-details container">
                 <h1 className="page-header">
-                    <Link to="accounts">Accounts</Link> / {this.state.details.name.first} {this.state.details.name.last}
+                    <Link to="/admin/accounts">Accounts</Link> / {this.state.details.name.first} {this.state.details.name.last}
                 </h1>
                 <div className="row">
                     <div className="col-sm-8">

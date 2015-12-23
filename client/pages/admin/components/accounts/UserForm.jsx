@@ -1,19 +1,19 @@
 /* global window */
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
-var ControlGroup = require('../../../../components/form/ControlGroup');
-var TextControl = require('../../../../components/form/TextControl');
-var Button = require('../../../../components/form/Button');
-var Spinner = require('../../../../components/form/Spinner');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var ControlGroup = require('../../../../components/form/ControlGroup.jsx');
+var TextControl = require('../../../../components/form/TextControl.jsx');
+var Button = require('../../../../components/form/Button.jsx');
+var Spinner = require('../../../../components/form/Spinner.jsx');
 var Actions = require('../../actions/Account');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [LinkedState],
+    mixins: [LinkedStateMixin],
     getInitialState: function () {
 
         return {};
@@ -90,8 +90,7 @@ var Component = React.createClass({
                         />
                         <span className="input-group-btn">
                             <Link
-                                to="userDetails"
-                                params={{ id: this.props.details.user.id }}
+                                to={`/admin/users/${this.props.details.user.id}`}
                                 className="btn btn-default">
 
                                 View

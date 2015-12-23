@@ -1,11 +1,11 @@
-var React = require('react/addons');
+var React = require('react');
 var Actions = require('../../Actions');
 var AccountStore = require('../../stores/Account');
 var PasswordStore = require('../../stores/Password');
 var UserStore = require('../../stores/User');
-var AccountForm = require('./AccountForm');
-var UserForm = require('./UserForm');
-var PasswordForm = require('./PasswordForm');
+var AccountForm = require('./AccountForm.jsx');
+var UserForm = require('./UserForm.jsx');
+var PasswordForm = require('./PasswordForm.jsx');
 
 
 var Component = React.createClass({

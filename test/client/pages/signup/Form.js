@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -11,7 +11,7 @@ var stub = {
     Actions: {},
     Store: {}
 };
-var Form = Proxyquire('../../../../client/pages/signup/Form', {
+var Form = Proxyquire('../../../../client/pages/signup/Form.jsx', {
     './Actions': stub.Actions,
     './Store': stub.Store
 });

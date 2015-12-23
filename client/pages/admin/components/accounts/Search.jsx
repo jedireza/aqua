@@ -1,23 +1,24 @@
 /* global window */
-var React = require('react/addons');
-var Paging = require('../../../../components/Paging');
+var React = require('react');
+var Paging = require('../../../../components/Paging.jsx');
 var Actions = require('../../actions/Account');
 var AccountStore = require('../../stores/Account');
-var FilterForm = require('./FilterForm');
-var CreateNewForm = require('./CreateNewForm');
-var Results = require('./Results');
+var FilterForm = require('./FilterForm.jsx');
+var CreateNewForm = require('./CreateNewForm.jsx');
+var Results = require('./Results.jsx');
 
 
 var Component = React.createClass({
     contextTypes: {
-        router: React.PropTypes.func
+        history: React.PropTypes.object,
+        location: React.PropTypes.object
     },
     getInitialState: function () {
 
         AccountStore.resetResults();
         AccountStore.resetCreateNew();
 
-        Actions.getResults(this.context.router.getCurrentQuery());
+        Actions.getResults(this.context.location.search);
 
         return {
             results: AccountStore.getResults(),
@@ -26,7 +27,7 @@ var Component = React.createClass({
     },
     componentWillReceiveProps: function (nextProps) {
 
-        Actions.getResults(this.context.router.getCurrentQuery());
+        Actions.getResults(nextProps.location.query);
     },
     componentDidMount: function () {
 
@@ -50,7 +51,7 @@ var Component = React.createClass({
             event.stopPropagation();
         }
 
-        this.context.router.transitionTo('accounts', {}, this.refs.filters.state);
+        this.context.history.pushState(null, '/admin/accounts', this.refs.filters.state);
         window.scrollTo(0, 0);
     },
     onPageChange: function (page) {
@@ -77,7 +78,7 @@ var Component = React.createClass({
                 </div>
                 <FilterForm
                     ref="filters"
-                    query={this.context.router.getCurrentQuery()}
+                    query={this.context.location.query}
                     loading={this.state.results.loading}
                     onChange={this.onFiltersChange}
                 />

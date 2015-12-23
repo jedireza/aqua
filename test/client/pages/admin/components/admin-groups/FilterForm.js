@@ -1,7 +1,7 @@
-var React = require('react/addons');
+var React = require('react');
 var Lab = require('lab');
 var Code = require('code');
-var Form = require('../../../../../../client/pages/admin/components/admin-groups/FilterForm');
+var Form = require('../../../../../../client/pages/admin/components/admin-groups/FilterForm.jsx');
 
 
 var lab = exports.lab = Lab.script();

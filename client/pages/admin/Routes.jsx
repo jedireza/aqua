@@ -1,42 +1,45 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
-var App = require('./components/App');
-var Home = require('./components/home/Controller');
-var NotFound = require('./components/not-found/Controller');
-var AccountSearch = require('./components/accounts/Search');
-var AccountDetails = require('./components/accounts/Details');
-var AdminSearch = require('./components/admins/Search');
-var AdminDetails = require('./components/admins/Details');
-var AdminGroupSearch = require('./components/admin-groups/Search');
-var AdminGroupDetails = require('./components/admin-groups/Details');
-var StatusSearch = require('./components/statuses/Search');
-var StatusDetails = require('./components/statuses/Details');
-var UserSearch = require('./components/users/Search');
-var UserDetails = require('./components/users/Details');
+var CreateBrowserHistory = require('history/lib/createBrowserHistory');
+var App = require('./components/App.jsx');
+var Home = require('./components/home/Controller.jsx');
+var NotFound = require('./components/not-found/Controller.jsx');
+var AccountSearch = require('./components/accounts/Search.jsx');
+var AccountDetails = require('./components/accounts/Details.jsx');
+var AdminSearch = require('./components/admins/Search.jsx');
+var AdminDetails = require('./components/admins/Details.jsx');
+var AdminGroupSearch = require('./components/admin-groups/Search.jsx');
+var AdminGroupDetails = require('./components/admin-groups/Details.jsx');
+var StatusSearch = require('./components/statuses/Search.jsx');
+var StatusDetails = require('./components/statuses/Details.jsx');
+var UserSearch = require('./components/users/Search.jsx');
+var UserDetails = require('./components/users/Details.jsx');
 
 
+var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
-var DefaultRoute = ReactRouter.DefaultRoute;
-var NotFoundRoute = ReactRouter.NotFoundRoute;
+var IndexRoute = ReactRouter.IndexRoute;
+var History = CreateBrowserHistory();
 
 
-var routes = (
-    <Route path="/admin" name="app" handler={App}>
-        <DefaultRoute name="home" handler={Home} />
-        <NotFoundRoute name="notFound" handler={NotFound} />
-
-        <Route path="accounts" name="accounts" handler={AccountSearch} />
-        <Route path="accounts/:id" name="accountDetails" handler={AccountDetails} />
-        <Route path="admins" name="admins" handler={AdminSearch} />
-        <Route path="admins/:id" name="adminDetails" handler={AdminDetails} />
-        <Route path="admin-groups" name="adminGroups" handler={AdminGroupSearch} />
-        <Route path="admin-groups/:id" name="adminGroupDetails" handler={AdminGroupDetails} />
-        <Route path="statuses" name="statuses" handler={StatusSearch} />
-        <Route path="statuses/:id" name="statusDetails" handler={StatusDetails} />
-        <Route path="users" name="users" handler={UserSearch} />
-        <Route path="users/:id" name="userDetails" handler={UserDetails} />
-    </Route>
+var Routes = (
+    <Router history={History}>
+        <Route path="/admin" component={App}>
+            <IndexRoute component={Home} />
+            <Route path="accounts" component={AccountSearch} />
+            <Route path="accounts/:id" component={AccountDetails} />
+            <Route path="admins" component={AdminSearch} />
+            <Route path="admins/:id" component={AdminDetails} />
+            <Route path="admin-groups" component={AdminGroupSearch} />
+            <Route path="admin-groups/:id" component={AdminGroupDetails} />
+            <Route path="statuses" component={StatusSearch} />
+            <Route path="statuses/:id" component={StatusDetails} />
+            <Route path="users" component={UserSearch} />
+            <Route path="users/:id" component={UserDetails} />
+            <Route path="*" component={NotFound} />
+        </Route>
+    </Router>
 );
 
 
-module.exports = routes;
+module.exports = Routes;

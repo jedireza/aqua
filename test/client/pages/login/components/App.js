@@ -1,8 +1,8 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
 var Lab = require('lab');
 var Code = require('code');
-var App = require('../../../../../client/pages/login/components/App');
+var App = require('../../../../../client/pages/login/components/App.jsx');
 
 
 var lab = exports.lab = Lab.script();

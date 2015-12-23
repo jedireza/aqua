@@ -1,5 +1,5 @@
 /* global document, window */
-var React = require('react/addons');
+var React = require('react');
 var ClassNames = require('classnames');
 
 

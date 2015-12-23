@@ -1,12 +1,13 @@
-var React = require('react/addons');
-var ControlGroup = require('../../../../components/form/ControlGroup');
-var Button = require('../../../../components/form/Button');
-var Spinner = require('../../../../components/form/Spinner');
+var React = require('react');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var ControlGroup = require('../../../../components/form/ControlGroup.jsx');
+var Button = require('../../../../components/form/Button.jsx');
+var Spinner = require('../../../../components/form/Spinner.jsx');
 var Actions = require('../../actions/Admin');
 
 
 var Component = React.createClass({
-    mixins: [React.addons.LinkedStateMixin],
+    mixins: [LinkedStateMixin],
     getInitialState: function () {
 
         return {};
@@ -22,7 +23,7 @@ var Component = React.createClass({
     },
     handleNewPermission: function (event) {
 
-        var newPermission = this.refs.newPermission.getDOMNode().value.trim();
+        var newPermission = this.refs.newPermission.value.trim();
 
         if (!newPermission) {
             return;

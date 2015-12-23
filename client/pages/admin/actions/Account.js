@@ -151,7 +151,7 @@ var Actions = {
 
         dispatch(VIEW_ACTION, Types.HIDE_CREATE_NEW, data);
     },
-    createNew: function (data, router) {
+    createNew: function (data, routerHistory) {
 
         dispatch(VIEW_ACTION, Types.CREATE_NEW, data);
 
@@ -167,8 +167,8 @@ var Actions = {
             if (!err) {
                 response.success = true;
 
-                if (router) {
-                    router.transitionTo('accountDetails', { id: response._id });
+                if (routerHistory) {
+                    routerHistory.pushState(null, `/admin/accounts/${response._id}`);
                     window.scrollTo(0, 0);
                 }
             }
@@ -199,7 +199,7 @@ var Actions = {
             dispatch(SERVER_ACTION, Types.SAVE_DETAILS_RESPONSE, response);
         });
     },
-    delete: function (data, router) {
+    delete: function (data, routerHistory) {
 
         dispatch(VIEW_ACTION, Types.DELETE, data);
 
@@ -218,8 +218,8 @@ var Actions = {
             if (!err) {
                 response.success = true;
 
-                if (router) {
-                    router.transitionTo('accounts');
+                if (routerHistory) {
+                    routerHistory.pushState(null, '/admin/accounts');
                     window.scrollTo(0, 0);
                 }
             }

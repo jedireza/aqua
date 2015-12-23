@@ -1,16 +1,17 @@
-var React = require('react/addons');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
 var stub = {
     Actions: {},
     AccountStore: {}
 };
-var Component = Proxyquire('../../../../../../client/pages/account/components/settings/Controller', {
+var Component = Proxyquire('../../../../../../client/pages/account/components/settings/Controller.jsx', {
     '../../Actions': stub.Actions,
     '../../stores/Account': stub.AccountStore
 });
@@ -36,8 +37,8 @@ lab.experiment('Account Home Component', function () {
         var container = global.document.createElement('div');
         var ComponentEl = React.createElement(Component, {});
 
-        React.render(ComponentEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(ComponentEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -48,7 +49,7 @@ lab.experiment('Account Home Component', function () {
         var container = global.document.createElement('div');
         var ComponentEl = React.createElement(Component, {});
 
-        React.render(ComponentEl, container);
+        ReactDOM.render(ComponentEl, container);
 
         stub.AccountStore.emitChange();
 

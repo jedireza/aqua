@@ -109,10 +109,8 @@ lab.experiment('Account User Store', function () {
 
         Dispatcher.handleAction(ActionTypes.SAVE_USER_SETTINGS_RESPONSE, {
             success: true,
-            user: {
-                username: 'stimpson',
-                email: 'ren@stimpy.show'
-            }
+            username: 'stimpson',
+            email: 'ren@stimpy.show'
         });
 
         var state = Store.getState();

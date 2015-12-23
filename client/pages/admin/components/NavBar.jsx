@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
 var ClassNames = require('classnames');
 
@@ -8,7 +8,7 @@ var Link = ReactRouter.Link;
 
 var Component = React.createClass({
     contextTypes: {
-        router: React.PropTypes.func
+        location: React.PropTypes.object
     },
     getInitialState: function () {
 
@@ -20,13 +20,10 @@ var Component = React.createClass({
 
         this.setState({ navBarOpen: false });
     },
-    isNavActive: function (routes) {
+    isPathActive: function (pathPattern) {
 
         return ClassNames({
-            active: routes.some(function (route) {
-
-                return this.context.router.isActive(route);
-            }.bind(this))
+            active: this.context.location.pathname.match(pathPattern)
         });
     },
     toggleMenu: function () {
@@ -44,7 +41,7 @@ var Component = React.createClass({
             <div className="navbar navbar-inverse navbar-fixed-top">
                 <div className="container">
                     <div className="navbar-header">
-                        <Link className="navbar-brand" to="home">
+                        <Link className="navbar-brand" to="/admin">
                             <img
                                 className="navbar-logo"
                                 src="/public/media/logo-square-inverse.png"
@@ -62,20 +59,20 @@ var Component = React.createClass({
                     </div>
                     <div className={navBarCollapse}>
                         <ul className="nav navbar-nav">
-                            <li className={this.isNavActive(['accounts', 'accountDetails'])}>
-                                <Link to="accounts">Accounts</Link>
+                            <li className={this.isPathActive(/^\/admin\/accounts/)}>
+                                <Link to="/admin/accounts">Accounts</Link>
                             </li>
-                            <li className={this.isNavActive(['admins', 'adminDetails'])}>
-                                <Link to="admins">Admins</Link>
+                            <li className={this.isPathActive(/^\/admin\/admins/)}>
+                                <Link to="/admin/admins">Admins</Link>
                             </li>
-                            <li className={this.isNavActive(['adminGroups', 'adminGroupDetails'])}>
-                                <Link to="adminGroups">Admin Groups</Link>
+                            <li className={this.isPathActive(/^\/admin\/admin-groups/)}>
+                                <Link to="/admin/admin-groups">Admin Groups</Link>
                             </li>
-                            <li className={this.isNavActive(['statuses', 'statusDetails'])}>
-                                <Link to="statuses">Statuses</Link>
+                            <li className={this.isPathActive(/^\/admin\/statuses/)}>
+                                <Link to="/admin/statuses">Statuses</Link>
                             </li>
-                            <li className={this.isNavActive(['users', 'userDetails'])}>
-                                <Link to="users">Users</Link>
+                            <li className={this.isPathActive(/^\/admin\/users/)}>
+                                <Link to="/admin/users">Users</Link>
                             </li>
                         </ul>
                         <ul className="nav navbar-nav navbar-right">

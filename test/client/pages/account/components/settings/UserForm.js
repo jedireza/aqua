@@ -1,15 +1,16 @@
-var React = require('react/addons');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
 var stub = {
     Actions: {}
 };
-var Form = Proxyquire('../../../../../../client/pages/account/components/settings/UserForm', {
+var Form = Proxyquire('../../../../../../client/pages/account/components/settings/UserForm.jsx', {
     '../../Actions': stub.Actions
 });
 var mockStoreState = {};
@@ -50,8 +51,8 @@ lab.experiment('Account Settings User Form', function () {
             data: mockStoreState
         });
 
-        React.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(FormEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -92,7 +93,7 @@ lab.experiment('Account Settings User Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(formTag);
     });
 
 
@@ -106,7 +107,7 @@ lab.experiment('Account Settings User Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var button = TestUtils.findRenderedDOMComponentWithTag(form, 'button');
 
-        Code.expect(button.getDOMNode().disabled).to.be.true();
+        Code.expect(button.disabled).to.be.true();
         done();
     });
 

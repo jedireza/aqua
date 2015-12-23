@@ -1,20 +1,19 @@
-var React = require('react/addons');
+var React = require('react');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
 var ReactRouter = require('react-router');
-var ControlGroup = require('../../../components/form/ControlGroup');
-var TextControl = require('../../../components/form/TextControl');
-var Button = require('../../../components/form/Button');
-var Spinner = require('../../../components/form/Spinner');
+var ControlGroup = require('../../../components/form/ControlGroup.jsx');
+var TextControl = require('../../../components/form/TextControl.jsx');
+var Button = require('../../../components/form/Button.jsx');
+var Spinner = require('../../../components/form/Spinner.jsx');
 var Actions = require('../Actions');
 var LoginStore = require('../stores/Login');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
-var Navigation = ReactRouter.Navigation;
 
 
 var Component = React.createClass({
-    mixins: [LinkedState, Navigation],
+    mixins: [LinkedStateMixin],
     getInitialState: function () {
 
         LoginStore.reset();
@@ -23,7 +22,7 @@ var Component = React.createClass({
     componentDidMount: function () {
 
         LoginStore.addChangeListener(this.onStoreChange);
-        this.refs.username.refs.inputField.getDOMNode().focus();
+        this.refs.username.refs.inputField.focus();
     },
     componentWillUnmount: function () {
 
@@ -87,7 +86,7 @@ var Component = React.createClass({
                         Sign in
                         <Spinner space="left" show={this.state.loading} />
                     </Button>
-                    <Link to="forgot" className="btn btn-link">Forgot your password?</Link>
+                    <Link to="/login/forgot" className="btn btn-link">Forgot your password?</Link>
                 </ControlGroup>
             </fieldset>;
         }

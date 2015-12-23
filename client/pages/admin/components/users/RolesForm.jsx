@@ -1,14 +1,14 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
-var ControlGroup = require('../../../../components/form/ControlGroup');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var ControlGroup = require('../../../../components/form/ControlGroup.jsx');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [LinkedState],
+    mixins: [LinkedStateMixin],
     render: function () {
 
         var notice;
@@ -35,8 +35,7 @@ var Component = React.createClass({
                             />
                             <span className="input-group-btn">
                                 <Link
-                                    to="accountDetails"
-                                    params={{ id: roles.account.id }}
+                                    to={`/admin/accounts/${roles.account.id}`}
                                     className="btn btn-default">
 
                                     View
@@ -59,8 +58,7 @@ var Component = React.createClass({
                             />
                             <span className="input-group-btn">
                                 <Link
-                                    to="adminDetails"
-                                    params={{ id: roles.admin.id }}
+                                    to={`/admin/admins/${roles.admin.id}`}
                                     className="btn btn-default">
 
                                     View

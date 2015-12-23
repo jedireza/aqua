@@ -1,11 +1,12 @@
-var React = require('react/addons');
-var ControlGroup = require('../../../../components/form/ControlGroup');
-var Spinner = require('../../../../components/form/Spinner');
+var React = require('react');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var ControlGroup = require('../../../../components/form/ControlGroup.jsx');
+var Spinner = require('../../../../components/form/Spinner.jsx');
 var Actions = require('../../actions/Account');
 
 
 var Component = React.createClass({
-    mixins: [React.addons.LinkedStateMixin],
+    mixins: [LinkedStateMixin],
     getInitialState: function () {
 
         return {};

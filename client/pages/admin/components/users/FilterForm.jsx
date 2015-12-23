@@ -1,11 +1,12 @@
-var React = require('react/addons');
+var React = require('react');
 var ObjectAssign = require('object-assign');
-var TextControl = require('../../../../components/form/TextControl');
-var SelectControl = require('../../../../components/form/SelectControl');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var TextControl = require('../../../../components/form/TextControl.jsx');
+var SelectControl = require('../../../../components/form/SelectControl.jsx');
 
 
 var Component = React.createClass({
-    mixins: [React.addons.LinkedStateMixin],
+    mixins: [LinkedStateMixin],
     defaultState: {
         username: '',
         role: '',

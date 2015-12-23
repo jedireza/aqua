@@ -1,22 +1,19 @@
-var React = require('react/addons');
+var React = require('react');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
 var ReactRouter = require('react-router');
-var ControlGroup = require('../../../components/form/ControlGroup');
-var TextControl = require('../../../components/form/TextControl');
-var Button = require('../../../components/form/Button');
-var Spinner = require('../../../components/form/Spinner');
+var ControlGroup = require('../../../components/form/ControlGroup.jsx');
+var TextControl = require('../../../components/form/TextControl.jsx');
+var Button = require('../../../components/form/Button.jsx');
+var Spinner = require('../../../components/form/Spinner.jsx');
 var Actions = require('../Actions');
 var ForgotStore = require('../stores/Forgot');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [LinkedState],
-    contextTypes: {
-        router: React.PropTypes.func
-    },
+    mixins: [LinkedStateMixin],
     getInitialState: function () {
 
         ForgotStore.reset();
@@ -25,7 +22,7 @@ var Component = React.createClass({
     componentDidMount: function () {
 
         ForgotStore.addChangeListener(this.onStoreChange);
-        this.refs.email.refs.inputField.getDOMNode().focus();
+        this.refs.email.refs.inputField.focus();
     },
     componentWillUnmount: function () {
 
@@ -52,7 +49,7 @@ var Component = React.createClass({
                 <div className="alert alert-success">
                     If an account matched that address, an email will be sent with instructions.
                 </div>
-                <Link to="home" className="btn btn-link">Back to login</Link>
+                <Link to="/login" className="btn btn-link">Back to login</Link>
             </div>);
         }
         else if (this.state.error) {
@@ -82,7 +79,7 @@ var Component = React.createClass({
                         Send reset
                         <Spinner space="left" show={this.state.loading} />
                     </Button>
-                    <Link to="home" className="btn btn-link">Back to login</Link>
+                    <Link to="/login" className="btn btn-link">Back to login</Link>
                 </ControlGroup>
             </fieldset>;
         }

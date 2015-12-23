@@ -1,28 +1,30 @@
-var Hoek = require('hoek');
-var Fs = require('fs');
-var Handlebars = require('handlebars');
-var Nodemailer = require('nodemailer');
-var Markdown = require('nodemailer-markdown').markdown;
-var Config = require('../config');
+'use strict';
+
+const Hoek = require('hoek');
+const Fs = require('fs');
+const Handlebars = require('handlebars');
+const Nodemailer = require('nodemailer');
+const Markdown = require('nodemailer-markdown').markdown;
+const Config = require('../config');
 
 
-var transport = Nodemailer.createTransport(Config.get('/nodemailer'));
+const transport = Nodemailer.createTransport(Config.get('/nodemailer'));
 transport.use('compile', Markdown({ useEmbeddedImages: true }));
 
 
-var templateCache = {};
+const templateCache = {};
 
 
-var renderTemplate = function (signature, context, callback) {
+const renderTemplate = function (signature, context, callback) {
 
     if (templateCache[signature]) {
         return callback(null, templateCache[signature](context));
     }
 
-    var filePath = __dirname + '/emails/' + signature + '.hbs.md';
-    var options = { encoding: 'utf-8' };
+    const filePath = __dirname + '/emails/' + signature + '.hbs.md';
+    const options = { encoding: 'utf-8' };
 
-    Fs.readFile(filePath, options, function (err, source) {
+    Fs.readFile(filePath, options, (err, source) => {
 
         if (err) {
             return callback(err);
@@ -34,9 +36,9 @@ var renderTemplate = function (signature, context, callback) {
 };
 
 
-var sendEmail = exports.sendEmail = function (options, template, context, callback) {
+const sendEmail = exports.sendEmail = function (options, template, context, callback) {
 
-    renderTemplate(template, context, function (err, content) {
+    renderTemplate(template, context, (err, content) => {
 
         if (err) {
             return callback(err);

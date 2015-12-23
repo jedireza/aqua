@@ -1,7 +1,7 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
-var NavBar = require('./NavBar');
-var Footer = require('./Footer');
+var NavBar = require('./NavBar.jsx');
+var Footer = require('./Footer.jsx');
 
 
 var Component = React.createClass({
@@ -10,7 +10,7 @@ var Component = React.createClass({
         return (
             <div>
                 <NavBar />
-                <ReactRouter.RouteHandler />
+                {this.props.children}
                 <Footer />
             </div>
         );

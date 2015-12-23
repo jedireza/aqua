@@ -1,11 +1,11 @@
-var React = require('react/addons');
+var React = require('react');
+var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
-var Footer = require('../../../../../client/pages/account/components/Footer');
+var Footer = require('../../../../../client/pages/account/components/Footer.jsx');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
 
 
 lab.experiment('Account Footer', function () {

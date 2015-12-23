@@ -1,15 +1,15 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
 var Actions = require('../Actions');
 var LogoutStore = require('../stores/Logout');
 
 
 var Link = ReactRouter.Link;
-var Navigation = ReactRouter.Navigation;
+var History = ReactRouter.History;
 
 
 var Component = React.createClass({
-    mixins: [Navigation],
+    mixins: [History],
     getInitialState: function () {
 
         LogoutStore.reset();
@@ -46,7 +46,7 @@ var Component = React.createClass({
             <section>
                 <h1 className="page-header">Sign out</h1>
                 {alerts}
-                <Link to="home" className="btn btn-link">Back to login</Link>
+                <Link to="/login" className="btn btn-link">Back to login</Link>
             </section>
         );
     }

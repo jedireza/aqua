@@ -59,7 +59,7 @@ var Actions = {
 
         dispatch(VIEW_ACTION, Types.HIDE_CREATE_NEW, data);
     },
-    createNew: function (data, router) {
+    createNew: function (data, routerLocation) {
 
         dispatch(VIEW_ACTION, Types.CREATE_NEW, data);
 
@@ -75,8 +75,8 @@ var Actions = {
             if (!err) {
                 response.success = true;
 
-                if (router) {
-                    Actions.getResults(router.getCurrentQuery());
+                if (routerLocation) {
+                    Actions.getResults(routerLocation.query);
                 }
             }
 
@@ -106,7 +106,7 @@ var Actions = {
             dispatch(SERVER_ACTION, Types.SAVE_DETAILS_RESPONSE, response);
         });
     },
-    delete: function (data, router) {
+    delete: function (data, routerHistory) {
 
         dispatch(VIEW_ACTION, Types.DELETE, data);
 
@@ -125,8 +125,8 @@ var Actions = {
             if (!err) {
                 response.success = true;
 
-                if (router) {
-                    router.transitionTo('statuses');
+                if (routerHistory) {
+                    routerHistory.pushState(null, '/admin/statuses');
                     window.scrollTo(0, 0);
                 }
             }

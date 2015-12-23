@@ -1,3 +1,5 @@
+'use strict';
+
 exports.register = function (plugin, options, next) {
 
     plugin.route({

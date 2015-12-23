@@ -1,18 +1,16 @@
 /* global window */
-var React = require('react/addons');
-var ControlGroup = require('../../../../components/form/ControlGroup');
-var Button = require('../../../../components/form/Button');
-var Spinner = require('../../../../components/form/Spinner');
+var React = require('react');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var ControlGroup = require('../../../../components/form/ControlGroup.jsx');
+var Button = require('../../../../components/form/Button.jsx');
+var Spinner = require('../../../../components/form/Spinner.jsx');
 var Actions = require('../../actions/AdminGroup');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
-
-
 var Component = React.createClass({
-    mixins: [LinkedState],
+    mixins: [LinkedStateMixin],
     contextTypes: {
-        router: React.PropTypes.func
+        history: React.PropTypes.object
     },
     getInitialState: function () {
 
@@ -25,7 +23,7 @@ var Component = React.createClass({
 
         Actions.delete({
             id: this.props.details._id
-        }, this.context.router);
+        }, this.context.history);
     },
     onConfirm: function (event) {
 

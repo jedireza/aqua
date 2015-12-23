@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -10,7 +10,7 @@ var TestUtils = React.addons.TestUtils;
 var stub = {
     Actions: {}
 };
-var Form = Proxyquire('../../../../../../client/pages/admin/components/accounts/DeleteForm', {
+var Form = Proxyquire('../../../../../../client/pages/admin/components/accounts/DeleteForm.jsx', {
     '../../actions/Account': stub.Actions
 });
 var mockProps, originalConfirm;

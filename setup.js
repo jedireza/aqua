@@ -1,21 +1,23 @@
 #!/usr/bin/env node
-var Fs = require('fs');
-var Path = require('path');
-var Async = require('async');
-var Promptly = require('promptly');
-var Mongodb = require('mongodb');
-var Handlebars = require('handlebars');
+'use strict';
+
+const Fs = require('fs');
+const Path = require('path');
+const Async = require('async');
+const Promptly = require('promptly');
+const Mongodb = require('mongodb');
+const Handlebars = require('handlebars');
 
 
-var configTemplatePath = Path.resolve(__dirname, 'config.example');
-var configPath = Path.resolve(__dirname, 'config.js');
+const configTemplatePath = Path.resolve(__dirname, 'config.example');
+const configPath = Path.resolve(__dirname, 'config.js');
 
 
 if (process.env.NODE_ENV === 'test') {
-    var options = { encoding: 'utf-8' };
-    var source = Fs.readFileSync(configTemplatePath, options);
-    var configTemplate = Handlebars.compile(source);
-    var context = {
+    const options = { encoding: 'utf-8' };
+    const source = Fs.readFileSync(configTemplatePath, options);
+    const configTemplate = Handlebars.compile(source);
+    const context = {
         projectName: 'Aqua',
         mongodbUrl: 'mongodb://localhost:27017/aqua',
         rootEmail: 'root@root',
@@ -38,7 +40,7 @@ Async.auto({
     },
     mongodbUrl: ['projectName', function (done, results) {
 
-        var promptOptions = {
+        const promptOptions = {
             default: 'mongodb://localhost:27017/aqua'
         };
 
@@ -46,7 +48,7 @@ Async.auto({
     }],
     testMongo: ['rootPassword', function (done, results) {
 
-        Mongodb.MongoClient.connect(results.mongodbUrl, {}, function (err, db) {
+        Mongodb.MongoClient.connect(results.mongodbUrl, {}, (err, db) => {
 
             if (err) {
                 console.error('Failed to connect to Mongodb.');
@@ -67,7 +69,7 @@ Async.auto({
     }],
     systemEmail: ['rootPassword', function (done, results) {
 
-        var promptOptions = {
+        const promptOptions = {
             default: results.rootEmail
         };
 
@@ -83,7 +85,7 @@ Async.auto({
     }],
     smtpUsername: ['smtpPort', function (done, results) {
 
-        var promptOptions = {
+        const promptOptions = {
             default: results.systemEmail
         };
 
@@ -95,26 +97,26 @@ Async.auto({
     }],
     createConfig: ['smtpPassword', function (done, results) {
 
-        var fsOptions = { encoding: 'utf-8' };
+        const fsOptions = { encoding: 'utf-8' };
 
-        Fs.readFile(configTemplatePath, fsOptions, function (err, src) {
+        Fs.readFile(configTemplatePath, fsOptions, (err, src) => {
 
             if (err) {
                 console.error('Failed to read config template.');
                 return done(err);
             }
 
-            configTemplate = Handlebars.compile(src);
+            const configTemplate = Handlebars.compile(src);
             Fs.writeFile(configPath, configTemplate(results), done);
         });
     }],
     setupRootUser: ['createConfig', function (done, results) {
 
-        var BaseModel = require('hapi-mongo-models').BaseModel;
-        var User = require('./server/models/user');
-        var Admin = require('./server/models/admin');
-        var AdminGroup = require('./server/models/admin-group');
-        var Account = require('./server/models/account');
+        const BaseModel = require('hapi-mongo-models').BaseModel;
+        const User = require('./server/models/user');
+        const Admin = require('./server/models/admin');
+        const AdminGroup = require('./server/models/admin-group');
+        const Account = require('./server/models/account');
 
         Async.auto({
             connect: function (done) {
@@ -144,8 +146,8 @@ Async.auto({
             }],
             adminMembership: ['admin', function (done, dbResults) {
 
-                var id = dbResults.admin._id.toString();
-                var update = {
+                const id = dbResults.admin._id.toString();
+                const update = {
                     $set: {
                         groups: {
                             root: 'Root'
@@ -157,8 +159,8 @@ Async.auto({
             }],
             linkUser: ['admin', 'user', function (done, dbResults) {
 
-                var id = dbResults.user._id.toString();
-                var update = {
+                const id = dbResults.user._id.toString();
+                const update = {
                     $set: {
                         'roles.admin': {
                             id: dbResults.admin._id.toString(),
@@ -171,8 +173,8 @@ Async.auto({
             }],
             linkAdmin: ['admin', 'user', function (done, dbResults) {
 
-                var id = dbResults.admin._id.toString();
-                var update = {
+                const id = dbResults.admin._id.toString();
+                const update = {
                     $set: {
                         user: {
                             id: dbResults.user._id.toString(),
@@ -183,7 +185,7 @@ Async.auto({
 
                 Admin.findByIdAndUpdate(id, update, done);
             }]
-        }, function (err, dbResults) {
+        }, (err, dbResults) => {
 
             if (err) {
                 console.error('Failed to setup root user.');
@@ -193,7 +195,7 @@ Async.auto({
             done(null, true);
         });
     }]
-}, function (err, results) {
+}, (err, results) => {
 
     if (err) {
         console.error('Setup failed.');

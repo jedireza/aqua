@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -14,7 +14,7 @@ var stub = {
     },
     LogoutStore: {}
 };
-var Logout = Proxyquire('../../../../../client/pages/login/components/Logout', {
+var Logout = Proxyquire('../../../../../client/pages/login/components/Logout.jsx', {
     '../Actions': stub.Actions,
     '../stores/Logout': stub.LogoutStore
 });

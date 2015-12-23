@@ -1,24 +1,17 @@
 /* global window */
-var React = require('react/addons');
+var React = require('react');
+var ReactDOM = require('react-dom');
 var ReactRouter = require('react-router');
-var Routes = require('./Routes');
-
-
-var HistoryLocation = ReactRouter.HistoryLocation;
+var Routes = require('./Routes.jsx');
 
 
 var App = {
     blastoff: function () {
 
-        var self = this;
-
-        ReactRouter.run(Routes, HistoryLocation, function (Handler) {
-
-            self.mainElement = React.render(
-                <Handler />,
-                window.document.getElementById('app-mount')
-            );
-        });
+        this.mainElement = ReactDOM.render(
+            Routes,
+            window.document.getElementById('app-mount')
+        );
     }
 };
 

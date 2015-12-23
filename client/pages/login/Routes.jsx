@@ -1,27 +1,27 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
-var App = require('./components/App');
-var Home = require('./components/Home');
-var NotFound = require('./components/NotFound');
-var Logout = require('./components/Logout');
-var Forgot = require('./components/Forgot');
-var Reset = require('./components/Reset');
+var CreateBrowserHistory = require('history/lib/createBrowserHistory');
+var Home = require('./components/Home.jsx');
+var NotFound = require('./components/NotFound.jsx');
+var Logout = require('./components/Logout.jsx');
+var Forgot = require('./components/Forgot.jsx');
+var Reset = require('./components/Reset.jsx');
 
 
+var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
-var DefaultRoute = ReactRouter.DefaultRoute;
-var NotFoundRoute = ReactRouter.NotFoundRoute;
+var IndexRoute = ReactRouter.IndexRoute;
+var History = CreateBrowserHistory();
 
 
 var Routes = (
-    <Route path="/login" name="app" handler={App}>
-        <DefaultRoute name="home" handler={Home} />
-        <NotFoundRoute name="notFound" handler={NotFound} />
-
-        <Route path="forgot" name="forgot" handler={Forgot} />
-        <Route path="reset/:email/:key" name="reset" handler={Reset} />
-        <Route path="logout" name="logout" handler={Logout} />
-    </Route>
+    <Router history={History}>
+        <Route path="/login" component={Home} />
+        <Route path="/login/forgot" component={Forgot} />
+        <Route path="/login/reset/:email/:key" component={Reset} />
+        <Route path="/login/logout" component={Logout} />
+        <Route path="*" component={NotFound} />
+    </Router>
 );
 
 

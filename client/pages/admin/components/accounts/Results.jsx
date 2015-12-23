@@ -1,13 +1,13 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [LinkedState],
+    mixins: [LinkedStateMixin],
     getDefaultProps: function () {
 
         return {
@@ -23,8 +23,7 @@ var Component = React.createClass({
                     <td>
                         <Link
                             className="btn btn-default btn-sm"
-                            to="accountDetails"
-                            params={{ id: record._id }}>
+                            to={`/admin/accounts/${record._id}`}>
 
                             Edit
                         </Link>

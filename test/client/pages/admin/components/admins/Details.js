@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -17,7 +17,7 @@ var stub = {
     AdminStore: {},
     AdminGroupStore: {}
 };
-var Details = Proxyquire('../../../../../../client/pages/admin/components/admins/Details', {
+var Details = Proxyquire('../../../../../../client/pages/admin/components/admins/Details.jsx', {
     '../../actions/Admin': stub.Actions,
     '../../actions/AdminGroup': stub.GroupActions,
     '../../stores/Admin': stub.AdminStore,

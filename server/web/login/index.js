@@ -1,3 +1,5 @@
+'use strict';
+
 exports.register = function (plugin, options, next) {
 
     plugin.route({
@@ -26,7 +28,7 @@ exports.register = function (plugin, options, next) {
                 return reply.redirect('/account');
             }
 
-            var response = reply.view('login/index');
+            const response = reply.view('login/index');
             response.header('x-auth-required', true);
         }
     });

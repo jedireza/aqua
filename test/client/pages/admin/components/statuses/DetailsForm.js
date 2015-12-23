@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -9,7 +9,7 @@ var TestUtils = React.addons.TestUtils;
 var stub = {
     Actions: {}
 };
-var Form = Proxyquire('../../../../../../client/pages/admin/components/statuses/DetailsForm', {
+var Form = Proxyquire('../../../../../../client/pages/admin/components/statuses/DetailsForm.jsx', {
     '../../actions/Status': stub.Actions
 });
 var mockProps;

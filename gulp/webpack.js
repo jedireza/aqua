@@ -1,16 +1,18 @@
-var Gulp = require('gulp');
-var Gutil = require('gulp-util');
-var Webpack = require('webpack');
+'use strict';
+
+const Gulp = require('gulp');
+const Gutil = require('gulp-util');
+const Webpack = require('webpack');
 
 
-var CommonsChunkPlugin = Webpack.optimize.CommonsChunkPlugin;
-var UglifyJsPlugin = Webpack.optimize.UglifyJsPlugin;
-var executionCount = 0;
+const CommonsChunkPlugin = Webpack.optimize.CommonsChunkPlugin;
+const UglifyJsPlugin = Webpack.optimize.UglifyJsPlugin;
+let executionCount = 0;
 
 
-Gulp.task('webpack', function (callback) {
+Gulp.task('webpack', (callback) => {
 
-    var config = {
+    const config = {
         watch: global.isWatching,
         entry: {
             account: './client/pages/account/index',
@@ -28,18 +30,29 @@ Gulp.task('webpack', function (callback) {
             extensions: ['', '.js', '.jsx']
         },
         module: {
-            loaders: [
-                { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel-loader' }
-            ]
+            loaders: [{
+                test: /\.jsx$/,
+                exclude: /node_modules/,
+                loader: 'babel',
+                query: {
+                    presets: ['react', 'es2015']
+                }
+            },{
+              test: /node_modules\/qs\/.*\.js$/,
+              loader: 'babel',
+              query: {
+                  presets: ['es2015']
+              }
+            }]
         },
         devtool: 'source-map',
         plugins: [
-            new CommonsChunkPlugin('../core.min.js', undefined, 2),
-            new UglifyJsPlugin({ compress: { warnings: false } })
+            new CommonsChunkPlugin('core', '../core.min.js', [], 2),
+            // new UglifyJsPlugin({ compress: { warnings: false } })
         ]
     };
 
-    Webpack(config, function (err, stats) {
+    Webpack(config, (err, stats) => {
 
         if (err) {
             throw new Gutil.PluginError('webpack', err);
@@ -53,6 +66,7 @@ Gulp.task('webpack', function (callback) {
         if (executionCount === 0) {
             callback();
         }
+
         executionCount += 1;
     });
 });

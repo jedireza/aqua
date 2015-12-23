@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -13,7 +13,7 @@ var stub = {
     },
     StatusStore: {}
 };
-var Search = Proxyquire('../../../../../../client/pages/admin/components/statuses/Search', {
+var Search = Proxyquire('../../../../../../client/pages/admin/components/statuses/Search.jsx', {
     '../../actions/Status': stub.Actions,
     '../../stores/Status': stub.StatusStore
 });

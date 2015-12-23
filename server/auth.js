@@ -1,11 +1,13 @@
-var Async = require('async');
-var Config = require('../config');
+'use strict';
+
+const Async = require('async');
+const Config = require('../config');
 
 
 exports.register = function (server, options, next) {
 
-    var Session = server.plugins['hapi-mongo-models'].Session;
-    var User = server.plugins['hapi-mongo-models'].User;
+    const Session = server.plugins['hapi-mongo-models'].Session;
+    const User = server.plugins['hapi-mongo-models'].User;
 
 
     server.auth.strategy('session', 'cookie', {
@@ -18,8 +20,8 @@ exports.register = function (server, options, next) {
             Async.auto({
                 session: function (done) {
 
-                    var id = data.session._id;
-                    var key = data.session.key;
+                    const id = data.session._id;
+                    const key = data.session.key;
                     Session.findByCredentials(id, key, done);
                 },
                 user: ['session', function (done, results) {
@@ -46,7 +48,7 @@ exports.register = function (server, options, next) {
 
                     done(null, Object.keys(results.user.roles));
                 }]
-            }, function (err, results) {
+            }, (err, results) => {
 
                 if (err) {
                     return callback(err);
@@ -79,13 +81,13 @@ exports.preware.ensureAdminGroup = function (groups) {
                 groups = [groups];
             }
 
-            var groupFound = groups.some(function (group) {
+            const groupFound = groups.some((group) => {
 
                 return request.auth.credentials.roles.admin.isMemberOf(group);
             });
 
             if (!groupFound) {
-                var response = {
+                const response = {
                     message: 'Permission denied to this resource.'
                 };
 

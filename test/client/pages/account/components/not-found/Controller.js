@@ -1,12 +1,13 @@
-var React = require('react/addons');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
-var NotFound = require('../../../../../../client/pages/account/components/not-found/Controller');
+var NotFound = require('../../../../../../client/pages/account/components/not-found/Controller.jsx');
 var StubRouterContext = require('../../../../fixtures/StubRouterContext');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
 
 
 lab.experiment('Login Not Found Component', function () {
@@ -28,8 +29,8 @@ lab.experiment('Login Not Found Component', function () {
         var ComponentWithContext = StubRouterContext(NotFound, {});
         var NotFoundEl = React.createElement(ComponentWithContext, {});
 
-        React.render(NotFoundEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(NotFoundEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });

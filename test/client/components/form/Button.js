@@ -1,11 +1,11 @@
-var React = require('react/addons');
+var React = require('react');
+var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
-var Button = require('../../../../client/components/form/Button');
+var Button = require('../../../../client/components/form/Button.jsx');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
 
 
 lab.experiment('Button', function () {

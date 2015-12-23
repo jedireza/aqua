@@ -1,12 +1,12 @@
-var React = require('react/addons');
+var React = require('react');
+var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
-var NavBar = require('../../../../../client/pages/account/components/NavBar');
+var NavBar = require('../../../../../client/pages/account/components/NavBar.jsx');
 var StubRouterContext = require('../../../fixtures/StubRouterContext');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
 
 
 lab.experiment('Account NavBar', function () {
@@ -29,10 +29,10 @@ lab.experiment('Account NavBar', function () {
         var mainElement = TestUtils.renderIntoDocument(NavBarEl);
         var button = TestUtils.findRenderedDOMComponentWithTag(mainElement, 'button');
         var menuDiv = TestUtils.findRenderedDOMComponentWithClass(mainElement, 'navbar-collapse');
-        var menuDivNode = menuDiv.getDOMNode();
+        var menuDivNode = menuDiv;
 
         Code.expect(menuDivNode.className).to.equal('navbar-collapse collapse');
-        TestUtils.Simulate.click(button.getDOMNode());
+        TestUtils.Simulate.click(button);
 
         Code.expect(menuDivNode.className).to.equal('navbar-collapse');
 

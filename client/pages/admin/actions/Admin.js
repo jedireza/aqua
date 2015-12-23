@@ -59,7 +59,7 @@ var Actions = {
 
         dispatch(VIEW_ACTION, Types.HIDE_CREATE_NEW, data);
     },
-    createNew: function (data, router) {
+    createNew: function (data, routerHistory) {
 
         dispatch(VIEW_ACTION, Types.CREATE_NEW, data);
 
@@ -75,8 +75,8 @@ var Actions = {
             if (!err) {
                 response.success = true;
 
-                if (router) {
-                    router.transitionTo('adminDetails', { id: response._id });
+                if (routerHistory) {
+                    routerHistory.pushState(null, `/admin/admins/${response._id}`);
                     window.scrollTo(0, 0);
                 }
             }
@@ -199,7 +199,7 @@ var Actions = {
             dispatch(SERVER_ACTION, Types.SAVE_PERMISSIONS_RESPONSE, response);
         });
     },
-    delete: function (data, router) {
+    delete: function (data, routerHistory) {
 
         dispatch(VIEW_ACTION, Types.DELETE, data);
 
@@ -218,8 +218,8 @@ var Actions = {
             if (!err) {
                 response.success = true;
 
-                if (router) {
-                    router.transitionTo('admins');
+                if (routerHistory) {
+                    routerHistory.pushState(null, '/admin/admins');
                     window.scrollTo(0, 0);
                 }
             }

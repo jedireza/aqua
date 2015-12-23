@@ -82,8 +82,8 @@ var Store = FluxStore.extend({
             this.handleResponseErrors(action.data);
 
             if (this.state.success) {
-                this.state.username = action.data.user.username;
-                this.state.email = action.data.user.email;
+                this.state.username = action.data.username;
+                this.state.email = action.data.email;
             }
 
             this.emitChange();

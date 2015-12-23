@@ -1,9 +1,19 @@
-var Glue = require('glue');
-var Manifest = require('./manifest');
+'use strict';
+
+const Glue = require('glue');
+const Manifest = require('./manifest');
 
 
-var composeOptions = {
-    relativeTo: __dirname
+const composeOptions = {
+    relativeTo: __dirname,
+    preRegister: function(server, next){
+
+        require('babel-core/register')({
+            presets: ['react', 'es2015']
+        });
+
+        next();
+    }
 };
 
 

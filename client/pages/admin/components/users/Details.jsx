@@ -1,29 +1,26 @@
-var React = require('react/addons');
+var React = require('react');
 var ReactRouter = require('react-router');
-var IdentityForm = require('./IdentityForm');
-var RolesForm = require('./RolesForm');
-var PasswordForm = require('./PasswordForm');
-var DeleteForm = require('./DeleteForm');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var IdentityForm = require('./IdentityForm.jsx');
+var RolesForm = require('./RolesForm.jsx');
+var PasswordForm = require('./PasswordForm.jsx');
+var DeleteForm = require('./DeleteForm.jsx');
 var UserStore = require('../../stores/User');
 var Actions = require('../../actions/User');
 
 
-var LinkedState = React.addons.LinkedStateMixin;
 var Link = ReactRouter.Link;
 
 
 var Component = React.createClass({
-    mixins: [LinkedState],
-    contextTypes: {
-        router: React.PropTypes.func
-    },
+    mixins: [LinkedStateMixin],
     getInitialState: function () {
 
         UserStore.resetIdentity();
         UserStore.resetPassword();
         UserStore.resetDelete();
 
-        Actions.getIdentity(this.context.router.getCurrentParams());
+        Actions.getIdentity(this.props.params);
 
         return {
             identity: UserStore.getIdentity(),
@@ -53,7 +50,7 @@ var Component = React.createClass({
             return (
                 <section className="section-user-details container">
                     <h1 className="page-header">
-                        <Link to="users">Users</Link> / Error
+                        <Link to="/admin/users">Users</Link> / Error
                     </h1>
                     <div className="alert alert-danger">
                         {this.state.identity.error}
@@ -65,7 +62,7 @@ var Component = React.createClass({
         return (
             <section className="section-user-details container">
                 <h1 className="page-header">
-                    <Link to="users">Users</Link> / {this.state.identity.username}
+                    <Link to="/admin/users">Users</Link> / {this.state.identity.username}
                 </h1>
                 <div className="row">
                     <div className="col-sm-6">

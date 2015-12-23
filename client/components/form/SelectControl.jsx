@@ -1,6 +1,6 @@
-var React = require('react/addons');
+var React = require('react');
 var ObjectAssign = require('object-assign');
-var ControlGroup = require('../../components/form/ControlGroup');
+var ControlGroup = require('./ControlGroup.jsx');
 var ClassNames = require('classnames');
 
 

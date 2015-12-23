@@ -1,12 +1,13 @@
 /* global window */
-var React = require('react/addons');
-var FormView = require('./Form');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var FormView = require('./Form.jsx');
 
 
 var App = {
     blastoff: function () {
 
-        this.mainElement = React.render(
+        this.mainElement = ReactDOM.render(
             <FormView />,
             window.document.getElementById('app-mount')
         );

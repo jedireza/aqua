@@ -1,15 +1,16 @@
-var React = require('react/addons');
-var ControlGroup = require('../../components/form/ControlGroup');
-var TextControl = require('../../components/form/TextControl');
-var TextareaControl = require('../../components/form/TextareaControl');
-var Button = require('../../components/form/Button');
-var Spinner = require('../../components/form/Spinner');
+var React = require('react');
+var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var ControlGroup = require('../../components/form/ControlGroup.jsx');
+var TextControl = require('../../components/form/TextControl.jsx');
+var TextareaControl = require('../../components/form/TextareaControl.jsx');
+var Button = require('../../components/form/Button.jsx');
+var Spinner = require('../../components/form/Spinner.jsx');
 var Actions = require('./Actions');
 var Store = require('./Store');
 
 
 var Component = React.createClass({
-    mixins: [React.addons.LinkedStateMixin],
+    mixins: [LinkedStateMixin],
     getInitialState: function () {
 
         Store.reset();
@@ -18,7 +19,7 @@ var Component = React.createClass({
     componentDidMount: function () {
 
         Store.addChangeListener(this.onStoreChange);
-        this.refs.nameControl.refs.inputField.getDOMNode().focus();
+        this.refs.nameControl.refs.inputField.focus();
     },
     componentWillUnmount: function () {
 
