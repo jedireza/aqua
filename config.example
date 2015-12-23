@@ -1,12 +1,12 @@
-var Confidence = require('confidence');
+const Confidence = require('confidence');
 
 
-var criteria = {
+const criteria = {
     env: process.env.NODE_ENV
 };
 
 
-var config = {
+const config = {
     $meta: 'This file configures the plot device.',
     projectName: '{{projectName}}',
     port: {
@@ -30,7 +30,7 @@ var config = {
     cookieSecret: {
         $filter: 'env',
         production: process.env.COOKIE_SECRET,
-        $default: '~k3yb04rdK4tz!'
+        $default: '!k3yb04rdK4tz~4qu4~k3yb04rdd0gz!'
     },
     hapiMongoModels: {
         $filter: 'env',
@@ -75,7 +75,7 @@ var config = {
 };
 
 
-var store = new Confidence.Store(config);
+const store = new Confidence.Store(config);
 
 
 exports.get = function (key) {

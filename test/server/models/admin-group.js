@@ -1,26 +1,28 @@
-var Lab = require('lab');
-var Code = require('code');
-var Config = require('../../../config');
-var AdminGroup = require('../../../server/models/admin-group');
+'use strict';
+
+const Lab = require('lab');
+const Code = require('code');
+const Config = require('../../../config');
+const AdminGroup = require('../../../server/models/admin-group');
 
 
-var lab = exports.lab = Lab.script();
+const lab = exports.lab = Lab.script();
 
 
-lab.experiment('AdminGroup Class Methods', function () {
+lab.experiment('AdminGroup Class Methods', () => {
 
-    lab.before(function (done) {
+    lab.before((done) => {
 
-        AdminGroup.connect(Config.get('/hapiMongoModels/mongodb'), function (err, db) {
+        AdminGroup.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
 
             done(err);
         });
     });
 
 
-    lab.after(function (done) {
+    lab.after((done) => {
 
-        AdminGroup.deleteMany({}, function (err, count) {
+        AdminGroup.deleteMany({}, (err, count) => {
 
             AdminGroup.disconnect();
 
@@ -29,9 +31,9 @@ lab.experiment('AdminGroup Class Methods', function () {
     });
 
 
-    lab.test('it returns a new instance when create succeeds', function (done) {
+    lab.test('it returns a new instance when create succeeds', (done) => {
 
-        AdminGroup.create('Sales', function (err, result) {
+        AdminGroup.create('Sales', (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.be.an.instanceOf(AdminGroup);
@@ -41,18 +43,18 @@ lab.experiment('AdminGroup Class Methods', function () {
     });
 
 
-    lab.test('it returns an error when create fails', function (done) {
+    lab.test('it returns an error when create fails', (done) => {
 
-        var realInsertOne = AdminGroup.insertOne;
+        const realInsertOne = AdminGroup.insertOne;
         AdminGroup.insertOne = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(Error('insert failed'));
         };
 
-        AdminGroup.create('Support', function (err, result) {
+        AdminGroup.create('Support', (err, result) => {
 
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
@@ -65,20 +67,20 @@ lab.experiment('AdminGroup Class Methods', function () {
 });
 
 
-lab.experiment('AdminGroup Instance Methods', function () {
+lab.experiment('AdminGroup Instance Methods', () => {
 
-    lab.before(function (done) {
+    lab.before((done) => {
 
-        AdminGroup.connect(Config.get('/hapiMongoModels/mongodb'), function (err, db) {
+        AdminGroup.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
 
             done(err);
         });
     });
 
 
-    lab.after(function (done) {
+    lab.after((done) => {
 
-        AdminGroup.deleteMany({}, function (err, result) {
+        AdminGroup.deleteMany({}, (err, result) => {
 
             AdminGroup.disconnect();
 
@@ -87,9 +89,9 @@ lab.experiment('AdminGroup Instance Methods', function () {
     });
 
 
-    lab.test('it returns false when permissions are not found', function (done) {
+    lab.test('it returns false when permissions are not found', (done) => {
 
-        AdminGroup.create('Sales', function (err, adminGroup) {
+        AdminGroup.create('Sales', (err, adminGroup) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(adminGroup).to.be.an.instanceOf(AdminGroup);
@@ -100,9 +102,9 @@ lab.experiment('AdminGroup Instance Methods', function () {
     });
 
 
-    lab.test('it returns boolean values for set permissions', function (done) {
+    lab.test('it returns boolean values for set permissions', (done) => {
 
-        AdminGroup.create('Support', function (err, adminGroup) {
+        AdminGroup.create('Support', (err, adminGroup) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(adminGroup).to.be.an.instanceOf(AdminGroup);

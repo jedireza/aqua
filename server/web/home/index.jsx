@@ -1,11 +1,13 @@
-var React = require('react/addons');
-var Layout = require('../layouts/Default.jsx');
+'use strict';
+
+const React = require('react');
+const Layout = require('../layouts/Default');
 
 
-var Component = React.createClass({
+const Component = React.createClass({
     render: function () {
 
-        var neck = <link rel='stylesheet' href="/public/pages/home.min.css" />;
+        const neck = <link rel='stylesheet' href="/public/pages/home.min.css" />;
 
         return (
             <Layout

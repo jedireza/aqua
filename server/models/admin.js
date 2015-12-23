@@ -1,11 +1,13 @@
-var Joi = require('joi');
-var Async = require('async');
-var ObjectAssign = require('object-assign');
-var BaseModel = require('hapi-mongo-models').BaseModel;
-var AdminGroup = require('./admin-group');
+'use strict';
+
+const Joi = require('joi');
+const Async = require('async');
+const ObjectAssign = require('object-assign');
+const BaseModel = require('hapi-mongo-models').BaseModel;
+const AdminGroup = require('./admin-group');
 
 
-var Admin = BaseModel.extend({
+const Admin = BaseModel.extend({
     constructor: function (attrs) {
 
         ObjectAssign(this, attrs);
@@ -34,10 +36,9 @@ var Admin = BaseModel.extend({
             return callback(null, this._groups);
         }
 
-        var self = this;
-        var tasks = {};
+        const tasks = {};
 
-        Object.keys(this.groups).forEach(function (group) {
+        Object.keys(this.groups).forEach((group) => {
 
             tasks[group] = function (done) {
 
@@ -45,15 +46,15 @@ var Admin = BaseModel.extend({
             };
         });
 
-        Async.auto(tasks, function (err, results) {
+        Async.auto(tasks, (err, results) => {
 
             if (err) {
                 return callback(err);
             }
 
-            self._groups = results;
+            this._groups = results;
 
-            callback(null, self._groups);
+            callback(null, this._groups);
         });
     },
     hasPermissionTo: function (permission, callback) {
@@ -62,19 +63,17 @@ var Admin = BaseModel.extend({
             return callback(null, this.permissions[permission]);
         }
 
-        var self = this;
-
-        this.hydrateGroups(function (err) {
+        this.hydrateGroups((err) => {
 
             if (err) {
                 return callback(err);
             }
 
-            var groupHasPermission = false;
+            let groupHasPermission = false;
 
-            Object.keys(self._groups).forEach(function (group) {
+            Object.keys(this._groups).forEach((group) => {
 
-                if (self._groups[group].hasPermissionTo(permission)) {
+                if (this._groups[group].hasPermissionTo(permission)) {
                     groupHasPermission = true;
                 }
             });
@@ -98,7 +97,7 @@ Admin.schema = Joi.object().keys({
     permissions: Joi.object().description('{ permission: boolean, ... }'),
     name: Joi.object().keys({
         first: Joi.string().required(),
-        middle: Joi.string().allow(['', null]),
+        middle: Joi.string().allow(''),
         last: Joi.string().required()
     }),
     timeCreated: Joi.date()
@@ -106,16 +105,16 @@ Admin.schema = Joi.object().keys({
 
 
 Admin.indexes = [
-    [{ 'user.id': 1 }],
-    [{ 'user.name': 1 }]
+    { key: { 'user.id': 1 } },
+    { key: { 'user.name': 1 } }
 ];
 
 
 Admin.create = function (name, callback) {
 
-    var nameParts = name.trim().split(/\s/);
+    const nameParts = name.trim().split(/\s/);
 
-    var document = {
+    const document = {
         name: {
             first: nameParts.shift(),
             middle: nameParts.length > 1 ? nameParts.shift() : undefined,
@@ -124,7 +123,7 @@ Admin.create = function (name, callback) {
         timeCreated: new Date()
     };
 
-    this.insertOne(document, function (err, docs) {
+    this.insertOne(document, (err, docs) => {
 
         if (err) {
             return callback(err);
@@ -137,7 +136,7 @@ Admin.create = function (name, callback) {
 
 Admin.findByUsername = function (username, callback) {
 
-    var query = { 'user.name': username.toLowerCase() };
+    const query = { 'user.name': username.toLowerCase() };
     this.findOne(query, callback);
 };
 

@@ -1,8 +1,10 @@
-var React = require('react/addons');
-var ClassNames = require('classnames');
+'use strict';
+
+const React = require('react');
+const ClassNames = require('classnames');
 
 
-var Component = React.createClass({
+const Component = React.createClass({
     tabClass: function (tab) {
 
         return ClassNames({

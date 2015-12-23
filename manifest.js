@@ -1,13 +1,14 @@
-var Confidence = require('confidence');
-var Config = require('./config');
+'use strict';
+const Confidence = require('confidence');
+const Config = require('./config.js');
 
 
-var criteria = {
+const criteria = {
     env: process.env.NODE_ENV
 };
 
 
-var manifest = {
+const manifest = {
     $meta: 'This file defines the plot device.',
     server: {
         debug: {
@@ -23,60 +24,165 @@ var manifest = {
         port: Config.get('/port/web'),
         labels: ['web']
     }],
-    plugins: {
-        'hapi-auth-basic': {},
-        'hapi-auth-cookie': {},
-        'crumb': {
-            restful: true
+    registrations: [
+        {
+            plugin: 'inert'
         },
-        'lout': {},
-        'visionary': {
-            engines: {
-                jsx: 'hapi-react-views'
-            },
-            relativeTo: __dirname,
-            path: './server/web'
+        {
+            plugin: 'hapi-auth-cookie'
         },
-        'hapi-mongo-models': {
-            mongodb: Config.get('/hapiMongoModels/mongodb'),
-            models: {
-                Account: './server/models/account',
-                AdminGroup: './server/models/admin-group',
-                Admin: './server/models/admin',
-                AuthAttempt: './server/models/auth-attempt',
-                Session: './server/models/session',
-                Status: './server/models/status',
-                User: './server/models/user'
-            },
-            autoIndex: Config.get('/hapiMongoModels/autoIndex')
+        {
+            plugin: {
+                register: 'crumb',
+                options: {
+                    restful: true
+                }
+            }
         },
-        './server/auth': {},
-        './server/mailer': {},
-        './server/api/accounts': { basePath: '/api' },
-        './server/api/admin-groups': { basePath: '/api' },
-        './server/api/admins': { basePath: '/api' },
-        './server/api/auth-attempts': { basePath: '/api' },
-        './server/api/contact': { basePath: '/api' },
-        './server/api/index': { basePath: '/api' },
-        './server/api/login': { basePath: '/api' },
-        './server/api/logout': { basePath: '/api' },
-        './server/api/sessions': { basePath: '/api' },
-        './server/api/signup': { basePath: '/api' },
-        './server/api/statuses': { basePath: '/api' },
-        './server/api/users': { basePath: '/api' },
-        './server/web/about': {},
-        './server/web/account': {},
-        './server/web/admin': {},
-        './server/web/contact': {},
-        './server/web/home': {},
-        './server/web/login': {},
-        './server/web/public': {},
-        './server/web/signup': {}
-    }
+        {
+            plugin: 'lout'
+        },
+        {
+            plugin: 'inert'
+        },
+        {
+            plugin: 'vision'
+        },
+        {
+            plugin: {
+                register: 'visionary',
+                options: {
+                    engines: { jsx: 'hapi-react-views' },
+                    relativeTo: __dirname,
+                    path: './server/web'
+                }
+            }
+        },
+        {
+            plugin: {
+                register: 'hapi-mongo-models',
+                options: {
+                    mongodb: Config.get('/hapiMongoModels/mongodb'),
+                    models: {
+                        Account: './server/models/account',
+                        AdminGroup: './server/models/admin-group',
+                        Admin: './server/models/admin',
+                        AuthAttempt: './server/models/auth-attempt',
+                        Session: './server/models/session',
+                        Status: './server/models/status',
+                        User: './server/models/user'
+                    },
+                    autoIndex: Config.get('/hapiMongoModels/autoIndex')
+                }
+            }
+        },
+        {
+            plugin: './server/auth'
+        },
+        {
+            plugin: './server/mailer'
+        },
+        {
+            plugin: './server/api/accounts',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/admin-groups',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/admins',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/auth-attempts',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/contact',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/index',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/login',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/logout',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/sessions',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/signup',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/statuses',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/users',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/web/about'
+        },
+        {
+            plugin: './server/web/account'
+        },
+        {
+            plugin: './server/web/admin'
+        },
+        {
+            plugin: './server/web/contact'
+        },
+        {
+            plugin: './server/web/home'
+        },
+        {
+            plugin: './server/web/login'
+        },
+        {
+            plugin: './server/web/public'
+        },
+        {
+            plugin: './server/web/signup'
+        }
+    ]
 };
 
 
-var store = new Confidence.Store(manifest);
+const store = new Confidence.Store(manifest);
 
 
 exports.get = function (key) {
