@@ -1,15 +1,16 @@
-var React = require('react/addons');
-var Layout = require('../layouts/Plain.jsx');
+'use strict';
+const Layout = require('../layouts/plain.jsx');
+const React = require('react');
 
 
-var Component = React.createClass({
-    render: function () {
+class AdminPage extends React.Component {
+    render() {
 
-        var neck = [
+        const neck = [
             <link key="layout" rel="stylesheet" href="/public/layouts/default.min.css" />,
             <link key="page" rel="stylesheet" href="/public/pages/admin.min.css" />
         ];
-        var feet = <script src="/public/pages/admin.min.js"></script>;
+        const feet = <script src="/public/pages/admin.min.js"></script>;
 
         return (
             <Layout
@@ -21,7 +22,7 @@ var Component = React.createClass({
             </Layout>
         );
     }
-});
+}
 
 
-module.exports = Component;
+module.exports = AdminPage;

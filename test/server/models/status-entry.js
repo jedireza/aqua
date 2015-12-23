@@ -1,16 +1,17 @@
-var Lab = require('lab');
-var Code = require('code');
-var StatusEntry = require('../../../server/models/status-entry');
+'use strict';
+const Code = require('code');
+const Lab = require('lab');
+const StatusEntry = require('../../../server/models/status-entry');
 
 
-var lab = exports.lab = Lab.script();
+const lab = exports.lab = Lab.script();
 
 
-lab.experiment('Status Entry Class', function () {
+lab.experiment('Status Entry Class', () => {
 
-    lab.test('it instantiates an instance', function (done) {
+    lab.test('it instantiates an instance', (done) => {
 
-        var statusEntry = new StatusEntry({});
+        const statusEntry = new StatusEntry({});
 
         Code.expect(statusEntry).to.be.an.instanceOf(StatusEntry);
 

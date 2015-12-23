@@ -1,12 +1,13 @@
-var Lab = require('lab');
-var Code = require('code');
-var Config = require('../../config');
-var Hapi = require('hapi');
-var Proxyquire = require('proxyquire');
+'use strict';
+const Code = require('code');
+const Config = require('../../config');
+const Hapi = require('hapi');
+const Lab = require('lab');
+const Proxyquire = require('proxyquire');
 
 
-var lab = exports.lab = Lab.script();
-var stub = {
+const lab = exports.lab = Lab.script();
+const stub = {
     fs: {},
     nodemailer: {
         createTransport: function (smtp) {
@@ -24,22 +25,22 @@ var stub = {
         }
     }
 };
-var MailerPlugin = Proxyquire('../../server/mailer', {
+const MailerPlugin = Proxyquire('../../server/mailer', {
     'fs': stub.fs,
     'nodemailer': stub.nodemailer
 });
 
 
-lab.experiment('Mailer Plugin', function () {
+lab.experiment('Mailer Plugin', () => {
 
-    var server;
+    let server;
 
 
-    lab.before(function (done) {
+    lab.before((done) => {
 
         server = new Hapi.Server();
         server.connection({ port: Config.get('/port/web') });
-        server.register(MailerPlugin, function (err) {
+        server.register(MailerPlugin, (err) => {
 
             if (err) {
                 return done(err);
@@ -50,7 +51,7 @@ lab.experiment('Mailer Plugin', function () {
     });
 
 
-    lab.test('it successfuly registers itself', function (done) {
+    lab.test('it successfuly registers itself', (done) => {
 
         Code.expect(server.plugins.mailer).to.be.an.object();
         Code.expect(server.plugins.mailer.sendEmail).to.be.a.function();
@@ -59,15 +60,15 @@ lab.experiment('Mailer Plugin', function () {
     });
 
 
-    lab.test('it returns error when read file fails', function (done) {
+    lab.test('it returns error when read file fails', (done) => {
 
-        var realReadFile = stub.fs.readFile;
+        const realReadFile = stub.fs.readFile;
         stub.fs.readFile = function (path, options, callback) {
 
             return callback(Error('read file failed'));
         };
 
-        server.plugins.mailer.sendEmail({}, 'path', {}, function (err, info) {
+        server.plugins.mailer.sendEmail({}, 'path', {}, (err, info) => {
 
             stub.fs.readFile = realReadFile;
             Code.expect(err).to.be.an.object();
@@ -77,15 +78,15 @@ lab.experiment('Mailer Plugin', function () {
     });
 
 
-    lab.test('it sends an email', function (done) {
+    lab.test('it sends an email', (done) => {
 
-        var realReadFile = stub.fs.readFile;
+        const realReadFile = stub.fs.readFile;
         stub.fs.readFile = function (path, options, callback) {
 
             return callback(null, '');
         };
 
-        server.plugins.mailer.sendEmail({}, 'path', {}, function (err, info) {
+        server.plugins.mailer.sendEmail({}, 'path', {}, (err, info) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(info).to.be.an.object();
@@ -97,15 +98,15 @@ lab.experiment('Mailer Plugin', function () {
     });
 
 
-    lab.test('it returns early with the template is cached', function (done) {
+    lab.test('it returns early with the template is cached', (done) => {
 
-        var realReadFile = stub.fs.readFile;
+        const realReadFile = stub.fs.readFile;
         stub.fs.readFile = function (path, options, callback) {
 
             return callback(null, '');
         };
 
-        server.plugins.mailer.sendEmail({}, 'path', {}, function (err, info) {
+        server.plugins.mailer.sendEmail({}, 'path', {}, (err, info) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(info).to.be.an.object();

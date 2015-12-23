@@ -1,14 +1,18 @@
-var Hoek = require('hoek');
+'use strict';
+const Boom = require('boom');
 
 
-exports.register = function (server, options, next) {
+const internals = {};
 
-    options = Hoek.applyToDefaults({ basePath: '' }, options);
+
+internals.applyRoutes = function (server, next) {
+
+    const Session = server.plugins['hapi-mongo-models'].Session;
 
 
     server.route({
         method: 'DELETE',
-        path: options.basePath + '/logout',
+        path: '/logout',
         config: {
             auth: {
                 mode: 'try',
@@ -22,26 +26,33 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var Session = request.server.plugins['hapi-mongo-models'].Session;
-            var credentials = request.auth.credentials || { session: {} };
-            var session = credentials.session || {};
+            const credentials = request.auth.credentials || { session: {} };
+            const session = credentials.session || {};
 
-            Session.findByIdAndDelete(session._id, function (err, sessionDoc) {
+            Session.findByIdAndDelete(session._id, (err, sessionDoc) => {
 
                 if (err) {
                     return reply(err);
                 }
 
                 if (!sessionDoc) {
-                    return reply({ message: 'Session not found.' }).code(404);
+                    return reply(Boom.notFound('Document not found.'));
                 }
 
-                request.auth.session.clear();
+                request.cookieAuth.clear();
                 reply({ message: 'Success.' });
             });
         }
     });
 
+
+    next();
+};
+
+
+exports.register = function (server, options, next) {
+
+    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
 
     next();
 };

@@ -1,16 +1,20 @@
-var Joi = require('joi');
-var Hoek = require('hoek');
-var AuthPlugin = require('../auth');
+'use strict';
+const AuthPlugin = require('../auth');
+const Boom = require('boom');
+const Joi = require('joi');
 
 
-exports.register = function (server, options, next) {
+const internals = {};
 
-    options = Hoek.applyToDefaults({ basePath: '' }, options);
+
+internals.applyRoutes = function (server, next) {
+
+    const AuthAttempt = server.plugins['hapi-mongo-models'].AuthAttempt;
 
 
     server.route({
         method: 'GET',
-        path: options.basePath + '/auth-attempts',
+        path: '/auth-attempts',
         config: {
             auth: {
                 strategy: 'session',
@@ -30,14 +34,13 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var AuthAttempt = request.server.plugins['hapi-mongo-models'].AuthAttempt;
-            var query = {};
-            var fields = request.query.fields;
-            var sort = request.query.sort;
-            var limit = request.query.limit;
-            var page = request.query.page;
+            const query = {};
+            const fields = request.query.fields;
+            const sort = request.query.sort;
+            const limit = request.query.limit;
+            const page = request.query.page;
 
-            AuthAttempt.pagedFind(query, fields, sort, limit, page, function (err, results) {
+            AuthAttempt.pagedFind(query, fields, sort, limit, page, (err, results) => {
 
                 if (err) {
                     return reply(err);
@@ -51,7 +54,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'GET',
-        path: options.basePath + '/auth-attempts/{id}',
+        path: '/auth-attempts/{id}',
         config: {
             auth: {
                 strategy: 'session',
@@ -63,16 +66,14 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var AuthAttempt = request.server.plugins['hapi-mongo-models'].AuthAttempt;
-
-            AuthAttempt.findById(request.params.id, function (err, authAttempt) {
+            AuthAttempt.findById(request.params.id, (err, authAttempt) => {
 
                 if (err) {
                     return reply(err);
                 }
 
                 if (!authAttempt) {
-                    return reply({ message: 'Document not found.' }).code(404);
+                    return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply(authAttempt);
@@ -83,7 +84,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'DELETE',
-        path: options.basePath + '/auth-attempts/{id}',
+        path: '/auth-attempts/{id}',
         config: {
             auth: {
                 strategy: 'session',
@@ -95,16 +96,14 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var AuthAttempt = request.server.plugins['hapi-mongo-models'].AuthAttempt;
-
-            AuthAttempt.findByIdAndDelete(request.params.id, function (err, authAttempt) {
+            AuthAttempt.findByIdAndDelete(request.params.id, (err, authAttempt) => {
 
                 if (err) {
                     return reply(err);
                 }
 
                 if (!authAttempt) {
-                    return reply({ message: 'Document not found.' }).code(404);
+                    return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply({ message: 'Success.' });
@@ -112,6 +111,14 @@ exports.register = function (server, options, next) {
         }
     });
 
+
+    next();
+};
+
+
+exports.register = function (server, options, next) {
+
+    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
 
     next();
 };

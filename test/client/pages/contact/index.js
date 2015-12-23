@@ -1,14 +1,15 @@
-var React = require('react/addons');
-var Lab = require('lab');
-var Code = require('code');
-var App = require('../../../../client/pages/contact/index');
+'use strict';
+const App = require('../../../../client/pages/contact/index.jsx');
+const Code = require('code');
+const Lab = require('lab');
+const ReactDOM = require('react-dom');
 
 
-var lab = exports.lab = Lab.script();
-var mountNode;
+const lab = exports.lab = Lab.script();
+let mountNode;
 
 
-lab.before(function (done) {
+lab.before((done) => {
 
     mountNode = global.document.createElement('div');
     mountNode.id = 'app-mount';
@@ -18,9 +19,9 @@ lab.before(function (done) {
 });
 
 
-lab.after(function (done) {
+lab.after((done) => {
 
-    React.unmountComponentAtNode(mountNode);
+    ReactDOM.unmountComponentAtNode(mountNode);
     global.document.body.removeChild(mountNode);
     delete global.window.app;
 
@@ -28,13 +29,14 @@ lab.after(function (done) {
 });
 
 
-lab.experiment('Contact App', function () {
+lab.experiment('Contact App', () => {
 
-    lab.test('it renders normally', function (done) {
+    lab.test('it renders', (done) => {
 
         App.blastoff();
 
         Code.expect(App.mainElement).to.be.an.object();
+
         done();
     });
 });

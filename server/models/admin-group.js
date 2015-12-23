@@ -1,10 +1,11 @@
-var Joi = require('joi');
-var ObjectAssign = require('object-assign');
-var BaseModel = require('hapi-mongo-models').BaseModel;
-var Slug = require('slug');
+'use strict';
+const Joi = require('joi');
+const ObjectAssign = require('object-assign');
+const BaseModel = require('hapi-mongo-models').BaseModel;
+const Slug = require('slug');
 
 
-var AdminGroup = BaseModel.extend({
+const AdminGroup = BaseModel.extend({
     constructor: function (attrs) {
 
         ObjectAssign(this, attrs);
@@ -35,12 +36,12 @@ AdminGroup.schema = Joi.object().keys({
 
 AdminGroup.create = function (name, callback) {
 
-    var document = {
+    const document = {
         _id: Slug(name).toLowerCase(),
-        name: name
+        name
     };
 
-    this.insertOne(document, function (err, docs) {
+    this.insertOne(document, (err, docs) => {
 
         if (err) {
             return callback(err);

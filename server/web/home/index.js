@@ -1,6 +1,9 @@
-exports.register = function (plugin, options, next) {
+'use strict';
 
-    plugin.route({
+
+exports.register = function (server, options, next) {
+
+    server.route({
         method: 'GET',
         path: '/',
         handler: function (request, reply) {

@@ -1,6 +1,6 @@
 # Aqua
 
-A website and user system starter. Implemented with Hapi, React and Flux.
+A website and user system starter.
 
 [![Build Status](https://travis-ci.org/jedireza/aqua.svg?branch=master)](https://travis-ci.org/jedireza/aqua)
 [![Dependency Status](https://david-dm.org/jedireza/aqua.svg?style=flat)](https://david-dm.org/jedireza/aqua)
@@ -10,14 +10,18 @@ A website and user system starter. Implemented with Hapi, React and Flux.
 ## Technology
 
 Server side, Aqua is built with the [hapi.js](https://hapijs.com/) framework
-and toolset. We're using [MongoDB](http://www.mongodb.org/) as a data store. We
-also use [Nodemailer](http://www.nodemailer.com/) for email transport.
+and toolset. We're using [MongoDB](http://www.mongodb.org/) as a data store.
 
-The front-end is built with [React](http://facebook.github.io/react/). We're
-using a totally vanilla [Flux](https://facebook.github.io/flux/)
-implementation. Client side routing is done with [React
-Router](https://github.com/rackt/react-router). We're using
-[Gulp](http://gulpjs.com/) for the asset pipeline.
+The front-end is built with [React](https://github.com/facebook/react). We're
+using [Redux](https://github.com/reactjs/redux) as our state container. Client
+side routing is done with [React Router](https://github.com/reactjs/react-router).
+We're using [Gulp](http://gulpjs.com/) for the build system.
+
+
+## API only
+
+If you don't use React and/or would rather bring your own front-end, checkout
+[Frame](https://github.com/jedireza/frame). It's just the HTTP API parts of Aqua.
 
 
 ## Live demo
@@ -84,42 +88,20 @@ $ npm start
 # > gulp react && gulp
 
 # [23:41:44] Using gulpfile ~/projects/aqua/gulpfile.js
-# [23:41:44] Starting 'react'...
-# [23:41:44] Finished 'react' after 515 ms
-# [23:41:45] Using gulpfile ~/projects/aqua/gulpfile.js
-# [23:41:45] Starting 'watch'...
-# [23:41:45] Finished 'watch' after 82 ms
-# [23:41:45] Starting 'less'...
-# [23:41:45] Finished 'less' after 15 ms
-# [23:41:45] Starting 'webpack'...
-# [23:41:45] Starting 'react'...
-# [23:41:45] Starting 'nodemon'...
-# [23:41:45] Finished 'nodemon' after 1.01 ms
-# [23:41:45] Starting 'media'...
-# [gulp] [nodemon] v1.3.7
-# [gulp] [nodemon] to restart at any time, enter `rs`
-# [gulp] [nodemon] watching: *.*
-# [gulp] [nodemon] starting `node server.js`
-# Started the plot device.
-# [23:41:47] Finished 'media' after 2.16 s
-# [23:42:01] [webpack] Hash: 746152d2793c42fb1240
 # ...
-# [23:42:01] Finished 'webpack' after 16 s
 ```
 
 This will start the app using [`nodemon`](https://github.com/remy/nodemon).
 `nodemon` will watch for changes and restart the app as needed.
 
-Now you should be able to point your browser to http://localhost:8000/ and see
+Now you should be able to point your browser to http://127.0.0.1:8000/ and see
 the welcome page.
 
+We also pass the `--inspect` flag to Node so you have a debugger available.
+Watch the output of `npm start` and look for the debugging url and open it in
+Chrome. It looks something like this:
 
-## Philosophy
-
- - Create a website and user system
- - Write code in a simple and consistent way
- - It's just JavaScript
- - 100% test coverage
+`chrome-devtools://devtools/remote/serve_file/@62cd277117e6f8ec53e31b1be58290a6f7ab42ef/inspector.html?experiments=true&v8only=true&ws=localhost:9229/node`
 
 
 ## Features
@@ -138,22 +120,7 @@ the welcome page.
 ## Questions and contributing
 
 Any issues or questions (no matter how basic), open an issue. Please take the
-initiative to include basic debugging information like operating system
-and relevant version details such as:
-
-```bash
-$ npm version
-
-# { aqua: '0.0.0',
-#   npm: '2.5.1',
-#   http_parser: '2.3',
-#   modules: '14',
-#   node: '0.12.0',
-#   openssl: '1.0.1l',
-#   uv: '1.0.2',
-#   v8: '3.28.73',
-#   zlib: '1.2.8' }
-```
+initiative to read relevant docs and if possible create a pull request.
 
 Contributions are welcome. Your code should:
 
@@ -161,7 +128,7 @@ Contributions are welcome. Your code should:
  - follow the [hapi.js coding conventions](http://hapijs.com/styleguide)
 
 If you're changing something non-trivial, you may want to submit an issue
-first.
+before creating a large pull request.
 
 
 ## Running tests
@@ -174,8 +141,8 @@ For command line output:
 ```bash
 $ npm test
 
-# > aqua@1.0.0 test /Users/jedireza/projects/aqua
-# > lab -c -L ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/
+# > aqua@0.0.0 test /Users/jedireza/projects/aqua
+# > lab -t 100 -S -T ./test/lab/transform -L --lint-options '{"extensions":[".js",".jsx"]}' ./test/lab/client-before.js ./test/client/ ./test/lab/client-after.js ./test/server/ ./test/lab/server-after.js ./test/misc/
 
 #  ..................................................
 #  ..................................................
@@ -194,29 +161,14 @@ $ npm test
 #  ..................................................
 #  ..................................................
 #  ..................................................
-#  ..................................................
-#  ..................................................
-#  ..................................................
-#  ......
+#  .............
 
-# 1006 tests complete
-# Test duration: 11004 ms
+# 863 tests complete
+# Test duration: 6382 ms
 # No global variable leaks detected
 # Coverage: 100.00%
 # Linting results: No issues
 ```
-
-With html code coverage report:
-
-```bash
-$ npm run test-cover
-
-# > aqua@1.0.0 test-cover /Users/jedireza/projects/aqua
-# > lab -c -r html -o ./test/artifacts/coverage.html ./test/client-before.js ./test/client/ ./test/client-after.js ./test/misc/ ./test/server/ && open ./test/artifacts/coverage.html
-```
-
-This will run the tests and open a web browser to the visual code coverage
-artifacts. The generated source can be found in `/tests/artifacts/coverage.html`.
 
 
 ## License

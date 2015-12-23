@@ -1,11 +1,12 @@
-var Joi = require('joi');
-var ObjectAssign = require('object-assign');
-var BaseModel = require('hapi-mongo-models').BaseModel;
-var StatusEntry = require('./status-entry');
-var NoteEntry = require('./note-entry');
+'use strict';
+const Joi = require('joi');
+const ObjectAssign = require('object-assign');
+const BaseModel = require('hapi-mongo-models').BaseModel;
+const StatusEntry = require('./status-entry');
+const NoteEntry = require('./note-entry');
 
 
-var Account = BaseModel.extend({
+const Account = BaseModel.extend({
     constructor: function (attrs) {
 
         ObjectAssign(this, attrs);
@@ -41,25 +42,25 @@ Account.schema = Joi.object().keys({
 
 
 Account.indexes = [
-    [{ 'user.id': 1 }],
-    [{ 'user.name': 1 }]
+    { key: { 'user.id': 1 } },
+    { key: { 'user.name': 1 } }
 ];
 
 
 Account.create = function (name, callback) {
 
-    var nameParts = name.trim().split(/\s/);
+    const nameParts = name.trim().split(/\s/);
 
-    var document = {
+    const document = {
         name: {
             first: nameParts.shift(),
-            middle: nameParts.length > 1 ? nameParts.shift() : undefined,
+            middle: nameParts.length > 1 ? nameParts.shift() : '',
             last: nameParts.join(' ')
         },
         timeCreated: new Date()
     };
 
-    this.insertOne(document, function (err, docs) {
+    this.insertOne(document, (err, docs) => {
 
         if (err) {
             return callback(err);
@@ -72,7 +73,7 @@ Account.create = function (name, callback) {
 
 Account.findByUsername = function (username, callback) {
 
-    var query = { 'user.name': username.toLowerCase() };
+    const query = { 'user.name': username.toLowerCase() };
     this.findOne(query, callback);
 };
 

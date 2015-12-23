@@ -1,16 +1,20 @@
-var Joi = require('joi');
-var Hoek = require('hoek');
-var AuthPlugin = require('../auth');
+'use strict';
+const AuthPlugin = require('../auth');
+const Boom = require('boom');
+const Joi = require('joi');
 
 
-exports.register = function (server, options, next) {
+const internals = {};
 
-    options = Hoek.applyToDefaults({ basePath: '' }, options);
+
+internals.applyRoutes = function (server, next) {
+
+    const Status = server.plugins['hapi-mongo-models'].Status;
 
 
     server.route({
         method: 'GET',
-        path: options.basePath + '/statuses',
+        path: '/statuses',
         config: {
             auth: {
                 strategy: 'session',
@@ -32,20 +36,19 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var Status = request.server.plugins['hapi-mongo-models'].Status;
-            var query = {};
+            const query = {};
             if (request.query.pivot) {
                 query.pivot = new RegExp('^.*?' + request.query.pivot + '.*$', 'i');
             }
             if (request.query.name) {
                 query.name = new RegExp('^.*?' + request.query.name + '.*$', 'i');
             }
-            var fields = request.query.fields;
-            var sort = request.query.sort;
-            var limit = request.query.limit;
-            var page = request.query.page;
+            const fields = request.query.fields;
+            const sort = request.query.sort;
+            const limit = request.query.limit;
+            const page = request.query.page;
 
-            Status.pagedFind(query, fields, sort, limit, page, function (err, results) {
+            Status.pagedFind(query, fields, sort, limit, page, (err, results) => {
 
                 if (err) {
                     return reply(err);
@@ -59,7 +62,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'GET',
-        path: options.basePath + '/statuses/{id}',
+        path: '/statuses/{id}',
         config: {
             auth: {
                 strategy: 'session',
@@ -71,16 +74,14 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var Status = request.server.plugins['hapi-mongo-models'].Status;
-
-            Status.findById(request.params.id, function (err, status) {
+            Status.findById(request.params.id, (err, status) => {
 
                 if (err) {
                     return reply(err);
                 }
 
                 if (!status) {
-                    return reply({ message: 'Document not found.' }).code(404);
+                    return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply(status);
@@ -91,7 +92,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'POST',
-        path: options.basePath + '/statuses',
+        path: '/statuses',
         config: {
             auth: {
                 strategy: 'session',
@@ -109,11 +110,10 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var Status = request.server.plugins['hapi-mongo-models'].Status;
-            var pivot = request.payload.pivot;
-            var name = request.payload.name;
+            const pivot = request.payload.pivot;
+            const name = request.payload.name;
 
-            Status.create(pivot, name, function (err, status) {
+            Status.create(pivot, name, (err, status) => {
 
                 if (err) {
                     return reply(err);
@@ -127,7 +127,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'PUT',
-        path: options.basePath + '/statuses/{id}',
+        path: '/statuses/{id}',
         config: {
             auth: {
                 strategy: 'session',
@@ -144,22 +144,21 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var Status = request.server.plugins['hapi-mongo-models'].Status;
-            var id = request.params.id;
-            var update = {
+            const id = request.params.id;
+            const update = {
                 $set: {
                     name: request.payload.name
                 }
             };
 
-            Status.findByIdAndUpdate(id, update, function (err, status) {
+            Status.findByIdAndUpdate(id, update, (err, status) => {
 
                 if (err) {
                     return reply(err);
                 }
 
                 if (!status) {
-                    return reply({ message: 'Document not found.' }).code(404);
+                    return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply(status);
@@ -170,7 +169,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'DELETE',
-        path: options.basePath + '/statuses/{id}',
+        path: '/statuses/{id}',
         config: {
             auth: {
                 strategy: 'session',
@@ -182,16 +181,14 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var Status = request.server.plugins['hapi-mongo-models'].Status;
-
-            Status.findByIdAndDelete(request.params.id, function (err, status) {
+            Status.findByIdAndDelete(request.params.id, (err, status) => {
 
                 if (err) {
                     return reply(err);
                 }
 
                 if (!status) {
-                    return reply({ message: 'Document not found.' }).code(404);
+                    return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply({ message: 'Success.' });
@@ -199,6 +196,14 @@ exports.register = function (server, options, next) {
         }
     });
 
+
+    next();
+};
+
+
+exports.register = function (server, options, next) {
+
+    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
 
     next();
 };

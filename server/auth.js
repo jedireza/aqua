@@ -1,12 +1,16 @@
-var Async = require('async');
-var Config = require('../config');
+'use strict';
+const Async = require('async');
+const Boom = require('boom');
+const Config = require('../config');
 
 
-exports.register = function (server, options, next) {
+const internals = {};
 
-    var Session = server.plugins['hapi-mongo-models'].Session;
-    var User = server.plugins['hapi-mongo-models'].User;
 
+internals.applyStrategy = function (server, next) {
+
+    const Session = server.plugins['hapi-mongo-models'].Session;
+    const User = server.plugins['hapi-mongo-models'].User;
 
     server.auth.strategy('session', 'cookie', {
         password: Config.get('/cookieSecret'),
@@ -18,11 +22,12 @@ exports.register = function (server, options, next) {
             Async.auto({
                 session: function (done) {
 
-                    var id = data.session._id;
-                    var key = data.session.key;
+                    const id = data.session._id;
+                    const key = data.session.key;
+
                     Session.findByCredentials(id, key, done);
                 },
-                user: ['session', function (done, results) {
+                user: ['session', function (results, done) {
 
                     if (!results.session) {
                         return done();
@@ -30,7 +35,7 @@ exports.register = function (server, options, next) {
 
                     User.findById(results.session.userId, done);
                 }],
-                roles: ['user', function (done, results) {
+                roles: ['user', function (results, done) {
 
                     if (!results.user) {
                         return done();
@@ -38,7 +43,7 @@ exports.register = function (server, options, next) {
 
                     results.user.hydrateRoles(done);
                 }],
-                scope: ['user', function (done, results) {
+                scope: ['user', function (results, done) {
 
                     if (!results.user || !results.user.roles) {
                         return done();
@@ -46,7 +51,7 @@ exports.register = function (server, options, next) {
 
                     done(null, Object.keys(results.user.roles));
                 }]
-            }, function (err, results) {
+            }, (err, results) => {
 
                 if (err) {
                     return callback(err);
@@ -66,36 +71,42 @@ exports.register = function (server, options, next) {
 };
 
 
-exports.preware = {};
+internals.preware = {
+    ensureAdminGroup: function (groups) {
 
+        return {
+            assign: 'ensureAdminGroup',
+            method: function (request, reply) {
 
-exports.preware.ensureAdminGroup = function (groups) {
+                if (Object.prototype.toString.call(groups) !== '[object Array]') {
+                    groups = [groups];
+                }
 
-    return {
-        assign: 'ensureAdminGroup',
-        method: function (request, reply) {
+                const groupFound = groups.some((group) => {
 
-            if (Object.prototype.toString.call(groups) !== '[object Array]') {
-                groups = [groups];
+                    return request.auth.credentials.roles.admin.isMemberOf(group);
+                });
+
+                if (!groupFound) {
+                    return reply(Boom.notFound('Permission denied to this resource.'));
+                }
+
+                reply();
             }
-
-            var groupFound = groups.some(function (group) {
-
-                return request.auth.credentials.roles.admin.isMemberOf(group);
-            });
-
-            if (!groupFound) {
-                var response = {
-                    message: 'Permission denied to this resource.'
-                };
-
-                return reply(response).takeover().code(403);
-            }
-
-            reply();
-        }
-    };
+        };
+    }
 };
+
+
+exports.register = function (server, options, next) {
+
+    server.dependency('hapi-mongo-models', internals.applyStrategy);
+
+    next();
+};
+
+
+exports.preware = internals.preware;
 
 
 exports.register.attributes = {

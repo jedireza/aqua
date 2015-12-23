@@ -1,26 +1,28 @@
-var Async = require('async');
-var Lab = require('lab');
-var Code = require('code');
-var Config = require('../../../config');
-var Account = require('../../../server/models/account');
+'use strict';
+const Account = require('../../../server/models/account');
+const Async = require('async');
+const Code = require('code');
+const Config = require('../../../config');
+const Lab = require('lab');
 
 
-var lab = exports.lab = Lab.script();
+const lab = exports.lab = Lab.script();
 
-lab.experiment('Account Class Methods', function () {
 
-    lab.before(function (done) {
+lab.experiment('Account Class Methods', () => {
 
-        Account.connect(Config.get('/hapiMongoModels/mongodb'), function (err, db) {
+    lab.before((done) => {
+
+        Account.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
 
             done(err);
         });
     });
 
 
-    lab.after(function (done) {
+    lab.after((done) => {
 
-        Account.deleteMany({}, function (err, count) {
+        Account.deleteMany({}, (err, count) => {
 
             Account.disconnect();
             done(err);
@@ -28,9 +30,9 @@ lab.experiment('Account Class Methods', function () {
     });
 
 
-    lab.test('it returns a new instance when create succeeds', function (done) {
+    lab.test('it returns a new instance when create succeeds', (done) => {
 
-        Account.create('Ren Höek', function (err, result) {
+        Account.create('Ren Höek', (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.be.an.instanceOf(Account);
@@ -40,9 +42,9 @@ lab.experiment('Account Class Methods', function () {
     });
 
 
-    lab.test('it correctly sets the middle name when create is called', function (done) {
+    lab.test('it correctly sets the middle name when create is called', (done) => {
 
-        Account.create('Stimpson J Cat', function (err, account) {
+        Account.create('Stimpson J Cat', (err, account) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(account).to.be.an.instanceOf(Account);
@@ -53,18 +55,18 @@ lab.experiment('Account Class Methods', function () {
     });
 
 
-    lab.test('it returns an error when create fails', function (done) {
+    lab.test('it returns an error when create fails', (done) => {
 
-        var realInsertOne = Account.insertOne;
+        const realInsertOne = Account.insertOne;
         Account.insertOne = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(Error('insert failed'));
         };
 
-        Account.create('Stimpy Cat', function (err, result) {
+        Account.create('Stimpy Cat', (err, result) => {
 
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
@@ -76,16 +78,16 @@ lab.experiment('Account Class Methods', function () {
     });
 
 
-    lab.test('it returns a result when finding by username', function (done) {
+    lab.test('it returns a result when finding by username', (done) => {
 
         Async.auto({
             account: function (cb) {
 
                 Account.create('Stimpson J Cat', cb);
             },
-            accountUpdated: ['account', function (cb, results) {
+            accountUpdated: ['account', function (results, cb) {
 
-                var fieldsToUpdate = {
+                const fieldsToUpdate = {
                     $set: {
                         user: {
                             id: '95EP150D35',
@@ -96,13 +98,13 @@ lab.experiment('Account Class Methods', function () {
 
                 Account.findByIdAndUpdate(results.account._id, fieldsToUpdate, cb);
             }]
-        }, function (err, results) {
+        }, (err, results) => {
 
             if (err) {
                 return done(err);
             }
 
-            Account.findByUsername('stimpy', function (err, account) {
+            Account.findByUsername('stimpy', (err, account) => {
 
                 Code.expect(err).to.not.exist();
                 Code.expect(account).to.be.an.instanceOf(Account);

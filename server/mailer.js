@@ -1,42 +1,46 @@
-var Hoek = require('hoek');
-var Fs = require('fs');
-var Handlebars = require('handlebars');
-var Nodemailer = require('nodemailer');
-var Markdown = require('nodemailer-markdown').markdown;
-var Config = require('../config');
+'use strict';
+const Config = require('../config');
+const Fs = require('fs');
+const Handlebars = require('handlebars');
+const Hoek = require('hoek');
+const Markdown = require('nodemailer-markdown').markdown;
+const Nodemailer = require('nodemailer');
 
 
-var transport = Nodemailer.createTransport(Config.get('/nodemailer'));
-transport.use('compile', Markdown({ useEmbeddedImages: true }));
+const internals = {};
 
 
-var templateCache = {};
+internals.transport = Nodemailer.createTransport(Config.get('/nodemailer'));
+internals.transport.use('compile', Markdown({ useEmbeddedImages: true }));
 
 
-var renderTemplate = function (signature, context, callback) {
+internals.templateCache = {};
 
-    if (templateCache[signature]) {
-        return callback(null, templateCache[signature](context));
+
+internals.renderTemplate = function (signature, context, callback) {
+
+    if (internals.templateCache[signature]) {
+        return callback(null, internals.templateCache[signature](context));
     }
 
-    var filePath = __dirname + '/emails/' + signature + '.hbs.md';
-    var options = { encoding: 'utf-8' };
+    const filePath = __dirname + '/emails/' + signature + '.hbs.md';
+    const options = { encoding: 'utf-8' };
 
-    Fs.readFile(filePath, options, function (err, source) {
+    Fs.readFile(filePath, options, (err, source) => {
 
         if (err) {
             return callback(err);
         }
 
-        templateCache[signature] = Handlebars.compile(source);
-        callback(null, templateCache[signature](context));
+        internals.templateCache[signature] = Handlebars.compile(source);
+        callback(null, internals.templateCache[signature](context));
     });
 };
 
 
-var sendEmail = exports.sendEmail = function (options, template, context, callback) {
+internals.sendEmail = function (options, template, context, callback) {
 
-    renderTemplate(template, context, function (err, content) {
+    internals.renderTemplate(template, context, (err, content) => {
 
         if (err) {
             return callback(err);
@@ -47,18 +51,21 @@ var sendEmail = exports.sendEmail = function (options, template, context, callba
             markdown: content
         });
 
-        transport.sendMail(options, callback);
+        internals.transport.sendMail(options, callback);
     });
 };
 
 
 exports.register = function (server, options, next) {
 
-    server.expose('sendEmail', sendEmail);
-    server.expose('transport', transport);
+    server.expose('sendEmail', internals.sendEmail);
+    server.expose('transport', internals.transport);
 
     next();
 };
+
+
+exports.sendEmail = internals.sendEmail;
 
 
 exports.register.attributes = {

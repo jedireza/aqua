@@ -1,59 +1,72 @@
-var Lab = require('lab');
-var Code = require('code');
-var Path = require('path');
-var Hoek = require('hoek');
-var Config = require('../../../config');
-var Manifest = require('../../../manifest');
-var Hapi = require('hapi');
-var HapiAuth = require('hapi-auth-cookie');
-var Proxyquire = require('proxyquire');
-var AuthPlugin = require('../../../server/auth');
-var LogoutPlugin = require('../../../server/api/logout');
-var AuthenticatedUser = require('../fixtures/credentials-admin');
+'use strict';
+const AuthPlugin = require('../../../server/auth');
+const AuthenticatedUser = require('../fixtures/credentials-admin');
+const Code = require('code');
+const Config = require('../../../config');
+const Hapi = require('hapi');
+const HapiAuth = require('hapi-auth-cookie');
+const Hoek = require('hoek');
+const Lab = require('lab');
+const LogoutPlugin = require('../../../server/api/logout');
+const Manifest = require('../../../manifest');
+const Path = require('path');
+const Proxyquire = require('proxyquire');
 
 
-var lab = exports.lab = Lab.script();
-var ModelsPlugin, request, server, stub;
+const lab = exports.lab = Lab.script();
+let request;
+let server;
+let stub;
 
 
-lab.before(function (done) {
+lab.before((done) => {
 
     stub = {
         Session: {}
     };
 
-    var proxy = {};
+    const proxy = {};
     proxy[Path.join(process.cwd(), './server/models/session')] = stub.Session;
 
-    ModelsPlugin = {
+    const ModelsPlugin = {
         register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/plugins')['hapi-mongo-models']
+        options: Manifest.get('/registrations').filter((reg) => {
+
+            if (reg.plugin &&
+                reg.plugin.register &&
+                reg.plugin.register === 'hapi-mongo-models') {
+
+                return true;
+            }
+
+            return false;
+        })[0].plugin.options
     };
 
-    var plugins = [HapiAuth, ModelsPlugin, AuthPlugin, LogoutPlugin];
+    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, LogoutPlugin];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, function (err) {
+    server.register(plugins, (err) => {
 
         if (err) {
             return done(err);
         }
 
-        done();
+        server.initialize(done);
     });
 });
 
 
-lab.after(function (done) {
+lab.after((done) => {
 
     server.plugins['hapi-mongo-models'].BaseModel.disconnect();
     done();
 });
 
 
-lab.experiment('Logout Plugin (Delete Session)', function () {
+lab.experiment('Logout Plugin (Delete Session)', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'DELETE',
@@ -65,17 +78,17 @@ lab.experiment('Logout Plugin (Delete Session)', function () {
     });
 
 
-    lab.test('it returns an error when delete fails', function (done) {
+    lab.test('it returns an error when delete fails', (done) => {
 
         stub.Session.findByIdAndDelete = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(Error('delete failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -83,63 +96,63 @@ lab.experiment('Logout Plugin (Delete Session)', function () {
     });
 
 
-    lab.test('it returns a not found when delete misses (no credentials)', function (done) {
+    lab.test('it returns a not found when delete misses (no credentials)', (done) => {
 
         stub.Session.findByIdAndDelete = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(null, 0);
         };
 
         delete request.credentials;
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/session not found/i);
+            Code.expect(response.result.message).to.match(/document not found/i);
 
             done();
         });
     });
 
 
-    lab.test('it returns a not found when delete misses (missing user from credentials)', function (done) {
+    lab.test('it returns a not found when delete misses (missing user from credentials)', (done) => {
 
-        stub.Session.findByIdAndDelete = function () {
+        stub.Session.deleteOne = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(null, 0);
         };
 
-        var CorruptedAuthenticatedUser = Hoek.clone(AuthenticatedUser);
+        const CorruptedAuthenticatedUser = Hoek.clone(AuthenticatedUser);
         CorruptedAuthenticatedUser.user = undefined;
         request.credentials = CorruptedAuthenticatedUser;
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/session not found/i);
+            Code.expect(response.result.message).to.match(/document not found/i);
 
             done();
         });
     });
 
 
-    lab.test('it deletes the authenticated user session successfully', function (done) {
+    lab.test('it deletes the authenticated user session successfully', (done) => {
 
         stub.Session.findByIdAndDelete = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(null, 1);
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.message).to.match(/success/i);

@@ -1,11 +1,12 @@
-var React = require('react/addons');
-var Layout = require('../layouts/Default.jsx');
+'use strict';
+const Layout = require('../layouts/default.jsx');
+const React = require('react');
 
 
-var Component = React.createClass({
-    render: function () {
+class HomePage extends React.Component {
+    render() {
 
-        var neck = <link rel='stylesheet' href="/public/pages/home.min.css" />;
+        const neck = <link rel='stylesheet' href="/public/pages/home.min.css" />;
 
         return (
             <Layout
@@ -15,9 +16,9 @@ var Component = React.createClass({
 
                 <div className="jumbotron">
                     <h1>Success</h1>
-                    <p className="lead">
-                        Your Node.js website and user system is running. May
-                        the force be with you.
+                    <div>
+                        <p className="lead">Your Node.js website and user
+                        system is running. May the force be with you.</p>
 
                         <div>
                             <a className="btn btn-primary btn-lg" href="/signup">
@@ -28,7 +29,7 @@ var Component = React.createClass({
                                 Reset your password
                             </a>
                         </div>
-                    </p>
+                    </div>
                 </div>
                 <div className="row">
                     <div className="col-sm-4">
@@ -83,7 +84,7 @@ var Component = React.createClass({
             </Layout>
         );
     }
-});
+}
 
 
-module.exports = Component;
+module.exports = HomePage;
