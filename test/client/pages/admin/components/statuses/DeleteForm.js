@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -6,7 +7,7 @@ var StubRouterContext = require('../../../../fixtures/StubRouterContext');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {}
 };
@@ -62,7 +63,7 @@ lab.experiment('Admin Status Delete Form', function () {
         var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
 
-        React.render(FormEl, container);
+        ReactDOM.render(FormEl, container);
         React.unmountComponentAtNode(container);
 
         done();

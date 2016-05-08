@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Component = require('../../../../../../client/pages/admin/components/home/Controller.jsx');
@@ -13,7 +14,7 @@ lab.experiment('Admin Home Component', function () {
     lab.test('it renders normally', function (done) {
 
         var ComponentEl = React.createElement(Component, {});
-        var component = React.render(ComponentEl, container);
+        var component = ReactDOM.render(ComponentEl, container);
 
         Code.expect(component).to.exist();
         done();
@@ -38,6 +39,6 @@ lab.experiment('Admin Home Component', function () {
 
         var ComponentEl = React.createElement(Component, {});
 
-        React.render(ComponentEl, container);
+        ReactDOM.render(ComponentEl, container);
     });
 });

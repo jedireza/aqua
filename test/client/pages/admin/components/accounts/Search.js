@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -6,7 +7,7 @@ var StubRouterContext = require('../../../../fixtures/StubRouterContext');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {
         getResults: function () {}
@@ -38,7 +39,7 @@ lab.experiment('Admin Account Search', function () {
         var ComponentWithContext = StubRouterContext(Search, {});
         var SearchEl = React.createElement(ComponentWithContext, {});
 
-        React.render(SearchEl, container);
+        ReactDOM.render(SearchEl, container);
         React.unmountComponentAtNode(container);
 
         done();

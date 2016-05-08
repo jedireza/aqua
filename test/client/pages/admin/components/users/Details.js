@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -6,7 +7,7 @@ var StubRouterContext = require('../../../../fixtures/StubRouterContext');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {
         getIdentity: function () {}
@@ -38,7 +39,7 @@ lab.experiment('Admin User Details', function () {
         var ComponentWithContext = StubRouterContext(Details, {});
         var DetailsEl = React.createElement(ComponentWithContext, {});
 
-        React.render(DetailsEl, container);
+        ReactDOM.render(DetailsEl, container);
         React.unmountComponentAtNode(container);
 
         done();

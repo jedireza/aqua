@@ -7,7 +7,7 @@ var RouteHelpers = require('../../../fixtures/RouteHelpers');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var Route = ReactRouter.Route;
 var DefaultRoute = ReactRouter.DefaultRoute;
 var Routes = React.createElement(Route,

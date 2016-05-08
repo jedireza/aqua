@@ -6,7 +6,7 @@ var StubRouterContext = require('../../../fixtures/StubRouterContext');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 
 
 lab.experiment('Admin NavBar', function () {

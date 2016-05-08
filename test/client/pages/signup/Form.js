@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -6,7 +7,7 @@ var Constants = require('../../../../client/pages/signup/Constants');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {},
     Store: {}
@@ -34,7 +35,7 @@ lab.experiment('Sign Up Form', function () {
         var container = global.document.createElement('div');
         var FormEl = React.createElement(Form, {});
 
-        React.render(FormEl, container);
+        ReactDOM.render(FormEl, container);
         React.unmountComponentAtNode(container);
 
         done();

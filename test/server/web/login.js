@@ -16,7 +16,7 @@ var dir = __dirname.toString();
 var request, server;
 var ModelsPlugin = {
     register: require('hapi-mongo-models'),
-    options: Manifest.get('/plugins')['hapi-mongo-models']
+    options: Manifest.getOptions('hapi-mongo-models')
 };
 
 

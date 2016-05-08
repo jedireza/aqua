@@ -194,6 +194,19 @@ exports.get = function (key) {
     return store.get(key, criteria);
 };
 
+exports.getOptions = function (pluginName) {
+
+    var options = {};
+    
+    store.get('/registrations', criteria).filter(function (item) {
+        return item.plugin.register == pluginName ? true : false
+    }).map(function (item) {
+        Object.assign( options, item.plugin.options);
+    })
+
+    return options;
+};
+
 
 exports.meta = function (key) {
 

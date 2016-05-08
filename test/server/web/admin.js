@@ -14,7 +14,7 @@ var lab = exports.lab = Lab.script();
 var request, server;
 var ModelsPlugin = {
     register: require('hapi-mongo-models'),
-    options: Manifest.get('/plugins')['hapi-mongo-models']
+    options: Manifest.getOptions('hapi-mongo-models')
 };
 
 

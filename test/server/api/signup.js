@@ -30,7 +30,7 @@ lab.before(function (done) {
 
     ModelsPlugin = {
         register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/plugins')['hapi-mongo-models']
+        options: Manifest.getOptions('hapi-mongo-models')
     };
 
     var plugins = [HapiAuth, ModelsPlugin, AuthPlugin, MailerPlugin, SignupPlugin];

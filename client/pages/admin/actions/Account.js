@@ -168,7 +168,7 @@ var Actions = {
                 response.success = true;
 
                 if (routerHistory) {
-                    routerHistory.pushState(null, `/admin/accounts/${response._id}`);
+                    routerHistory.push('/admin/accounts/' + response._id);
                     window.scrollTo(0, 0);
                 }
             }
@@ -219,7 +219,7 @@ var Actions = {
                 response.success = true;
 
                 if (routerHistory) {
-                    routerHistory.pushState(null, '/admin/accounts');
+                    routerHistory.push('/admin/accounts');
                     window.scrollTo(0, 0);
                 }
             }

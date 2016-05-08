@@ -53,10 +53,9 @@
         "no-spaced-func": 2,
         "semi-spacing": 2,
         "no-mixed-spaces-and-tabs": 2,
-        "space-after-keywords": 2,
+        "keyword-spacing": 2,
         "semi": [2, "always"],
         "space-infix-ops": 2,
-        "space-return-throw-case": 2,
         "space-unary-ops": [1, { "words": true, "nonwords": false }],
         "eqeqeq": 2,
         "curly": [2, "all"],
@@ -69,7 +68,6 @@
         "no-ex-assign": 2,
         "indent": [2, 4],
         "space-before-function-paren": 2,
-        "func-style": [2, "expression"],
         "object-curly-spacing": [2, "always"],
         "spaced-comment": [2, "always",{"markers":[","]}]
     }
