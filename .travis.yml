@@ -6,7 +6,14 @@ node_js:
 services:
   - mongodb
 env:
+  - CXX=g++-4.8
   - NODE_ENV=test
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
 before_script:
   - npm install -g npm@'>=2.13.0'
   - npm update npm
