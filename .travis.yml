@@ -8,4 +8,6 @@ services:
 env:
   - NODE_ENV=test
 before_script:
+  - npm install -g npm@'>=2.13.0'
+  - npm update npm
   - npm run setup
