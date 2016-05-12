@@ -55,6 +55,7 @@
     "cookie": "0.2.x",
     "del": "2.x.x",
     "eslint-plugin-hapi": "^4.x.x",
+    "eslint-plugin-react": "^5.0.1",
     "flux": "2.x.x",
     "flux-constant": "1.x.x",
     "flux-dispatcher": "1.x.x",

@@ -40,7 +40,7 @@ lab.experiment('Admin Admin Group Details', function () {
         var DetailsEl = React.createElement(ComponentWithContext, {});
 
         ReactDOM.render(DetailsEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -74,7 +74,7 @@ lab.experiment('Admin Admin Group Details', function () {
 
         var heading = TestUtils.findRenderedDOMComponentWithTag(target, 'h1');
 
-        Code.expect(heading.getDOMNode().textContent).to.match(/Error/);
+        Code.expect(ReactDOM.findDOMNode(heading).textContent).to.match(/Error/);
         done();
     });
 });

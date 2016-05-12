@@ -41,7 +41,7 @@ lab.experiment('Login Logout Form', function () {
         var LogoutEl = React.createElement(ComponentWithContext, {});
 
         ReactDOM.render(LogoutEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });

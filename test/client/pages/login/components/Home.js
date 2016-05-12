@@ -39,7 +39,7 @@ lab.experiment('Login Home Form', function () {
         var HomeEl = React.createElement(ComponentWithContext, {});
 
         ReactDOM.render(HomeEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -69,7 +69,7 @@ lab.experiment('Login Home Form', function () {
         var home = TestUtils.renderIntoDocument(HomeEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(home, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -86,7 +86,7 @@ lab.experiment('Login Home Form', function () {
             }
         });
 
-        Code.expect(button.getDOMNode().disabled).to.be.true();
+        Code.expect(ReactDOM.findDOMNode(button).disabled).to.be.true();
         done();
     });
 

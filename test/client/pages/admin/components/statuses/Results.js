@@ -28,7 +28,7 @@ lab.experiment('Admin Status Results', function () {
         var ResultsEl = React.createElement(Results, {});
 
         ReactDOM.render(ResultsEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });

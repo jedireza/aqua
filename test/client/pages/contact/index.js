@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var App = require('../../../../client/pages/contact/index.jsx');
@@ -20,7 +21,7 @@ lab.before(function (done) {
 
 lab.after(function (done) {
 
-    React.unmountComponentAtNode(mountNode);
+    ReactDOM.unmountComponentAtNode(mountNode);
     global.document.body.removeChild(mountNode);
     delete global.window.app;
 

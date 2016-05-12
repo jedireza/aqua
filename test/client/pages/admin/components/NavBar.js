@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var NavBar = require('../../../../../client/pages/admin/components/NavBar.jsx');
@@ -29,10 +30,10 @@ lab.experiment('Admin NavBar', function () {
         var mainElement = TestUtils.renderIntoDocument(NavBarEl);
         var button = TestUtils.findRenderedDOMComponentWithTag(mainElement, 'button');
         var menuDiv = TestUtils.findRenderedDOMComponentWithClass(mainElement, 'navbar-collapse');
-        var menuDivNode = menuDiv.getDOMNode();
+        var menuDivNode = ReactDOM.findDOMNode(menuDiv);
 
         Code.expect(menuDivNode.className).to.equal('navbar-collapse collapse');
-        TestUtils.Simulate.click(button.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(button));
 
         Code.expect(menuDivNode.className).to.equal('navbar-collapse');
 
@@ -46,7 +47,9 @@ lab.experiment('Admin NavBar', function () {
         var NavBarEl = React.createElement(ComponentWithContext, {});
         var mainElement = TestUtils.renderIntoDocument(NavBarEl);
 
-        mainElement.setProps({ foo: 'bar' });
+        NavBarEl = React.createElement(ComponentWithContext, Object.assign({}, mainElement.props, { foo: 'bar' }));
+
+        mainElement = TestUtils.renderIntoDocument(NavBarEl);
 
         Code.expect(mainElement).to.exist();
         done();

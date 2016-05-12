@@ -66,7 +66,7 @@ lab.experiment('Admin Admin User Form', function () {
         var FormEl = React.createElement(FormWithContext, mockProps);
 
         ReactDOM.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -79,10 +79,16 @@ lab.experiment('Admin Admin User Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.details.hydrated = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.details.hydrated = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         Code.expect(form).to.exist();
         done();
@@ -101,7 +107,7 @@ lab.experiment('Admin Admin User Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -119,7 +125,7 @@ lab.experiment('Admin Admin User Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -138,7 +144,7 @@ lab.experiment('Admin Admin User Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var buttonTag = TestUtils.findRenderedDOMComponentWithTag(form, 'button');
 
-        TestUtils.Simulate.click(buttonTag.getDOMNode(), {
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(buttonTag), {
             stopPropagation: function () {
 
                 done();
@@ -163,7 +169,7 @@ lab.experiment('Admin Admin User Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var buttonTag = TestUtils.findRenderedDOMComponentWithTag(form, 'button');
 
-        TestUtils.Simulate.click(buttonTag.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(buttonTag));
     });
 
 
@@ -175,7 +181,10 @@ lab.experiment('Admin Admin User Form', function () {
 
         mockProps.details.hydrated = true;
         mockProps.data.success = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-success');
 
@@ -192,7 +201,10 @@ lab.experiment('Admin Admin User Form', function () {
 
         mockProps.details.hydrated = true;
         mockProps.data.error = 'Whoops.';
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-danger');
 

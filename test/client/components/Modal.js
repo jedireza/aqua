@@ -27,7 +27,7 @@ lab.experiment('Modal', function () {
         var ModalEl = React.createElement(Modal, {});
 
         ReactDOM.render(ModalEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -38,7 +38,9 @@ lab.experiment('Modal', function () {
         var ModalEl = React.createElement(Modal, {});
         var modal = TestUtils.renderIntoDocument(ModalEl);
 
-        modal.setProps({ show: true });
+        ModalEl = React.createElement(Modal, Object.assign({}, modal.props, { show: true }));
+
+        modal = TestUtils.renderIntoDocument(ModalEl);
 
         done();
     });
@@ -49,7 +51,9 @@ lab.experiment('Modal', function () {
         var ModalEl = React.createElement(Modal, {});
         var modal = TestUtils.renderIntoDocument(ModalEl);
 
-        modal.setProps({ show: false });
+        ModalEl = React.createElement(Modal, Object.assign({}, modal.props, { show: false }));
+
+        modal = TestUtils.renderIntoDocument(ModalEl);
 
         done();
     });
@@ -78,10 +82,10 @@ lab.experiment('Modal', function () {
         var modal = TestUtils.renderIntoDocument(ModalEl);
 
         // click on the dialog
-        TestUtils.Simulate.click(modal.refs.dialog.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(modal.refs.dialog));
 
         // click on the modal
-        TestUtils.Simulate.click(modal.refs.modal.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(modal.refs.modal));
     });
 
 

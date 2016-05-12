@@ -36,7 +36,7 @@ lab.experiment('Contact Form', function () {
         var FormEl = React.createElement(Form, {});
 
         ReactDOM.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -65,7 +65,7 @@ lab.experiment('Contact Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -82,7 +82,7 @@ lab.experiment('Contact Form', function () {
 
         var button = TestUtils.findRenderedDOMComponentWithTag(form, 'button');
 
-        Code.expect(button.getDOMNode().disabled).to.be.true();
+        Code.expect(ReactDOM.findDOMNode(button).disabled).to.be.true();
         done();
     });
 

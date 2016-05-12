@@ -61,7 +61,7 @@ lab.experiment('Admin Admin Groups Form', function () {
         var FormEl = React.createElement(Form, mockProps);
 
         ReactDOM.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -73,10 +73,16 @@ lab.experiment('Admin Admin Groups Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.details.hydrated = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.details.hydrated = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         Code.expect(form).to.exist();
         done();
@@ -89,8 +95,8 @@ lab.experiment('Admin Admin Groups Form', function () {
 
         var FormEl = React.createElement(Form, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
-        var select = form.refs.newGroup.getDOMNode();
-        var button = form.refs.newGroupButton.getDOMNode();
+        var select = ReactDOM.findDOMNode(form.refs.newGroup);
+        var button = ReactDOM.findDOMNode(form.refs.newGroupButton);
 
         form.setState = function () {
 
@@ -108,8 +114,8 @@ lab.experiment('Admin Admin Groups Form', function () {
 
         var FormEl = React.createElement(Form, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
-        var select = form.refs.newGroup.getDOMNode();
-        var button = form.refs.newGroupButton.getDOMNode();
+        var select = ReactDOM.findDOMNode(form.refs.newGroup);
+        var button = ReactDOM.findDOMNode(form.refs.newGroupButton);
 
         form.setState = function () {
 
@@ -127,8 +133,8 @@ lab.experiment('Admin Admin Groups Form', function () {
 
         var FormEl = React.createElement(Form, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
-        var select = form.refs.newGroup.getDOMNode();
-        var button = form.refs.newGroupButton.getDOMNode();
+        var select = ReactDOM.findDOMNode(form.refs.newGroup);
+        var button = ReactDOM.findDOMNode(form.refs.newGroupButton);
 
         TestUtils.Simulate.change(select, { target: { value: 'sales' } });
         TestUtils.Simulate.click(button);
@@ -152,8 +158,8 @@ lab.experiment('Admin Admin Groups Form', function () {
 
         var FormEl = React.createElement(Form, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
-        var select = form.refs.newGroup.getDOMNode();
-        var button = form.refs.newGroupButton.getDOMNode();
+        var select = ReactDOM.findDOMNode(form.refs.newGroup);
+        var button = ReactDOM.findDOMNode(form.refs.newGroupButton);
 
         TestUtils.Simulate.change(select, { target: { value: 'service' } });
         TestUtils.Simulate.click(button);
@@ -167,7 +173,7 @@ lab.experiment('Admin Admin Groups Form', function () {
         var groupContainer = form.refs.groupContainer;
         var deletes = TestUtils.scryRenderedDOMComponentsWithClass(groupContainer, 'btn-warning');
 
-        TestUtils.Simulate.click(deletes[0].getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(deletes[0]));
         done();
     });
 
@@ -183,7 +189,7 @@ lab.experiment('Admin Admin Groups Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -194,7 +200,10 @@ lab.experiment('Admin Admin Groups Form', function () {
 
         mockProps.details.hydrated = true;
         mockProps.data.success = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-success');
 
@@ -210,7 +219,10 @@ lab.experiment('Admin Admin Groups Form', function () {
 
         mockProps.details.hydrated = true;
         mockProps.data.error = 'Whoops.';
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-danger');
 

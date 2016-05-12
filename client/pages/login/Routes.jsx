@@ -1,6 +1,6 @@
 var React = require('react');
 var ReactRouter = require('react-router');
-var CreateBrowserHistory = require('history/lib/createBrowserHistory');
+var History = require('history').createHistory();
 var Home = require('./components/Home.jsx');
 var NotFound = require('./components/NotFound.jsx');
 var Logout = require('./components/Logout.jsx');
@@ -11,7 +11,6 @@ var Reset = require('./components/Reset.jsx');
 var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
 var IndexRoute = ReactRouter.IndexRoute;
-var History = CreateBrowserHistory();
 
 
 var Routes = (

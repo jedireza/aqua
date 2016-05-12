@@ -28,7 +28,7 @@ lab.experiment('Admin Admin Group Results', function () {
         var ResultsEl = React.createElement(Results, {});
 
         ReactDOM.render(ResultsEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });

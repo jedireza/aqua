@@ -1,10 +1,29 @@
 {
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "ecmaFeatures": {
+            "jsx": true
+        }
+    },
     "ecmaFeatures": {
-        "jsx": true
+        "jsx": true,
+        "destructuring": true,
+        "modules": true
     },
     "plugins": [
-        "eslint-plugin-hapi"
+        "eslint-plugin-hapi",
+        "react"
     ],
+    "env": {
+        "es6": true,
+        "node": true
+    },
+    "globals": {
+        "describe": true,
+        "it": true,
+        "expect": true,
+        "before": true
+    },
     "rules": {
         "consistent-return": 0,
         "vars-on-top": 0,
@@ -29,8 +48,7 @@
         "no-lonely-if": 0,
         "space-in-brackets": 0,
         "brace-style": 0,
-        "no-shadow": 0,
-        "hapi/no-shadow-relaxed": [1, { "ignore": ["err", "done"] }],
+        "no-shadow": [1, { "allow": ["err", "done"] }],
         "hapi/hapi-capitalize-modules": [1, "global-scope-only"],
         "hapi/hapi-scope-start": 1,
         "array-bracket-spacing": 1,

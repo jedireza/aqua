@@ -4,6 +4,7 @@ var Path = require('path');
 var Config = require('../../../config');
 var Manifest = require('../../../manifest');
 var Hapi = require('hapi');
+var Vision = require('vision');
 var HapiAuth = require('hapi-auth-cookie');
 var AuthPlugin = require('../../../server/auth');
 var AccountPlugin = require('../../../server/web/account/index');
@@ -24,10 +25,19 @@ lab.beforeEach(function (done) {
     var plugins = [HapiAuth, ModelsPlugin, AuthPlugin, AccountPlugin];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
-    server.views({
-        engines: { jsx: require('hapi-react-views') },
-        path: './server/web',
-        relativeTo: Path.join(__dirname, '..', '..', '..')
+    server.register(Vision, (err) => {
+
+        if (err) {
+            console.log('Failed to load vision.');
+        }
+
+        server.views({
+            engines: {
+                jsx: require('hapi-react-views')
+            },
+            path: './server/web',
+            relativeTo: Path.join(__dirname, '..', '..', '..')
+        });
     });
     server.register(plugins, function (err) {
 

@@ -38,16 +38,16 @@ Gulp.task('webpack', (callback) => {
                     presets: ['react', 'es2015']
                 }
             },{
-              test: /node_modules\/qs\/.*\.js$/,
-              loader: 'babel',
-              query: {
-                  presets: ['es2015']
-              }
+                test: /node_modules\/qs\/.*\.js$/,
+                loader: 'babel',
+                query: {
+                    presets: ['es2015']
+                }
             }]
         },
         devtool: 'source-map',
         plugins: [
-            new CommonsChunkPlugin('core', '../core.min.js', [], 2),
+            new CommonsChunkPlugin('core', '../core.min.js', [], 2)
             // new UglifyJsPlugin({ compress: { warnings: false } })
         ]
     };

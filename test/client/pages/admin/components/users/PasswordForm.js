@@ -48,7 +48,7 @@ lab.experiment('Admin User Password Form', function () {
         var FormEl = React.createElement(Form, mockProps);
 
         ReactDOM.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -60,7 +60,10 @@ lab.experiment('Admin User Password Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.identity.hydrated = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         Code.expect(form).to.exist();
         done();
@@ -78,7 +81,7 @@ lab.experiment('Admin User Password Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -89,7 +92,10 @@ lab.experiment('Admin User Password Form', function () {
 
         mockProps.data.hydrated = true;
         mockProps.data.success = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-success');
 
@@ -105,7 +111,10 @@ lab.experiment('Admin User Password Form', function () {
 
         mockProps.data.hydrated = true;
         mockProps.data.error = 'Whoops.';
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-danger');
 

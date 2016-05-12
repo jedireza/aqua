@@ -39,7 +39,7 @@ lab.experiment('Login Forgot Form', function () {
         var ForgotEl = React.createElement(ComponentWithContext, {});
 
         ReactDOM.render(ForgotEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -69,7 +69,7 @@ lab.experiment('Login Forgot Form', function () {
         var forgot = TestUtils.renderIntoDocument(ForgotEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(forgot, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -86,7 +86,7 @@ lab.experiment('Login Forgot Form', function () {
             }
         });
 
-        Code.expect(button.getDOMNode().disabled).to.be.true();
+        Code.expect(ReactDOM.findDOMNode(button).disabled).to.be.true();
         done();
     });
 

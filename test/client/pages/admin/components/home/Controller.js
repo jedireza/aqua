@@ -18,7 +18,7 @@ lab.experiment('Admin Home Component', function () {
 
         Code.expect(component).to.exist();
         done();
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
     });
 
 
@@ -33,7 +33,7 @@ lab.experiment('Admin Home Component', function () {
                 handler();
                 setInterval = realSetInterval;
                 done();
-                React.unmountComponentAtNode(container);
+                ReactDOM.unmountComponentAtNode(container);
             });
         };
 

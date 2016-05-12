@@ -27,7 +27,7 @@ lab.experiment('Admin Admin Group Filter Form', function () {
         var FormEl = React.createElement(Form, {});
 
         ReactDOM.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -40,11 +40,13 @@ lab.experiment('Admin Admin Group Filter Form', function () {
 
         Code.expect(form.state.limit).to.equal(20);
 
-        form.setProps({
+        FormEl = React.createElement(Form, Object.assign({}, form.props, {
             query: {
                 limit: 10
             }
-        });
+        }));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         Code.expect(form.state.limit).to.equal(10);
 
@@ -77,7 +79,7 @@ lab.experiment('Admin Admin Group Filter Form', function () {
             }
         });
         var form = TestUtils.renderIntoDocument(FormEl);
-        var formNode = form.getDOMNode();
+        var formNode = ReactDOM.findDOMNode(form);
 
         TestUtils.Simulate.keyDown(formNode, { key: 'a' });
         TestUtils.Simulate.keyDown(formNode, { key: 'Enter', which: 13 });

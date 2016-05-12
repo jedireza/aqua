@@ -46,7 +46,9 @@ lab.experiment('Account NavBar', function () {
         var NavBarEl = React.createElement(ComponentWithContext, {});
         var mainElement = TestUtils.renderIntoDocument(NavBarEl);
 
-        mainElement.setProps({ foo: 'bar' });
+        NavBarEl = React.createElement(ComponentWithContext, Object.assign({}, mainElement.props, { foo: 'bar' }));
+
+        mainElement = TestUtils.renderIntoDocument(NavBarEl);
 
         Code.expect(mainElement).to.exist();
         done();

@@ -30,7 +30,7 @@ lab.experiment('Login Not Found Component', function () {
         var NotFoundEl = React.createElement(ComponentWithContext, {});
 
         ReactDOM.render(NotFoundEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });

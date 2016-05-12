@@ -50,7 +50,7 @@ lab.experiment('Admin User Roles Form', function () {
         var FormEl = React.createElement(FormWithContext, mockProps);
 
         ReactDOM.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });

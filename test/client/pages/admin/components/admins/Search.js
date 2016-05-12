@@ -40,7 +40,7 @@ lab.experiment('Admin Admin Search', function () {
         var SearchEl = React.createElement(ComponentWithContext, {});
 
         ReactDOM.render(SearchEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -52,7 +52,9 @@ lab.experiment('Admin Admin Search', function () {
         var SearchEl = React.createElement(ComponentWithContext, {});
         var search = TestUtils.renderIntoDocument(SearchEl);
 
-        search.setProps({ foo: 'bar' });
+        SearchEl = React.createElement(ComponentWithContext, Object.assign({}, search.props, { foo: 'bar' }));
+
+        search = TestUtils.renderIntoDocument(SearchEl);
 
         Code.expect(search).to.exist();
         done();
@@ -81,7 +83,7 @@ lab.experiment('Admin Admin Search', function () {
 
         target.transitionTo = function () {};
 
-        TestUtils.Simulate.submit(form.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(form));
 
         Code.expect(search).to.exist();
         done();
@@ -137,7 +139,7 @@ lab.experiment('Admin Admin Search', function () {
 
         target.transitionTo = function () {};
 
-        TestUtils.Simulate.click(next.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(next));
 
         Code.expect(search).to.exist();
         done();
@@ -152,7 +154,7 @@ lab.experiment('Admin Admin Search', function () {
         var target = TestUtils.findRenderedComponentWithType(search, Search);
         var createNew = target.refs.createNew;
 
-        TestUtils.Simulate.click(createNew.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(createNew));
 
         Code.expect(search).to.exist();
         done();

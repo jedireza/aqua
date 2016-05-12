@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 // var RouterTestLocation = require('react-router/lib/locations/TestLocation');
 var History = require('history');
 var Lab = require('lab');
@@ -25,7 +26,7 @@ var mountNode;
 lab.beforeEach(function (done) {
 
     // TestLocation.history = ['/login'];
-    TestLocation.history = history.createHref('/login');
+    history.createHref('/login');
     done();
 });
 
@@ -42,7 +43,7 @@ lab.before(function (done) {
 
 lab.after(function (done) {
 
-    React.unmountComponentAtNode(mountNode);
+    ReactDOM.unmountComponentAtNode(mountNode);
     global.document.body.removeChild(mountNode);
     delete global.window.app;
 

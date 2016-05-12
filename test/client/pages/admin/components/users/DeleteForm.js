@@ -64,7 +64,7 @@ lab.experiment('Admin User Delete Form', function () {
         var FormEl = React.createElement(FormWithContext, mockProps);
 
         ReactDOM.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -81,15 +81,17 @@ lab.experiment('Admin User Delete Form', function () {
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
-        form.setProps({
+        FormEl = React.createElement(Form, Object.assign({}, form.props, {
             details: {
                 _id: 'pivot-name'
             }
-        });
+        }));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var buttonTag = TestUtils.findRenderedDOMComponentWithTag(form, 'button');
 
-        TestUtils.Simulate.click(buttonTag.getDOMNode(), {
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(buttonTag), {
             stopPropagation: function () {
 
                 done();
@@ -110,15 +112,17 @@ lab.experiment('Admin User Delete Form', function () {
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
-        form.setProps({
+        FormEl = React.createElement(Form, Object.assign({}, form.props, {
             details: {
                 _id: 'pivot-name'
             }
-        });
+        }));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var buttonTag = TestUtils.findRenderedDOMComponentWithTag(form, 'button');
 
-        TestUtils.Simulate.click(buttonTag.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(buttonTag));
     });
 
 
@@ -133,15 +137,17 @@ lab.experiment('Admin User Delete Form', function () {
         var FormEl = React.createElement(FormWithContext, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
 
-        form.setProps({
+        FormEl = React.createElement(Form, Object.assign({}, form.props, {
             details: {
                 _id: 'pivot-name'
             }
-        });
+        }));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -152,7 +158,10 @@ lab.experiment('Admin User Delete Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.data.error = 'Whoops.';
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-danger');
 

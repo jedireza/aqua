@@ -2,6 +2,7 @@ var React = require('react');
 var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
+var ReactDOM = require('react-dom');
 var Button = require('../../../../client/components/form/Button.jsx');
 
 
@@ -18,7 +19,7 @@ lab.experiment('Button', function () {
         var ButtonEl = React.createElement(Button, props);
         var button = TestUtils.renderIntoDocument(ButtonEl);
 
-        Code.expect(button.getDOMNode().textContent).to.equal('Hi');
+        Code.expect(ReactDOM.findDOMNode(button).textContent).to.equal('Hi');
         done();
     });
 
@@ -32,7 +33,7 @@ lab.experiment('Button', function () {
         var ButtonEl = React.createElement(Button, props);
         var button = TestUtils.renderIntoDocument(ButtonEl);
 
-        Code.expect(button.getDOMNode().disabled).to.equal(true);
+        Code.expect(ReactDOM.findDOMNode(button).disabled).to.equal(true);
         done();
     });
 
@@ -50,6 +51,6 @@ lab.experiment('Button', function () {
         var ButtonEl = React.createElement(Button, props);
         var button = TestUtils.renderIntoDocument(ButtonEl);
 
-        TestUtils.Simulate.click(button.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(button));
     });
 });
