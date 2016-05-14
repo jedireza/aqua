@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
@@ -50,7 +51,7 @@ lab.experiment('Paging', function () {
         var PagingEl = React.createElement(Paging, props);
         var paging = TestUtils.renderIntoDocument(PagingEl);
 
-        TestUtils.Simulate.click(paging.refs.prev.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(paging.refs.prev));
     });
 
 
@@ -66,6 +67,6 @@ lab.experiment('Paging', function () {
         var PagingEl = React.createElement(Paging, props);
         var paging = TestUtils.renderIntoDocument(PagingEl);
 
-        TestUtils.Simulate.click(paging.refs.next.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(paging.refs.next));
     });
 });

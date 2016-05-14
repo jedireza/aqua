@@ -149,7 +149,7 @@ var Actions = {
                 response.success = true;
 
                 if (routerHistory) {
-                    routerHistory.pushState(null, '/admin/admin-groups');
+                    routerHistory.push('/admin/admin-groups');
                     window.scrollTo(0, 0);
                 }
             }

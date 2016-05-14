@@ -1,18 +1,23 @@
 var React = require('react');
-var RouterTestLocation = require('react-router/lib/locations/TestLocation');
+var ReactDOM = require('react-dom');
+// var RouterTestLocation = require('react-router/lib/locations/TestLocation');
+var History = require('history');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
 
 
-var TestLocation = new RouterTestLocation();
+// var TestLocation = new RouterTestLocation();
+var history = History.createHistory();
+
 var lab = exports.lab = Lab.script();
 var stub = {
     RedirectActions: {
         saveReturnUrl: function () {}
     },
     ReactRouter: {
-        HistoryLocation: TestLocation
+        // HistoryLocation: TestLocation
+        HistoryLocation: history
     }
 };
 var App = Proxyquire('../../../../client/pages/admin/index.jsx', {
@@ -24,7 +29,8 @@ var mountNode;
 
 lab.beforeEach(function (done) {
 
-    TestLocation.history = ['/admin'];
+    // TestLocation.history = ['/admin'];
+    history.createHref('/admin');
     done();
 });
 
@@ -41,7 +47,7 @@ lab.before(function (done) {
 
 lab.after(function (done) {
 
-    React.unmountComponentAtNode(mountNode);
+    ReactDOM.unmountComponentAtNode(mountNode);
     global.document.body.removeChild(mountNode);
     delete global.window.app;
 

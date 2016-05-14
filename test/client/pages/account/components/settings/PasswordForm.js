@@ -62,15 +62,15 @@ lab.experiment('Account Settings Password Form', function () {
         });
         var form = TestUtils.renderIntoDocument(FormEl);
 
-        form.setProps({
-            data: mockStoreState
-        });
+        FormEl = React.createElement(Form, Object.assign({}, form.props, { data: mockStoreState }));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         mockStoreState.success = true;
 
-        form.setProps({
-            data: mockStoreState
-        });
+        FormEl = React.createElement(Form, Object.assign({}, form.props, { data: mockStoreState }));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         Code.expect(form).to.exist();
         done();

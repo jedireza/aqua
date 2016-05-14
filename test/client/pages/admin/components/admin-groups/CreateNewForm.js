@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -6,7 +7,7 @@ var StubRouterContext = require('../../../../fixtures/StubRouterContext');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {}
 };
@@ -48,8 +49,8 @@ lab.experiment('Admin Admin Group Create New Form', function () {
         var FormWithContext = StubRouterContext(Form, {});
         var FormEl = React.createElement(FormWithContext, mockProps);
 
-        React.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(FormEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -62,7 +63,10 @@ lab.experiment('Admin Admin Group Create New Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.data.show = false;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         Code.expect(form).to.exist();
         done();
@@ -85,7 +89,10 @@ lab.experiment('Admin Admin Group Create New Form', function () {
         };
 
         mockProps.data.show = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(FormWithContext, mockProps);
+
+        form = TestUtils.renderIntoDocument(FormEl);
     });
 
 
@@ -101,7 +108,7 @@ lab.experiment('Admin Admin Group Create New Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -112,7 +119,10 @@ lab.experiment('Admin Admin Group Create New Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.data.success = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-success');
 
@@ -128,7 +138,10 @@ lab.experiment('Admin Admin Group Create New Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.data.error = 'Whoops.';
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-danger');
 

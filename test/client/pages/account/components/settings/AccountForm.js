@@ -66,13 +66,9 @@ lab.experiment('Account Settings Account Form', function () {
 
         mockStoreState.hydrated = true;
 
-        form.setProps({
-            data: mockStoreState
-        });
+        FormEl = React.createElement(Form, Object.assign({}, form.props, { data: mockStoreState }));
 
-        form.setProps({
-            data: mockStoreState
-        });
+        form = TestUtils.renderIntoDocument(FormEl);
 
         Code.expect(form).to.exist();
         done();

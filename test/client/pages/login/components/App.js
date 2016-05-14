@@ -1,12 +1,14 @@
 var React = require('react');
 var ReactRouter = require('react-router');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
+
 var App = require('../../../../../client/pages/login/components/App.jsx');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var Route = ReactRouter.Route;
 var Routes = React.createElement(Route, {
     name: 'app', path: '/login', handler: App

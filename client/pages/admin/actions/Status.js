@@ -126,7 +126,7 @@ var Actions = {
                 response.success = true;
 
                 if (routerHistory) {
-                    routerHistory.pushState(null, '/admin/statuses');
+                    routerHistory.push('/admin/statuses');
                     window.scrollTo(0, 0);
                 }
             }

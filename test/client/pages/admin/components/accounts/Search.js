@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -6,7 +7,7 @@ var StubRouterContext = require('../../../../fixtures/StubRouterContext');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {
         getResults: function () {}
@@ -38,8 +39,8 @@ lab.experiment('Admin Account Search', function () {
         var ComponentWithContext = StubRouterContext(Search, {});
         var SearchEl = React.createElement(ComponentWithContext, {});
 
-        React.render(SearchEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(SearchEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -51,7 +52,9 @@ lab.experiment('Admin Account Search', function () {
         var SearchEl = React.createElement(ComponentWithContext, {});
         var search = TestUtils.renderIntoDocument(SearchEl);
 
-        search.setProps({ foo: 'bar' });
+        SearchEl = React.createElement(ComponentWithContext, Object.assign({}, search.props, { foo: 'bar' }));
+
+        search = TestUtils.renderIntoDocument(SearchEl);
 
         Code.expect(search).to.exist();
         done();
@@ -80,7 +83,7 @@ lab.experiment('Admin Account Search', function () {
 
         target.transitionTo = function () {};
 
-        TestUtils.Simulate.submit(form.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(form));
 
         Code.expect(search).to.exist();
         done();
@@ -136,7 +139,7 @@ lab.experiment('Admin Account Search', function () {
 
         target.transitionTo = function () {};
 
-        TestUtils.Simulate.click(next.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(next));
 
         Code.expect(search).to.exist();
         done();
@@ -151,7 +154,7 @@ lab.experiment('Admin Account Search', function () {
         var target = TestUtils.findRenderedComponentWithType(search, Search);
         var createNew = target.refs.createNew;
 
-        TestUtils.Simulate.click(createNew.getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(createNew));
 
         Code.expect(search).to.exist();
         done();

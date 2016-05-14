@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Results = require('../../../../../../client/pages/admin/components/admin-groups/Results.jsx');
@@ -6,7 +7,7 @@ var StubRouterContext = require('../../../../fixtures/StubRouterContext');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 
 
 lab.experiment('Admin Admin Group Results', function () {
@@ -26,8 +27,8 @@ lab.experiment('Admin Admin Group Results', function () {
         var container = global.document.createElement('div');
         var ResultsEl = React.createElement(Results, {});
 
-        React.render(ResultsEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(ResultsEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });

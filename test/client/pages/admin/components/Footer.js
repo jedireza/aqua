@@ -5,7 +5,7 @@ var Footer = require('../../../../../client/pages/admin/components/Footer.jsx');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 
 
 lab.experiment('Admin Footer', function () {

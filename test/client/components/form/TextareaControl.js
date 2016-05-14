@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
@@ -31,7 +32,7 @@ lab.experiment('TextareaControl', function () {
         var textareaControl = TestUtils.renderIntoDocument(TextareaControlEl);
         var textarea = TestUtils.findRenderedDOMComponentWithTag(textareaControl, 'textarea');
 
-        Code.expect(textarea.getDOMNode().disabled).to.equal(true);
+        Code.expect(ReactDOM.findDOMNode(textarea).disabled).to.equal(true);
         done();
     });
 });

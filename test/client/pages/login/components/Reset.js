@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -7,7 +8,7 @@ var Constants = require('../../../../../client/pages/login/Constants');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {},
     ResetStore: {}
@@ -28,7 +29,7 @@ lab.experiment('Login Reset Form', function () {
 
     lab.test('it renders normally', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Reset, RouterStubs);
+        var ComponentWithContext = StubRouterContext(Reset, RouterStubs.getCurrentParams());
         var ResetEl = React.createElement(ComponentWithContext, {});
         var reset = TestUtils.renderIntoDocument(ResetEl);
 
@@ -40,11 +41,11 @@ lab.experiment('Login Reset Form', function () {
     lab.test('it handles unmounting', function (done) {
 
         var container = global.document.createElement('div');
-        var ComponentWithContext = StubRouterContext(Reset, RouterStubs);
+        var ComponentWithContext = StubRouterContext(Reset, RouterStubs.getCurrentParams());
         var ResetEl = React.createElement(ComponentWithContext, {});
 
-        React.render(ResetEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(ResetEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -52,7 +53,7 @@ lab.experiment('Login Reset Form', function () {
 
     lab.test('it handles a store change', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Reset, RouterStubs);
+        var ComponentWithContext = StubRouterContext(Reset, RouterStubs.getCurrentParams());
         var ResetEl = React.createElement(ComponentWithContext, {});
 
         TestUtils.renderIntoDocument(ResetEl);
@@ -69,18 +70,18 @@ lab.experiment('Login Reset Form', function () {
             done();
         };
 
-        var ComponentWithContext = StubRouterContext(Reset, RouterStubs);
+        var ComponentWithContext = StubRouterContext(Reset, RouterStubs.getCurrentParams());
         var ResetEl = React.createElement(ComponentWithContext, {});
         var reset = TestUtils.renderIntoDocument(ResetEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(reset, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
     lab.test('it renders with loading state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Reset, RouterStubs);
+        var ComponentWithContext = StubRouterContext(Reset, RouterStubs.getCurrentParams());
         var ResetEl = React.createElement(ComponentWithContext, {});
         var reset = TestUtils.renderIntoDocument(ResetEl);
         var button = TestUtils.findRenderedDOMComponentWithTag(reset, 'button');
@@ -91,14 +92,14 @@ lab.experiment('Login Reset Form', function () {
             }
         });
 
-        Code.expect(button.getDOMNode().disabled).to.be.true();
+        Code.expect(ReactDOM.findDOMNode(button).disabled).to.be.true();
         done();
     });
 
 
     lab.test('it renders with success state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Reset, RouterStubs);
+        var ComponentWithContext = StubRouterContext(Reset, RouterStubs.getCurrentParams());
         var ResetEl = React.createElement(ComponentWithContext, {});
         var reset = TestUtils.renderIntoDocument(ResetEl);
 
@@ -120,7 +121,7 @@ lab.experiment('Login Reset Form', function () {
 
     lab.test('it renders with error state', function (done) {
 
-        var ComponentWithContext = StubRouterContext(Reset, RouterStubs);
+        var ComponentWithContext = StubRouterContext(Reset, RouterStubs.getCurrentParams());
         var ResetEl = React.createElement(ComponentWithContext, {});
         var reset = TestUtils.renderIntoDocument(ResetEl);
 

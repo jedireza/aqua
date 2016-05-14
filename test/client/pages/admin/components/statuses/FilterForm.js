@@ -1,11 +1,12 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Form = require('../../../../../../client/pages/admin/components/statuses/FilterForm.jsx');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 
 
 lab.experiment('Admin Status Filter Form', function () {
@@ -25,8 +26,8 @@ lab.experiment('Admin Status Filter Form', function () {
         var container = global.document.createElement('div');
         var FormEl = React.createElement(Form, {});
 
-        React.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(FormEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -39,11 +40,13 @@ lab.experiment('Admin Status Filter Form', function () {
 
         Code.expect(form.state.limit).to.equal(20);
 
-        form.setProps({
+        FormEl = React.createElement(Form, Object.assign({}, form.props, {
             query: {
                 limit: 10
             }
-        });
+        }));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         Code.expect(form.state.limit).to.equal(10);
 
@@ -76,7 +79,7 @@ lab.experiment('Admin Status Filter Form', function () {
             }
         });
         var form = TestUtils.renderIntoDocument(FormEl);
-        var formNode = form.getDOMNode();
+        var formNode = ReactDOM.findDOMNode(form);
 
         TestUtils.Simulate.keyDown(formNode, { key: 'a' });
         TestUtils.Simulate.keyDown(formNode, { key: 'Enter', which: 13 });

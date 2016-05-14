@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var StubRouterContext = require('../../../fixtures/StubRouterContext');
@@ -6,7 +7,7 @@ var NotFound = require('../../../../../client/pages/login/components/NotFound.js
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 
 
 lab.experiment('Login Not Found Component', function () {
@@ -28,8 +29,8 @@ lab.experiment('Login Not Found Component', function () {
         var ComponentWithContext = StubRouterContext(NotFound, {});
         var NotFoundEl = React.createElement(ComponentWithContext, {});
 
-        React.render(NotFoundEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(NotFoundEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });

@@ -76,7 +76,7 @@ var Actions = {
                 response.success = true;
 
                 if (routerHistory) {
-                    routerHistory.pushState(null, `/admin/users/${response._id}`);
+                    routerHistory.pushState('/admin/users/' + response._id);
                     window.scrollTo(0, 0);
                 }
             }
@@ -159,7 +159,7 @@ var Actions = {
                 response.success = true;
 
                 if (routerHistory) {
-                    routerHistory.pushState(null, '/admin/users');
+                    routerHistory.pushState('/admin/users');
                     window.scrollTo(0, 0);
                 }
             }

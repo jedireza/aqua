@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
@@ -31,7 +32,7 @@ lab.experiment('TextControl', function () {
         var textControl = TestUtils.renderIntoDocument(TextControlEl);
         var input = TestUtils.findRenderedDOMComponentWithTag(textControl, 'input');
 
-        Code.expect(input.getDOMNode().disabled).to.equal(true);
+        Code.expect(ReactDOM.findDOMNode(input).disabled).to.equal(true);
         done();
     });
 });

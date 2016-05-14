@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -6,7 +7,7 @@ var StubRouterContext = require('../../../../fixtures/StubRouterContext');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {
         getDetails: function () {}
@@ -44,8 +45,8 @@ lab.experiment('Admin Account Details', function () {
         var ComponentWithContext = StubRouterContext(Details, {});
         var DetailsEl = React.createElement(ComponentWithContext, {});
 
-        React.render(DetailsEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(DetailsEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -79,7 +80,7 @@ lab.experiment('Admin Account Details', function () {
 
         var heading = TestUtils.findRenderedDOMComponentWithTag(target, 'h1');
 
-        Code.expect(heading.getDOMNode().textContent).to.match(/Error/);
+        Code.expect(ReactDOM.findDOMNode(heading).textContent).to.match(/Error/);
         done();
     });
 });

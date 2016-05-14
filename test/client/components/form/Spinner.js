@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var TestUtils = require('react-addons-test-utils');
 var Lab = require('lab');
 var Code = require('code');
@@ -15,7 +16,7 @@ lab.experiment('Spinner', function () {
         var props = {};
         var SpinnerEl = React.createElement(Spinner, props);
         var spinner = TestUtils.renderIntoDocument(SpinnerEl);
-        var klass = spinner.getDOMNode().getAttribute('class');
+        var klass = ReactDOM.findDOMNode(spinner).getAttribute('class');
 
         Code.expect(klass).to.equal('hidden');
         done();
@@ -29,7 +30,7 @@ lab.experiment('Spinner', function () {
         };
         var SpinnerEl = React.createElement(Spinner, props);
         var spinner = TestUtils.renderIntoDocument(SpinnerEl);
-        var klass = spinner.getDOMNode().getAttribute('class');
+        var klass = ReactDOM.findDOMNode(spinner).getAttribute('class');
 
         Code.expect(klass).to.equal('');
         done();
@@ -43,7 +44,7 @@ lab.experiment('Spinner', function () {
         };
         var SpinnerEl = React.createElement(Spinner, props);
         var spinner = TestUtils.renderIntoDocument(SpinnerEl);
-        var text = spinner.getDOMNode().textContent;
+        var text = ReactDOM.findDOMNode(spinner).textContent;
 
         Code.expect(text[0]).to.equal('\u00A0');
         done();
@@ -57,7 +58,7 @@ lab.experiment('Spinner', function () {
         };
         var SpinnerEl = React.createElement(Spinner, props);
         var spinner = TestUtils.renderIntoDocument(SpinnerEl);
-        var text = spinner.getDOMNode().textContent;
+        var text = ReactDOM.findDOMNode(spinner).textContent;
 
         Code.expect(text[text.length - 1]).to.equal('\u00A0');
         done();

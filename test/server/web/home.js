@@ -3,6 +3,7 @@ var Code = require('code');
 var Path = require('path');
 var Config = require('../../../config');
 var Hapi = require('hapi');
+var Vision = require('vision');
 var HomePlugin = require('../../../server/web/home/index');
 
 
@@ -15,10 +16,19 @@ lab.beforeEach(function (done) {
     var plugins = [HomePlugin];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
-    server.views({
-        engines: { jsx: require('hapi-react-views') },
-        path: './server/web',
-        relativeTo: Path.join(__dirname, '..', '..', '..')
+    server.register(Vision, (err) => {
+
+        if (err) {
+            console.log('Failed to load vision.');
+        }
+
+        server.views({
+            engines: {
+                jsx: require('hapi-react-views')
+            },
+            path: './server/web',
+            relativeTo: Path.join(__dirname, '..', '..', '..')
+        });
     });
     server.register(plugins, function (err) {
 

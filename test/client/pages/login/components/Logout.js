@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -7,7 +8,7 @@ var Constants = require('../../../../../client/pages/login/Constants');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {
         logout: function () {}
@@ -39,8 +40,8 @@ lab.experiment('Login Logout Form', function () {
         var ComponentWithContext = StubRouterContext(Logout, {});
         var LogoutEl = React.createElement(ComponentWithContext, {});
 
-        React.render(LogoutEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(LogoutEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });

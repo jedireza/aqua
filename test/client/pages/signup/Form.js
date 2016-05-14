@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -6,7 +7,7 @@ var Constants = require('../../../../client/pages/signup/Constants');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {},
     Store: {}
@@ -34,8 +35,8 @@ lab.experiment('Sign Up Form', function () {
         var container = global.document.createElement('div');
         var FormEl = React.createElement(Form, {});
 
-        React.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(FormEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -64,7 +65,7 @@ lab.experiment('Sign Up Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -81,7 +82,7 @@ lab.experiment('Sign Up Form', function () {
 
         var button = TestUtils.findRenderedDOMComponentWithTag(form, 'button');
 
-        Code.expect(button.getDOMNode().disabled).to.be.true();
+        Code.expect(ReactDOM.findDOMNode(button).disabled).to.be.true();
         done();
     });
 

@@ -1,11 +1,12 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {}
 };
@@ -46,8 +47,8 @@ lab.experiment('Admin Admin Permissions Form', function () {
         var container = global.document.createElement('div');
         var FormEl = React.createElement(Form, mockProps);
 
-        React.render(FormEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(FormEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -59,10 +60,16 @@ lab.experiment('Admin Admin Permissions Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.details.hydrated = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         mockProps.details.hydrated = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         Code.expect(form).to.exist();
         done();
@@ -75,8 +82,8 @@ lab.experiment('Admin Admin Permissions Form', function () {
 
         var FormEl = React.createElement(Form, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
-        var button = form.refs.newPermissionButton.getDOMNode();
-        var input = form.refs.newPermission.getDOMNode();
+        var button = ReactDOM.findDOMNode(form.refs.newPermissionButton);
+        var input = ReactDOM.findDOMNode(form.refs.newPermission);
 
         form.setState = function () {
 
@@ -94,7 +101,7 @@ lab.experiment('Admin Admin Permissions Form', function () {
 
         var FormEl = React.createElement(Form, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
-        var input = form.refs.newPermission.getDOMNode();
+        var input = ReactDOM.findDOMNode(form.refs.newPermission);
 
         form.setState = function () {
 
@@ -116,7 +123,7 @@ lab.experiment('Admin Admin Permissions Form', function () {
 
         var FormEl = React.createElement(Form, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
-        var input = form.refs.newPermission.getDOMNode();
+        var input = ReactDOM.findDOMNode(form.refs.newPermission);
 
         TestUtils.Simulate.change(input, { target: { value: 'NEW' } });
         TestUtils.Simulate.keyDown(input, { which: 13 });
@@ -140,7 +147,7 @@ lab.experiment('Admin Admin Permissions Form', function () {
 
         var FormEl = React.createElement(Form, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
-        var input = form.refs.newPermission.getDOMNode();
+        var input = ReactDOM.findDOMNode(form.refs.newPermission);
 
         var realSetTimeout = setTimeout;
         setTimeout = function (handler) {
@@ -167,7 +174,7 @@ lab.experiment('Admin Admin Permissions Form', function () {
         TestUtils.Simulate.change(input, { target: { value: 'NEW' } });
         TestUtils.Simulate.keyDown(input, { which: 13 });
 
-        TestUtils.Simulate.click(toggles[0].getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(toggles[0]));
     });
 
 
@@ -177,7 +184,7 @@ lab.experiment('Admin Admin Permissions Form', function () {
 
         var FormEl = React.createElement(Form, mockProps);
         var form = TestUtils.renderIntoDocument(FormEl);
-        var input = form.refs.newPermission.getDOMNode();
+        var input = ReactDOM.findDOMNode(form.refs.newPermission);
 
         TestUtils.Simulate.change(input, { target: { value: 'NEW' } });
         TestUtils.Simulate.keyDown(input, { which: 13 });
@@ -185,7 +192,7 @@ lab.experiment('Admin Admin Permissions Form', function () {
         var permissionContainer = form.refs.permissionContainer;
         var deletes = TestUtils.scryRenderedDOMComponentsWithClass(permissionContainer, 'btn-warning');
 
-        TestUtils.Simulate.click(deletes[0].getDOMNode());
+        TestUtils.Simulate.click(ReactDOM.findDOMNode(deletes[0]));
         done();
     });
 
@@ -201,7 +208,7 @@ lab.experiment('Admin Admin Permissions Form', function () {
         var form = TestUtils.renderIntoDocument(FormEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -212,7 +219,10 @@ lab.experiment('Admin Admin Permissions Form', function () {
 
         mockProps.details.hydrated = true;
         mockProps.data.success = true;
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-success');
 
@@ -228,7 +238,10 @@ lab.experiment('Admin Admin Permissions Form', function () {
 
         mockProps.details.hydrated = true;
         mockProps.data.error = 'Whoops.';
-        form.setProps(mockProps);
+
+        FormEl = React.createElement(Form, Object.assign({}, form.props, mockProps));
+
+        form = TestUtils.renderIntoDocument(FormEl);
 
         var alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-danger');
 

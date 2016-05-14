@@ -1,4 +1,5 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Lab = require('lab');
 var Code = require('code');
 var Proxyquire = require('proxyquire');
@@ -7,7 +8,7 @@ var Constants = require('../../../../../client/pages/login/Constants');
 
 
 var lab = exports.lab = Lab.script();
-var TestUtils = React.addons.TestUtils;
+var TestUtils = require('react-addons-test-utils');
 var stub = {
     Actions: {},
     ForgotStore: {}
@@ -37,8 +38,8 @@ lab.experiment('Login Forgot Form', function () {
         var ComponentWithContext = StubRouterContext(Forgot, {});
         var ForgotEl = React.createElement(ComponentWithContext, {});
 
-        React.render(ForgotEl, container);
-        React.unmountComponentAtNode(container);
+        ReactDOM.render(ForgotEl, container);
+        ReactDOM.unmountComponentAtNode(container);
 
         done();
     });
@@ -68,7 +69,7 @@ lab.experiment('Login Forgot Form', function () {
         var forgot = TestUtils.renderIntoDocument(ForgotEl);
         var formTag = TestUtils.findRenderedDOMComponentWithTag(forgot, 'form');
 
-        TestUtils.Simulate.submit(formTag.getDOMNode());
+        TestUtils.Simulate.submit(ReactDOM.findDOMNode(formTag));
     });
 
 
@@ -85,7 +86,7 @@ lab.experiment('Login Forgot Form', function () {
             }
         });
 
-        Code.expect(button.getDOMNode().disabled).to.be.true();
+        Code.expect(ReactDOM.findDOMNode(button).disabled).to.be.true();
         done();
     });
 

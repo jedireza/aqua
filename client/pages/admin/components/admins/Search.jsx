@@ -5,7 +5,7 @@ var Actions = require('../../actions/Admin');
 var AdminStore = require('../../stores/Admin');
 var FilterForm = require('./FilterForm.jsx');
 var CreateNewForm = require('./CreateNewForm.jsx');
-var Results = require('./Results');
+var Results = require('./Results.jsx');
 
 
 var Component = React.createClass({
