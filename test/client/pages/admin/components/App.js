@@ -8,42 +8,26 @@ var RouteHelpers = require('../../../fixtures/RouteHelpers');
 
 var lab = exports.lab = Lab.script();
 var TestUtils = require('react-addons-test-utils');
-var Route = ReactRouter.Route;
-var DefaultRoute = ReactRouter.DefaultRoute;
-var Routes = React.createElement(Route,
-    { path: '/admin', name: 'app', handler: App },
-    React.createElement(DefaultRoute, {
-        name: 'home', handler: RouteHelpers.StubHandler
-    }),
-    React.createElement(Route, {
-        path: 'accounts', name: 'accounts', handler: RouteHelpers.StubHandler
-    }),
-    React.createElement(Route, {
-        path: 'admins', name: 'admins', handler: RouteHelpers.StubHandler
-    }),
-    React.createElement(Route, {
-        path: 'admin-groups', name: 'adminGroups', handler: RouteHelpers.StubHandler
-    }),
-    React.createElement(Route, {
-        path: 'statuses', name: 'statuses', handler: RouteHelpers.StubHandler
-    }),
-    React.createElement(Route, {
-        path: 'users', name: 'users', handler: RouteHelpers.StubHandler
-    })
-);
+const { Route, IndexRedirect, Router } = ReactRouter;
 
+
+var Routes = <Route name="app" path="/admin" handler={App}>
+    <IndexRedirect to="/home" />
+    <Route name="home" path="home" handler={RouteHelpers.StubHandler} />
+    <Route name="accounts" path="accounts" handler={RouteHelpers.StubHandler} />
+    <Route name="admins" path="admins" handler={RouteHelpers.StubHandler} />
+    <Route name="adminGroups" path="admin-groups" handler={RouteHelpers.StubHandler} />
+    <Route name="statuses" path="statuses" handler={RouteHelpers.StubHandler} />
+    <Route name="users" path="users" handler={RouteHelpers.StubHandler} />
+  </Route>;
 
 lab.experiment('Admin App Component', function () {
 
     lab.test('it renders normally', function (done) {
 
-        ReactRouter.run(Routes, '/admin', function (Handler) {
+        var mainElement = TestUtils.renderIntoDocument(<Router routes={Routes} />);
 
-            var HandlerEl = React.createElement(Handler, {});
-            var mainElement = TestUtils.renderIntoDocument(HandlerEl);
-
-            Code.expect(mainElement).to.exist();
-            done();
-        });
+        Code.expect(mainElement).to.exist();
+        done();
     });
 });
