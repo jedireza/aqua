@@ -30,6 +30,7 @@ __Note:__ The live demo has been modified so you cannot change the root user,
 the root user's linked admin role or the root admin group. This was done in
 order to keep the app ready to use at all times.
 
+Route documentation for the demo can be viewed at /docs.
 
 ## Requirements
 
@@ -112,6 +113,11 @@ This will start the app using [`nodemon`](https://github.com/remy/nodemon).
 
 Now you should be able to point your browser to http://localhost:8000/ and see
 the welcome page.
+
+
+##Route Documentation
+A listing of application routes may be viewed at http://localhost:8000/docs.
+If you do not want the /docs list exposed in your project, remove 'lout' from the plugins in manifest.js.
 
 
 ## Philosophy
