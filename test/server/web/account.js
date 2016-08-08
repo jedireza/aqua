@@ -58,7 +58,7 @@ lab.experiment('Account Page View', function () {
 
         server.inject(request, function (response) {
 
-            Code.expect(response.result).to.match(/Account/i);
+            Code.expect(response.result).to.match(/account/i);
             Code.expect(response.statusCode).to.equal(200);
 
             done();

@@ -1,10 +1,12 @@
-var Joi = require('joi');
-var ObjectAssign = require('object-assign');
-var BaseModel = require('hapi-mongo-models').BaseModel;
-var Slug = require('slug');
+'use strict';
+
+const Joi = require('joi');
+const ObjectAssign = require('object-assign');
+const BaseModel = require('hapi-mongo-models').BaseModel;
+const Slug = require('slug');
 
 
-var Status = BaseModel.extend({
+const Status = BaseModel.extend({
     constructor: function (attrs) {
 
         ObjectAssign(this, attrs);
@@ -26,20 +28,20 @@ Status.schema = Joi.object().keys({
 
 
 Status.indexes = [
-    [{ pivot: 1 }],
-    [{ name: 1 }]
+    { key: { pivot: 1 } },
+    { key: { name: 1 } }
 ];
 
 
 Status.create = function (pivot, name, callback) {
 
-    var document = {
+    const document = {
         _id: Slug(pivot + ' ' + name).toLowerCase(),
         pivot: pivot,
         name: name
     };
 
-    this.insertOne(document, function (err, docs) {
+    this.insertOne(document, (err, docs) => {
 
         if (err) {
             return callback(err);

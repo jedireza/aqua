@@ -1,13 +1,14 @@
-var Path = require('path');
-var Gulp = require('gulp');
-var Newer = require('gulp-newer');
-var Concat = require('gulp-concat');
-var Less = require('gulp-less');
+'use strict';
+const Path = require('path');
+const Gulp = require('gulp');
+const Newer = require('gulp-newer');
+const Concat = require('gulp-concat');
+const Less = require('gulp-less');
 
 
-Gulp.task('less', function () {
+Gulp.task('less', () => {
 
-    var bundleConfigs = [{
+    const bundleConfigs = [{
         entries: [
             './client/core/bootstrap.less',
             './client/core/font-awesome.less'
@@ -32,7 +33,7 @@ Gulp.task('less', function () {
         outputName: 'home.min.css'
     }];
 
-    return bundleConfigs.map(function (bundleConfig) {
+    return bundleConfigs.map((bundleConfig) => {
 
         return Gulp.src(bundleConfig.entries)
             .pipe(Newer(Path.join(bundleConfig.dest, bundleConfig.outputName)))

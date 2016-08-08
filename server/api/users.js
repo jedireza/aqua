@@ -1,16 +1,21 @@
-var Joi = require('joi');
-var Hoek = require('hoek');
-var AuthPlugin = require('../auth');
+'use strict';
+
+const Boom = require('boom');
+const Joi = require('joi');
+const AuthPlugin = require('../auth');
 
 
-exports.register = function (server, options, next) {
+const internals = {};
 
-    options = Hoek.applyToDefaults({ basePath: '' }, options);
+
+internals.applyRoutes = function (server, next) {
+
+    const User = server.plugins['hapi-mongo-models'].User;
 
 
     server.route({
         method: 'GET',
-        path: options.basePath + '/users',
+        path: '/users',
         config: {
             auth: {
                 strategy: 'session',
@@ -33,8 +38,7 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var User = request.server.plugins['hapi-mongo-models'].User;
-            var query = {};
+            const query = {};
             if (request.query.username) {
                 query.username = new RegExp('^.*?' + request.query.username + '.*$', 'i');
             }
@@ -44,12 +48,12 @@ exports.register = function (server, options, next) {
             if (request.query.role) {
                 query['roles.' + request.query.role] = { $exists: true };
             }
-            var fields = request.query.fields;
-            var sort = request.query.sort;
-            var limit = request.query.limit;
-            var page = request.query.page;
+            const fields = request.query.fields;
+            const sort = request.query.sort;
+            const limit = request.query.limit;
+            const page = request.query.page;
 
-            User.pagedFind(query, fields, sort, limit, page, function (err, results) {
+            User.pagedFind(query, fields, sort, limit, page, (err, results) => {
 
                 if (err) {
                     return reply(err);
@@ -63,7 +67,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'GET',
-        path: options.basePath + '/users/{id}',
+        path: '/users/{id}',
         config: {
             auth: {
                 strategy: 'session',
@@ -75,16 +79,14 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var User = request.server.plugins['hapi-mongo-models'].User;
-
-            User.findById(request.params.id, function (err, user) {
+            User.findById(request.params.id, (err, user) => {
 
                 if (err) {
                     return reply(err);
                 }
 
                 if (!user) {
-                    return reply({ message: 'Document not found.' }).code(404);
+                    return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply(user);
@@ -95,7 +97,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'GET',
-        path: options.basePath + '/users/my',
+        path: '/users/my',
         config: {
             auth: {
                 strategy: 'session',
@@ -104,18 +106,17 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var User = request.server.plugins['hapi-mongo-models'].User;
-            var id = request.auth.credentials.user._id.toString();
-            var fields = User.fieldsAdapter('username email roles');
+            const id = request.auth.credentials.user._id.toString();
+            const fields = User.fieldsAdapter('username email roles');
 
-            User.findById(id, fields, function (err, user) {
+            User.findById(id, fields, (err, user) => {
 
                 if (err) {
                     return reply(err);
                 }
 
                 if (!user) {
-                    return reply({ message: 'Document not found. That is strange.' }).code(404);
+                    return reply(Boom.notFound('Document not found. That is strange.'));
                 }
 
                 reply(user);
@@ -126,7 +127,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'POST',
-        path: options.basePath + '/users',
+        path: '/users',
         config: {
             auth: {
                 strategy: 'session',
@@ -135,8 +136,8 @@ exports.register = function (server, options, next) {
             validate: {
                 payload: {
                     username: Joi.string().token().lowercase().required(),
-                    email: Joi.string().email().lowercase().required(),
-                    password: Joi.string().required()
+                    password: Joi.string().required(),
+                    email: Joi.string().email().lowercase().required()
                 }
             },
             pre: [
@@ -145,23 +146,18 @@ exports.register = function (server, options, next) {
                     assign: 'usernameCheck',
                     method: function (request, reply) {
 
-                        var User = request.server.plugins['hapi-mongo-models'].User;
-                        var conditions = {
+                        const conditions = {
                             username: request.payload.username
                         };
 
-                        User.findOne(conditions, function (err, user) {
+                        User.findOne(conditions, (err, user) => {
 
                             if (err) {
                                 return reply(err);
                             }
 
                             if (user) {
-                                var response = {
-                                    message: 'Username already in use.'
-                                };
-
-                                return reply(response).takeover().code(409);
+                                return reply(Boom.conflict('Username already in use.'));
                             }
 
                             reply(true);
@@ -171,23 +167,18 @@ exports.register = function (server, options, next) {
                     assign: 'emailCheck',
                     method: function (request, reply) {
 
-                        var User = request.server.plugins['hapi-mongo-models'].User;
-                        var conditions = {
+                        const conditions = {
                             email: request.payload.email
                         };
 
-                        User.findOne(conditions, function (err, user) {
+                        User.findOne(conditions, (err, user) => {
 
                             if (err) {
                                 return reply(err);
                             }
 
                             if (user) {
-                                var response = {
-                                    message: 'Email already in use.'
-                                };
-
-                                return reply(response).takeover().code(409);
+                                return reply(Boom.conflict('Email already in use.'));
                             }
 
                             reply(true);
@@ -198,12 +189,11 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var User = request.server.plugins['hapi-mongo-models'].User;
-            var username = request.payload.username;
-            var email = request.payload.email;
-            var password = request.payload.password;
+            const username = request.payload.username;
+            const password = request.payload.password;
+            const email = request.payload.email;
 
-            User.create(username, password, email, function (err, user) {
+            User.create(username, password, email, (err, user) => {
 
                 if (err) {
                     return reply(err);
@@ -217,7 +207,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'PUT',
-        path: options.basePath + '/users/{id}',
+        path: '/users/{id}',
         config: {
             auth: {
                 strategy: 'session',
@@ -236,24 +226,19 @@ exports.register = function (server, options, next) {
                     assign: 'usernameCheck',
                     method: function (request, reply) {
 
-                        var User = request.server.plugins['hapi-mongo-models'].User;
-                        var conditions = {
+                        const conditions = {
                             username: request.payload.username,
                             _id: { $ne: User._idClass(request.params.id) }
                         };
 
-                        User.findOne(conditions, function (err, user) {
+                        User.findOne(conditions, (err, user) => {
 
                             if (err) {
                                 return reply(err);
                             }
 
                             if (user) {
-                                var response = {
-                                    message: 'Username already in use.'
-                                };
-
-                                return reply(response).takeover().code(409);
+                                return reply(Boom.conflict('Username already in use.'));
                             }
 
                             reply(true);
@@ -263,24 +248,19 @@ exports.register = function (server, options, next) {
                     assign: 'emailCheck',
                     method: function (request, reply) {
 
-                        var User = request.server.plugins['hapi-mongo-models'].User;
-                        var conditions = {
+                        const conditions = {
                             email: request.payload.email,
                             _id: { $ne: User._idClass(request.params.id) }
                         };
 
-                        User.findOne(conditions, function (err, user) {
+                        User.findOne(conditions, (err, user) => {
 
                             if (err) {
                                 return reply(err);
                             }
 
                             if (user) {
-                                var response = {
-                                    message: 'Email already in use.'
-                                };
-
-                                return reply(response).takeover().code(409);
+                                return reply(Boom.conflict('Email already in use.'));
                             }
 
                             reply(true);
@@ -291,9 +271,8 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var User = request.server.plugins['hapi-mongo-models'].User;
-            var id = request.params.id;
-            var update = {
+            const id = request.params.id;
+            const update = {
                 $set: {
                     isActive: request.payload.isActive,
                     username: request.payload.username,
@@ -301,14 +280,14 @@ exports.register = function (server, options, next) {
                 }
             };
 
-            User.findByIdAndUpdate(id, update, function (err, user) {
+            User.findByIdAndUpdate(id, update, (err, user) => {
 
                 if (err) {
                     return reply(err);
                 }
 
                 if (!user) {
-                    return reply({ message: 'Document not found.' }).code(404);
+                    return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply(user);
@@ -319,7 +298,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'PUT',
-        path: options.basePath + '/users/my',
+        path: '/users/my',
         config: {
             auth: {
                 strategy: 'session',
@@ -335,24 +314,19 @@ exports.register = function (server, options, next) {
                 assign: 'usernameCheck',
                 method: function (request, reply) {
 
-                    var User = request.server.plugins['hapi-mongo-models'].User;
-                    var conditions = {
+                    const conditions = {
                         username: request.payload.username,
                         _id: { $ne: request.auth.credentials.user._id }
                     };
 
-                    User.findOne(conditions, function (err, user) {
+                    User.findOne(conditions, (err, user) => {
 
                         if (err) {
                             return reply(err);
                         }
 
                         if (user) {
-                            var response = {
-                                message: 'Username already in use.'
-                            };
-
-                            return reply(response).takeover().code(409);
+                            return reply(Boom.conflict('Username already in use.'));
                         }
 
                         reply(true);
@@ -362,24 +336,19 @@ exports.register = function (server, options, next) {
                 assign: 'emailCheck',
                 method: function (request, reply) {
 
-                    var User = request.server.plugins['hapi-mongo-models'].User;
-                    var conditions = {
+                    const conditions = {
                         email: request.payload.email,
                         _id: { $ne: request.auth.credentials.user._id }
                     };
 
-                    User.findOne(conditions, function (err, user) {
+                    User.findOne(conditions, (err, user) => {
 
                         if (err) {
                             return reply(err);
                         }
 
                         if (user) {
-                            var response = {
-                                message: 'Email already in use.'
-                            };
-
-                            return reply(response).takeover().code(409);
+                            return reply(Boom.conflict('Email already in use.'));
                         }
 
                         reply(true);
@@ -389,20 +358,18 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var User = request.server.plugins['hapi-mongo-models'].User;
-
-            var id = request.auth.credentials.user._id.toString();
-            var update = {
+            const id = request.auth.credentials.user._id.toString();
+            const update = {
                 $set: {
                     username: request.payload.username,
                     email: request.payload.email
                 }
             };
-            var findOptions = {
+            const findOptions = {
                 fields: User.fieldsAdapter('username email roles')
             };
 
-            User.findByIdAndUpdate(id, update, findOptions, function (err, user) {
+            User.findByIdAndUpdate(id, update, findOptions, (err, user) => {
 
                 if (err) {
                     return reply(err);
@@ -416,7 +383,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'PUT',
-        path: options.basePath + '/users/{id}/password',
+        path: '/users/{id}/password',
         config: {
             auth: {
                 strategy: 'session',
@@ -433,9 +400,7 @@ exports.register = function (server, options, next) {
                     assign: 'password',
                     method: function (request, reply) {
 
-                        var User = request.server.plugins['hapi-mongo-models'].User;
-
-                        User.generatePasswordHash(request.payload.password, function (err, hash) {
+                        User.generatePasswordHash(request.payload.password, (err, hash) => {
 
                             if (err) {
                                 return reply(err);
@@ -449,15 +414,14 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var User = request.server.plugins['hapi-mongo-models'].User;
-            var id = request.params.id;
-            var update = {
+            const id = request.params.id;
+            const update = {
                 $set: {
                     password: request.pre.password.hash
                 }
             };
 
-            User.findByIdAndUpdate(id, update, function (err, user) {
+            User.findByIdAndUpdate(id, update, (err, user) => {
 
                 if (err) {
                     return reply(err);
@@ -471,7 +435,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'PUT',
-        path: options.basePath + '/users/my/password',
+        path: '/users/my/password',
         config: {
             auth: {
                 strategy: 'session',
@@ -486,9 +450,7 @@ exports.register = function (server, options, next) {
                 assign: 'password',
                 method: function (request, reply) {
 
-                    var User = request.server.plugins['hapi-mongo-models'].User;
-
-                    User.generatePasswordHash(request.payload.password, function (err, hash) {
+                    User.generatePasswordHash(request.payload.password, (err, hash) => {
 
                         if (err) {
                             return reply(err);
@@ -501,18 +463,17 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var User = request.server.plugins['hapi-mongo-models'].User;
-            var id = request.auth.credentials.user._id.toString();
-            var update = {
+            const id = request.auth.credentials.user._id.toString();
+            const update = {
                 $set: {
                     password: request.pre.password.hash
                 }
             };
-            var findOptions = {
+            const findOptions = {
                 fields: User.fieldsAdapter('username email')
             };
 
-            User.findByIdAndUpdate(id, update, findOptions, function (err, user) {
+            User.findByIdAndUpdate(id, update, findOptions, (err, user) => {
 
                 if (err) {
                     return reply(err);
@@ -526,7 +487,7 @@ exports.register = function (server, options, next) {
 
     server.route({
         method: 'DELETE',
-        path: options.basePath + '/users/{id}',
+        path: '/users/{id}',
         config: {
             auth: {
                 strategy: 'session',
@@ -538,16 +499,14 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var User = request.server.plugins['hapi-mongo-models'].User;
-
-            User.findByIdAndDelete(request.params.id, function (err, user) {
+            User.findByIdAndDelete(request.params.id, (err, user) => {
 
                 if (err) {
                     return reply(err);
                 }
 
                 if (!user) {
-                    return reply({ message: 'Document not found.' }).code(404);
+                    return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply({ message: 'Success.' });
@@ -555,6 +514,14 @@ exports.register = function (server, options, next) {
         }
     });
 
+
+    next();
+};
+
+
+exports.register = function (server, options, next) {
+
+    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
 
     next();
 };

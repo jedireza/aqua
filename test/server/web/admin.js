@@ -58,7 +58,7 @@ lab.experiment('Admin Page View', function () {
 
         server.inject(request, function (response) {
 
-            Code.expect(response.result).to.match(/Admin/i);
+            Code.expect(response.result).to.match(/admin/i);
             Code.expect(response.statusCode).to.equal(200);
 
             done();

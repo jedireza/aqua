@@ -1,15 +1,17 @@
-var React = require('react/addons');
-var Layout = require('../layouts/Plain.jsx');
+'use strict';
+
+const React = require('react');
+const Layout = require('../layouts/Plain');
 
 
-var Component = React.createClass({
+const Component = React.createClass({
     render: function () {
 
-        var neck = [
+        const neck = [
             <link key="layout" rel="stylesheet" href="/public/layouts/default.min.css" />,
             <link key="page" rel="stylesheet" href="/public/pages/admin.min.css" />
         ];
-        var feet = <script src="/public/pages/admin.min.js"></script>;
+        const feet = <script src="/public/pages/admin.min.js"></script>;
 
         return (
             <Layout

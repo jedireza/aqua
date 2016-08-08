@@ -1,14 +1,15 @@
-var Gulp = require('gulp');
-var Path = require('path');
-var Merge = require('merge-stream');
+'use strict';
+const Gulp = require('gulp');
+const Path = require('path');
+const Merge = require('merge-stream');
 
 
-Gulp.task('media', function () {
+Gulp.task('media', () => {
 
-    var general = Gulp.src('./client/media/**/*')
+    const general = Gulp.src('./client/media/**/*')
         .pipe(Gulp.dest(Path.join('./public', 'media')));
 
-    var fonts = Gulp.src('./node_modules/font-awesome/fonts/**')
+    const fonts = Gulp.src('./node_modules/font-awesome/fonts/**')
         .pipe(Gulp.dest(Path.join('./public', 'media', 'font-awesome', 'fonts')));
 
     return Merge(general, fonts);

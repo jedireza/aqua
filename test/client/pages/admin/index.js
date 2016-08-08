@@ -1,4 +1,4 @@
-var React = require('react/addons');
+var React = require('react');
 var RouterTestLocation = require('react-router/lib/locations/TestLocation');
 var Lab = require('lab');
 var Code = require('code');
@@ -15,8 +15,8 @@ var stub = {
         HistoryLocation: TestLocation
     }
 };
-var App = Proxyquire('../../../../client/pages/admin/index', {
-    '../../actions/Redirect': stub.RedirectActions,
+var App = Proxyquire('../../../../client/pages/admin/index.jsx', {
+    '../../actions/redirect': stub.RedirectActions,
     'react-router': stub.ReactRouter
 });
 var mountNode;

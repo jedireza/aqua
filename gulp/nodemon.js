@@ -1,10 +1,12 @@
-var Gulp = require('gulp');
-var Nodemon = require('gulp-nodemon');
+'use strict';
+const Gulp = require('gulp');
+const Nodemon = require('gulp-nodemon');
 
 
-Gulp.task('nodemon', function () {
+Gulp.task('nodemon', () => {
 
-    var nodeArgs = [];
+    const nodeArgs = [];
+
     if (process.env.DEBUGGER) {
         nodeArgs.push('--debug');
     }
@@ -20,7 +22,7 @@ Gulp.task('nodemon', function () {
         ],
         nodeArgs: nodeArgs
     })
-    .on('restart', function (files) {
+    .on('restart', (files) => {
 
         console.log('change detected:', files);
     });

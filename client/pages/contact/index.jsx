@@ -1,17 +1,19 @@
 /* global window */
-var React = require('react/addons');
-var FormView = require('./Form');
+'use strict';
+const Form = require('./form');
+const React = require('react');
+const ReactDOM = require('react-dom');
 
 
-var App = {
-    blastoff: function () {
+class App {
+    static blastoff () {
 
-        this.mainElement = React.render(
-            <FormView />,
+        this.mainElement = ReactDOM.render(
+            <Form />,
             window.document.getElementById('app-mount')
         );
     }
-};
+}
 
 
 module.exports = App;

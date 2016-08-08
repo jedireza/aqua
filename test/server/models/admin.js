@@ -1,34 +1,36 @@
-var Async = require('async');
-var Lab = require('lab');
-var Code = require('code');
-var Config = require('../../../config');
-var Proxyquire = require('proxyquire');
+'use strict';
+
+const Async = require('async');
+const Lab = require('lab');
+const Code = require('code');
+const Config = require('../../../config');
+const Proxyquire = require('proxyquire');
 
 
-var lab = exports.lab = Lab.script();
-var stub = {
+const lab = exports.lab = Lab.script();
+const stub = {
     AdminGroup: {}
 };
-var Admin = Proxyquire('../../../server/models/admin', {
+const Admin = Proxyquire('../../../server/models/admin', {
     './admin-group': stub.AdminGroup
 });
-var AdminGroup = require('../../../server/models/admin-group');
+const AdminGroup = require('../../../server/models/admin-group');
 
 
-lab.experiment('Admin Class Methods', function () {
+lab.experiment('Admin Class Methods', () => {
 
-    lab.before(function (done) {
+    lab.before((done) => {
 
-        Admin.connect(Config.get('/hapiMongoModels/mongodb'), function (err, db) {
+        Admin.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
 
             done(err);
         });
     });
 
 
-    lab.after(function (done) {
+    lab.after((done) => {
 
-        Admin.deleteMany({}, function (err, count) {
+        Admin.deleteMany({}, (err, count) => {
 
             Admin.disconnect();
 
@@ -37,9 +39,9 @@ lab.experiment('Admin Class Methods', function () {
     });
 
 
-    lab.test('it returns a new instance when create succeeds', function (done) {
+    lab.test('it returns a new instance when create succeeds', (done) => {
 
-        Admin.create('Ren Höek', function (err, result) {
+        Admin.create('Ren Höek', (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.be.an.instanceOf(Admin);
@@ -49,9 +51,9 @@ lab.experiment('Admin Class Methods', function () {
     });
 
 
-    lab.test('it correctly sets the middle name when create is called', function (done) {
+    lab.test('it correctly sets the middle name when create is called', (done) => {
 
-        Admin.create('Stimpson J Cat', function (err, admin) {
+        Admin.create('Stimpson J Cat', (err, admin) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(admin).to.be.an.instanceOf(Admin);
@@ -62,18 +64,18 @@ lab.experiment('Admin Class Methods', function () {
     });
 
 
-    lab.test('it returns an error when create fails', function (done) {
+    lab.test('it returns an error when create fails', (done) => {
 
-        var realInsertOne = Admin.insertOne;
+        const realInsertOne = Admin.insertOne;
         Admin.insertOne = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(Error('insert failed'));
         };
 
-        Admin.create('Stimpy Cat', function (err, result) {
+        Admin.create('Stimpy Cat', (err, result) => {
 
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
@@ -85,16 +87,16 @@ lab.experiment('Admin Class Methods', function () {
     });
 
 
-    lab.test('it returns a result when finding by username', function (done) {
+    lab.test('it returns a result when finding by username', (done) => {
 
         Async.auto({
             admin: function (cb) {
 
                 Admin.create('Ren Höek', cb);
             },
-            adminUpdated: ['admin', function (cb, results) {
+            adminUpdated: ['admin', function (results, cb) {
 
-                var fieldsToUpdate = {
+                const fieldsToUpdate = {
                     $set: {
                         user: {
                             id: '95EP150D35',
@@ -105,13 +107,13 @@ lab.experiment('Admin Class Methods', function () {
 
                 Admin.findByIdAndUpdate(results.admin._id, fieldsToUpdate, cb);
             }]
-        }, function (err, results) {
+        }, (err, results) => {
 
             if (err) {
                 return done(err);
             }
 
-            Admin.findByUsername('ren', function (err, admin) {
+            Admin.findByUsername('ren', (err, admin) => {
 
                 Code.expect(err).to.not.exist();
                 Code.expect(admin).to.be.an.instanceOf(Admin);
@@ -123,20 +125,20 @@ lab.experiment('Admin Class Methods', function () {
 });
 
 
-lab.experiment('Admin Instance Methods', function () {
+lab.experiment('Admin Instance Methods', () => {
 
-    lab.before(function (done) {
+    lab.before((done) => {
 
-        Admin.connect(Config.get('/hapiMongoModels/mongodb'), function (err, db) {
+        Admin.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
 
             done(err);
         });
     });
 
 
-    lab.after(function (done) {
+    lab.after((done) => {
 
-        Admin.deleteMany({}, function (err, result) {
+        Admin.deleteMany({}, (err, result) => {
 
             Admin.disconnect();
 
@@ -145,9 +147,9 @@ lab.experiment('Admin Instance Methods', function () {
     });
 
 
-    lab.test('it returns false when groups are not found', function (done) {
+    lab.test('it returns false when groups are not found', (done) => {
 
-        var admin = new Admin({
+        const admin = new Admin({
             name: {
                 first: 'Ren',
                 last: 'Höek'
@@ -160,9 +162,9 @@ lab.experiment('Admin Instance Methods', function () {
     });
 
 
-    lab.test('it returns boolean values for set group memberships', function (done) {
+    lab.test('it returns boolean values for set group memberships', (done) => {
 
-        var admin = new Admin({
+        const admin = new Admin({
             name: {
                 first: 'Ren',
                 last: 'Höek'
@@ -180,16 +182,16 @@ lab.experiment('Admin Instance Methods', function () {
     });
 
 
-    lab.test('it exits early when hydrating groups where groups are missing', function (done) {
+    lab.test('it exits early when hydrating groups where groups are missing', (done) => {
 
-        var admin = new Admin({
+        const admin = new Admin({
             name: {
                 first: 'Ren',
                 last: 'Höek'
             }
         });
 
-        admin.hydrateGroups(function (err) {
+        admin.hydrateGroups((err) => {
 
             Code.expect(err).to.not.exist();
 
@@ -198,9 +200,9 @@ lab.experiment('Admin Instance Methods', function () {
     });
 
 
-    lab.test('it exits early when hydrating groups where hydrated groups exist', function (done) {
+    lab.test('it exits early when hydrating groups where hydrated groups exist', (done) => {
 
-        var admin = new Admin({
+        const admin = new Admin({
             name: {
                 first: 'Ren',
                 last: 'Höek'
@@ -220,7 +222,7 @@ lab.experiment('Admin Instance Methods', function () {
             }
         });
 
-        admin.hydrateGroups(function (err) {
+        admin.hydrateGroups((err) => {
 
             Code.expect(err).to.not.exist();
 
@@ -229,15 +231,15 @@ lab.experiment('Admin Instance Methods', function () {
     });
 
 
-    lab.test('it returns an error when hydrating groups and find by id fails', function (done) {
+    lab.test('it returns an error when hydrating groups and find by id fails', (done) => {
 
-        var realFindById = stub.AdminGroup.findById;
+        const realFindById = stub.AdminGroup.findById;
         stub.AdminGroup.findById = function (id, callback) {
 
             callback(Error('find by id failed'));
         };
 
-        var admin = new Admin({
+        const admin = new Admin({
             name: {
                 first: 'Ren',
                 last: 'Höek'
@@ -247,7 +249,7 @@ lab.experiment('Admin Instance Methods', function () {
             }
         });
 
-        admin.hydrateGroups(function (err) {
+        admin.hydrateGroups((err) => {
 
             Code.expect(err).to.be.an.object();
 
@@ -258,12 +260,12 @@ lab.experiment('Admin Instance Methods', function () {
     });
 
 
-    lab.test('it successfully hydrates groups', function (done) {
+    lab.test('it successfully hydrates groups', (done) => {
 
-        var realFindById = stub.AdminGroup.findById;
+        const realFindById = stub.AdminGroup.findById;
         stub.AdminGroup.findById = function (id, callback) {
 
-            var group = new AdminGroup({
+            const group = new AdminGroup({
                 _id: 'sales',
                 name: 'Sales',
                 permissions: {
@@ -275,7 +277,7 @@ lab.experiment('Admin Instance Methods', function () {
             callback(null, group);
         };
 
-        var admin = new Admin({
+        const admin = new Admin({
             name: {
                 first: 'Ren',
                 last: 'Höek'
@@ -285,7 +287,7 @@ lab.experiment('Admin Instance Methods', function () {
             }
         });
 
-        admin.hydrateGroups(function (err) {
+        admin.hydrateGroups((err) => {
 
             Code.expect(err).to.not.exist();
 
@@ -296,9 +298,9 @@ lab.experiment('Admin Instance Methods', function () {
     });
 
 
-    lab.test('it exits early when the permission exists on the admin', function (done) {
+    lab.test('it exits early when the permission exists on the admin', (done) => {
 
-        var admin = new Admin({
+        const admin = new Admin({
             name: {
                 first: 'Ren',
                 last: 'Höek'
@@ -309,7 +311,7 @@ lab.experiment('Admin Instance Methods', function () {
             }
         });
 
-        admin.hasPermissionTo('SPACE_MADNESS', function (err, permit) {
+        admin.hasPermissionTo('SPACE_MADNESS', (err, permit) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(permit).to.equal(true);
@@ -319,15 +321,15 @@ lab.experiment('Admin Instance Methods', function () {
     });
 
 
-    lab.test('it returns an error when checking permission and hydrating groups fails', function (done) {
+    lab.test('it returns an error when checking permission and hydrating groups fails', (done) => {
 
-        var realHydrateGroups = Admin.prototype.hydrateGroups;
+        const realHydrateGroups = Admin.prototype.hydrateGroups;
         Admin.prototype.hydrateGroups = function (callback) {
 
             callback(Error('hydrate groups failed'));
         };
 
-        var admin = new Admin({
+        const admin = new Admin({
             name: {
                 first: 'Ren',
                 last: 'Höek'
@@ -337,7 +339,7 @@ lab.experiment('Admin Instance Methods', function () {
             }
         });
 
-        admin.hasPermissionTo('SPACE_MADNESS', function (err) {
+        admin.hasPermissionTo('SPACE_MADNESS', (err) => {
 
             Code.expect(err).to.be.an.object();
 
@@ -348,9 +350,9 @@ lab.experiment('Admin Instance Methods', function () {
     });
 
 
-    lab.test('it returns correct permission from hydrated group permissions', function (done) {
+    lab.test('it returns correct permission from hydrated group permissions', (done) => {
 
-        var admin = new Admin({
+        const admin = new Admin({
             name: {
                 first: 'Ren',
                 last: 'Höek'
@@ -389,7 +391,7 @@ lab.experiment('Admin Instance Methods', function () {
 
                 admin.hasPermissionTo('UNTAMED_WORLD', cb);
             }
-        }, function (err, results) {
+        }, (err, results) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(results.test1).to.equal(true);

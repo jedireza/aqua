@@ -1,8 +1,10 @@
-var React = require('react/addons');
-var NavBar = require('./NavBar.jsx');
+'use strict';
+
+const React = require('react');
+const NavBar = require('./NavBar');
 
 
-var Component = React.createClass({
+const Component = React.createClass({
     render: function () {
 
         return (
