@@ -4,11 +4,12 @@
   "description": "A website and user system for Node.js",
   "main": "index.js",
   "scripts": {
-    "setup": "./setup.js",
     "start": "gulp",
+    "first-time-setup": "node first-time-setup.js",
     "test": "lab -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/lab/client-before.js ./test/client/ ./test/lab/client-after.js ./test/server/ ./test/lab/server-after.js ./test/misc/",
     "test-client": "lab -v -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/lab/client-before.js $TEST_TARGET ./test/lab/client-after.js || true",
-    "test-server": "lab -v -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' $TEST_TARGET ./test/lab/server-after.js || true"
+    "test-server": "lab -v -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' $TEST_TARGET ./test/lab/server-after.js || true",
+    "postinstall": "gulp build"
   },
   "author": "Reza Akhavan <jedireza@gmail.com> (http://reza.akhavan.me/)",
   "license": "MIT",
@@ -22,6 +23,7 @@
     "classnames": "2.x.x",
     "confidence": "3.x.x",
     "crumb": "6.x.x",
+    "dotenv": "2.x.x",
     "glue": "4.x.x",
     "handlebars": "4.x.x",
     "hapi": "15.x.x",

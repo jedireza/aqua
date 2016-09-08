@@ -72,6 +72,19 @@ internals.applyStrategy = function (server, next) {
 
 
 internals.preware = {
+    ensureNotRoot: {
+        assign: 'ensureNotRoot',
+        method: function (request, reply) {
+
+            if (request.auth.credentials.user.username === 'root') {
+                const message = 'Not permitted for root user.';
+
+                return reply(Boom.badRequest(message));
+            }
+
+            reply();
+        }
+    },
     ensureAdminGroup: function (groups) {
 
         return {
@@ -88,7 +101,9 @@ internals.preware = {
                 });
 
                 if (!groupFound) {
-                    return reply(Boom.notFound('Permission denied to this resource.'));
+                    const message = `Missing admin group membership to [${groups.join(' or ')}].`;
+
+                    return reply(Boom.badRequest(message));
                 }
 
                 reply();

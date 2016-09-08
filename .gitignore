@@ -1,4 +1,4 @@
 node_modules/*
 public/*
 test/artifacts/*
-/config.js
+.env

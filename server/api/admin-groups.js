@@ -128,6 +128,9 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             validate: {
+                params: {
+                    id: Joi.string().invalid('root')
+                },
                 payload: {
                     name: Joi.string().required()
                 }
@@ -170,6 +173,9 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             validate: {
+                params: {
+                    id: Joi.string().invalid('root')
+                },
                 payload: {
                     permissions: Joi.object().required()
                 }
@@ -206,6 +212,11 @@ internals.applyRoutes = function (server, next) {
             auth: {
                 strategy: 'session',
                 scope: 'admin'
+            },
+            validate: {
+                params: {
+                    id: Joi.string().invalid('root')
+                }
             },
             pre: [
                 AuthPlugin.preware.ensureAdminGroup('root')

@@ -1,6 +1,9 @@
 'use strict';
 const Confidence = require('confidence');
+const Dotenv = require('dotenv');
 
+
+Dotenv.config({ silent: true });
 
 const criteria = {
     env: process.env.NODE_ENV
@@ -9,7 +12,7 @@ const criteria = {
 
 const config = {
     $meta: 'This file configures the plot device.',
-    projectName: '{{projectName}}',
+    projectName: 'Aqua',
     port: {
         web: {
             $filter: 'env',
@@ -34,43 +37,33 @@ const config = {
         $default: '!k3yb04rdK4tz~4qu4~k3yb04rdd0gz!'
     },
     hapiMongoModels: {
-        $filter: 'env',
-        production: {
-            mongodb: {
-                url: process.env.MONGOLAB_URI
-            },
-            autoIndex: false
+        mongodb: {
+            url: {
+                $filter: 'env',
+                production: process.env.MONGOLAB_URI,
+                test: 'mongodb://localhost:27017/aqua-test',
+                $default: 'mongodb://localhost:27017/aqua'
+            }
         },
-        test: {
-            mongodb: {
-                url: '{{mongodbUrl}}-test'
-            },
-            autoIndex: true
-        },
-        $default: {
-            mongodb: {
-                url: '{{mongodbUrl}}'
-            },
-            autoIndex: true
-        }
+        autoIndex: true
     },
     nodemailer: {
-        host: '{{smtpHost}}',
-        port: {{smtpPort}},
+        host: 'smtp.gmail.com',
+        port: 465,
         secure: true,
         auth: {
-            user: '{{smtpUsername}}',
-            pass: '{{smtpPassword}}'
+            user: 'jedireza@gmail.com',
+            pass: process.env.SMTP_PASSWORD
         }
     },
     system: {
         fromAddress: {
-            name: '{{projectName}}',
-            address: '{{systemEmail}}'
+            name: 'Aqua',
+            address: 'jedireza@gmail.com'
         },
         toAddress: {
-            name: '{{projectName}}',
-            address: '{{systemEmail}}'
+            name: 'Aqua',
+            address: 'jedireza@gmail.com'
         }
     }
 };
