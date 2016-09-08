@@ -1,6 +1,12 @@
-exports.register = function (plugin, options, next) {
+'use strict';
 
-    plugin.route({
+
+const internals = {};
+
+
+internals.applyRoutes = function (server, next) {
+
+    server.route({
         method: 'GET',
         path: '/login/{glob*}',
         config: {
@@ -26,11 +32,20 @@ exports.register = function (plugin, options, next) {
                 return reply.redirect('/account');
             }
 
-            var response = reply.view('login/index');
+            const response = reply.view('login/index');
+
             response.header('x-auth-required', true);
         }
     });
 
+
+    next();
+};
+
+
+exports.register = function (server, options, next) {
+
+    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
 
     next();
 };

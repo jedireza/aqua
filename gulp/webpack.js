@@ -1,16 +1,36 @@
-var Gulp = require('gulp');
-var Gutil = require('gulp-util');
-var Webpack = require('webpack');
+'use strict';
+const Gulp = require('gulp');
+const Gutil = require('gulp-util');
+const Webpack = require('webpack');
 
 
-var CommonsChunkPlugin = Webpack.optimize.CommonsChunkPlugin;
-var UglifyJsPlugin = Webpack.optimize.UglifyJsPlugin;
-var executionCount = 0;
+let executionCount = 0;
 
 
-Gulp.task('webpack', function (callback) {
+Gulp.task('webpack', (callback) => {
 
-    var config = {
+    const plugins = [
+        new Webpack.optimize.CommonsChunkPlugin({
+            name: 'core',
+            filename: '../core.min.js',
+            minSize: 2
+        }),
+        new Webpack.DefinePlugin({
+            'process.env': {
+                'NODE_ENV': `"${process.env.NODE_ENV}"`
+            }
+        })
+    ];
+
+    if (process.env.NODE_ENV === 'production') {
+        plugins.push(new Webpack.optimize.UglifyJsPlugin({
+            compressor: {
+                warnings: false
+            }
+        }));
+    }
+
+    const config = {
         watch: global.isWatching,
         entry: {
             account: './client/pages/account/index',
@@ -28,18 +48,20 @@ Gulp.task('webpack', function (callback) {
             extensions: ['', '.js', '.jsx']
         },
         module: {
-            loaders: [
-                { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel-loader' }
-            ]
+            loaders: [{
+                test: /\.jsx?$/,
+                exclude: /node_modules/,
+                loader: 'babel',
+                query: {
+                    presets: ['react', 'es2015']
+                }
+            }]
         },
-        devtool: 'source-map',
-        plugins: [
-            new CommonsChunkPlugin('../core.min.js', undefined, 2),
-            new UglifyJsPlugin({ compress: { warnings: false } })
-        ]
+        devtool: 'cheap-module-source-map',
+        plugins
     };
 
-    Webpack(config, function (err, stats) {
+    Webpack(config, (err, stats) => {
 
         if (err) {
             throw new Gutil.PluginError('webpack', err);
@@ -53,6 +75,7 @@ Gulp.task('webpack', function (callback) {
         if (executionCount === 0) {
             callback();
         }
+
         executionCount += 1;
     });
 });

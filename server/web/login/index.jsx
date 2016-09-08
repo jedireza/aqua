@@ -1,11 +1,12 @@
-var React = require('react/addons');
-var Layout = require('../layouts/Default.jsx');
+'use strict';
+const Layout = require('../layouts/default.jsx');
+const React = require('react');
 
 
-var Component = React.createClass({
-    render: function () {
+class LoginPage extends React.Component {
+    render() {
 
-        var feet = <script src="/public/pages/login.min.js"></script>;
+        const feet = <script src="/public/pages/login.min.js"></script>;
 
         return (
             <Layout
@@ -19,7 +20,7 @@ var Component = React.createClass({
             </Layout>
         );
     }
-});
+}
 
 
-module.exports = Component;
+module.exports = LoginPage;

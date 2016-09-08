@@ -1,11 +1,12 @@
-var Joi = require('joi');
-var Async = require('async');
-var ObjectAssign = require('object-assign');
-var BaseModel = require('hapi-mongo-models').BaseModel;
-var Config = require('../../config');
+'use strict';
+const Joi = require('joi');
+const Async = require('async');
+const ObjectAssign = require('object-assign');
+const BaseModel = require('hapi-mongo-models').BaseModel;
+const Config = require('../../config');
 
 
-var AuthAttempt = BaseModel.extend({
+const AuthAttempt = BaseModel.extend({
     constructor: function (attrs) {
 
         ObjectAssign(this, attrs);
@@ -25,20 +26,20 @@ AuthAttempt.schema = Joi.object().keys({
 
 
 AuthAttempt.indexes = [
-    [{ ip: 1, username: 1 }],
-    [{ username: 1 }]
+    { key: { ip: 1, username: 1 } },
+    { key: { username: 1 } }
 ];
 
 
 AuthAttempt.create = function (ip, username, callback) {
 
-    var document = {
-        ip: ip,
+    const document = {
+        ip,
         username: username.toLowerCase(),
         time: new Date()
     };
 
-    this.insertOne(document, function (err, docs) {
+    this.insertOne(document, (err, docs) => {
 
         if (err) {
             return callback(err);
@@ -51,32 +52,32 @@ AuthAttempt.create = function (ip, username, callback) {
 
 AuthAttempt.abuseDetected = function (ip, username, callback) {
 
-    var self = this;
+    const self = this;
 
     Async.auto({
         abusiveIpCount: function (done) {
 
-            var query = { ip: ip };
+            const query = { ip };
             self.count(query, done);
         },
         abusiveIpUserCount: function (done) {
 
-            var query = {
-                ip: ip,
+            const query = {
+                ip,
                 username: username.toLowerCase()
             };
 
             self.count(query, done);
         }
-    }, function (err, results) {
+    }, (err, results) => {
 
         if (err) {
             return callback(err);
         }
 
-        var authAttemptsConfig = Config.get('/authAttempts');
-        var ipLimitReached = results.abusiveIpCount >= authAttemptsConfig.forIp;
-        var ipUserLimitReached = results.abusiveIpUserCount >= authAttemptsConfig.forIpAndUser;
+        const authAttemptsConfig = Config.get('/authAttempts');
+        const ipLimitReached = results.abusiveIpCount >= authAttemptsConfig.forIp;
+        const ipUserLimitReached = results.abusiveIpUserCount >= authAttemptsConfig.forIpAndUser;
 
         callback(null, ipLimitReached || ipUserLimitReached);
     });

@@ -1,13 +1,14 @@
-var Composer = require('./index');
+'use strict';
+const Composer = require('./index');
 
 
-Composer(function (err, server) {
+Composer((err, server) => {
 
     if (err) {
         throw err;
     }
 
-    server.start(function () {
+    server.start(() => {
 
         console.log('Started the plot device on port ' + server.info.port);
     });

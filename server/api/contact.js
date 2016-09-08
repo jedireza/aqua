@@ -1,16 +1,16 @@
-var Joi = require('joi');
-var Hoek = require('hoek');
-var Config = require('../../config');
+'use strict';
+const Config = require('../../config');
+const Joi = require('joi');
 
 
-exports.register = function (server, options, next) {
+const internals = {};
 
-    options = Hoek.applyToDefaults({ basePath: '' }, options);
 
+internals.applyRoutes = function (server, next) {
 
     server.route({
         method: 'POST',
-        path: options.basePath + '/contact',
+        path: '/contact',
         config: {
             validate: {
                 payload: {
@@ -22,8 +22,8 @@ exports.register = function (server, options, next) {
         },
         handler: function (request, reply) {
 
-            var mailer = request.server.plugins.mailer;
-            var emailOptions = {
+            const mailer = server.plugins.mailer;
+            const emailOptions = {
                 subject: Config.get('/projectName') + ' contact form',
                 to: Config.get('/system/toAddress'),
                 replyTo: {
@@ -31,9 +31,9 @@ exports.register = function (server, options, next) {
                     address: request.payload.email
                 }
             };
-            var template = 'contact';
+            const template = 'contact';
 
-            mailer.sendEmail(emailOptions, template, request.payload, function (err, info) {
+            mailer.sendEmail(emailOptions, template, request.payload, (err, info) => {
 
                 if (err) {
                     return reply(err);
@@ -44,6 +44,14 @@ exports.register = function (server, options, next) {
         }
     });
 
+
+    next();
+};
+
+
+exports.register = function (server, options, next) {
+
+    server.dependency('mailer', internals.applyRoutes);
 
     next();
 };

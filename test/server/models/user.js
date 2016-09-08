@@ -1,39 +1,40 @@
-var Async = require('async');
-var Lab = require('lab');
-var Code = require('code');
-var Config = require('../../../config');
-var Proxyquire = require('proxyquire');
+'use strict';
+const Async = require('async');
+const Code = require('code');
+const Config = require('../../../config');
+const Lab = require('lab');
+const Proxyquire = require('proxyquire');
 
 
-var lab = exports.lab = Lab.script();
-var stub = {
+const lab = exports.lab = Lab.script();
+const stub = {
     Account: {},
     Admin: {},
     bcrypt: {}
 };
-var User = Proxyquire('../../../server/models/user', {
+const User = Proxyquire('../../../server/models/user', {
     './account': stub.Account,
     './admin': stub.Admin,
     bcrypt: stub.bcrypt
 });
-var Admin = require('../../../server/models/admin');
-var Account = require('../../../server/models/account');
+const Admin = require('../../../server/models/admin');
+const Account = require('../../../server/models/account');
 
 
-lab.experiment('User Class Methods', function () {
+lab.experiment('User Class Methods', () => {
 
-    lab.before(function (done) {
+    lab.before((done) => {
 
-        User.connect(Config.get('/hapiMongoModels/mongodb'), function (err, db) {
+        User.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
 
             done(err);
         });
     });
 
 
-    lab.after(function (done) {
+    lab.after((done) => {
 
-        User.deleteMany({}, function (err, count) {
+        User.deleteMany({}, (err, count) => {
 
             User.disconnect();
 
@@ -42,9 +43,9 @@ lab.experiment('User Class Methods', function () {
     });
 
 
-    lab.test('it creates a password hash combination', function (done) {
+    lab.test('it creates a password hash combination', (done) => {
 
-        User.generatePasswordHash('bighouseblues', function (err, result) {
+        User.generatePasswordHash('bighouseblues', (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.be.an.object();
@@ -56,15 +57,15 @@ lab.experiment('User Class Methods', function () {
     });
 
 
-    lab.test('it returns an error when password hash fails', function (done) {
+    lab.test('it returns an error when password hash fails', (done) => {
 
-        var realGenSalt = stub.bcrypt.genSalt;
+        const realGenSalt = stub.bcrypt.genSalt;
         stub.bcrypt.genSalt = function (rounds, callback) {
 
             callback(Error('bcrypt failed'));
         };
 
-        User.generatePasswordHash('bighouseblues', function (err, result) {
+        User.generatePasswordHash('bighouseblues', (err, result) => {
 
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
@@ -76,9 +77,9 @@ lab.experiment('User Class Methods', function () {
     });
 
 
-    lab.test('it returns a new instance when create succeeds', function (done) {
+    lab.test('it returns a new instance when create succeeds', (done) => {
 
-        User.create('ren', 'bighouseblues', 'ren@stimpy.show', function (err, result) {
+        User.create('ren', 'bighouseblues', 'ren@stimpy.show', (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.be.an.instanceOf(User);
@@ -88,18 +89,18 @@ lab.experiment('User Class Methods', function () {
     });
 
 
-    lab.test('it returns an error when create fails', function (done) {
+    lab.test('it returns an error when create fails', (done) => {
 
-        var realInsertOne = User.insertOne;
+        const realInsertOne = User.insertOne;
         User.insertOne = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(Error('insert failed'));
         };
 
-        User.create('ren', 'bighouseblues', 'ren@stimpy.show', function (err, result) {
+        User.create('ren', 'bighouseblues', 'ren@stimpy.show', (err, result) => {
 
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
@@ -111,22 +112,22 @@ lab.experiment('User Class Methods', function () {
     });
 
 
-    lab.test('it returns a result when finding by login', function (done) {
+    lab.test('it returns a result when finding by login', (done) => {
 
         Async.auto({
             user: function (cb) {
 
                 User.create('stimpy', 'thebigshot', 'stimpy@ren.show', cb);
             },
-            username: ['user', function (cb, results) {
+            username: ['user', function (results, cb) {
 
                 User.findByCredentials(results.user.username, results.user.password, cb);
             }],
-            email: ['user', function (cb, results) {
+            email: ['user', function (results, cb) {
 
                 User.findByCredentials(results.user.email, results.user.password, cb);
             }]
-        }, function (err, results) {
+        }, (err, results) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(results.user).to.be.an.instanceOf(User);
@@ -138,24 +139,24 @@ lab.experiment('User Class Methods', function () {
     });
 
 
-    lab.test('it returns nothing for find by credentials when password match fails', function (done) {
+    lab.test('it returns nothing for find by credentials when password match fails', (done) => {
 
-        var realFindOne = User.findOne;
+        const realFindOne = User.findOne;
         User.findOne = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(null, { username: 'toastman', password: 'letmein' });
         };
 
-        var realCompare = stub.bcrypt.compare;
+        const realCompare = stub.bcrypt.compare;
         stub.bcrypt.compare = function (key, source, callback) {
 
             callback(null, false);
         };
 
-        User.findByCredentials('toastman', 'doorislocked', function (err, result) {
+        User.findByCredentials('toastman', 'doorislocked', (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.not.exist();
@@ -168,18 +169,18 @@ lab.experiment('User Class Methods', function () {
     });
 
 
-    lab.test('it returns early when finding by login misses', function (done) {
+    lab.test('it returns early when finding by login misses', (done) => {
 
-        var realFindOne = User.findOne;
+        const realFindOne = User.findOne;
         User.findOne = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback();
         };
 
-        User.findByCredentials('stimpy', 'dog', function (err, result) {
+        User.findByCredentials('stimpy', 'dog', (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.not.exist();
@@ -191,18 +192,18 @@ lab.experiment('User Class Methods', function () {
     });
 
 
-    lab.test('it returns an error when finding by login fails', function (done) {
+    lab.test('it returns an error when finding by login fails', (done) => {
 
-        var realFindOne = User.findOne;
+        const realFindOne = User.findOne;
         User.findOne = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(Error('find one failed'));
         };
 
-        User.findByCredentials('stimpy', 'dog', function (err, result) {
+        User.findByCredentials('stimpy', 'dog', (err, result) => {
 
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
@@ -214,12 +215,12 @@ lab.experiment('User Class Methods', function () {
     });
 
 
-    lab.test('it returns a result when finding by username', function (done) {
+    lab.test('it returns a result when finding by username', (done) => {
 
         Async.auto({
             user: function (cb) {
 
-                User.create('horseman', 'eathay', 'horse@man.show', function (err, result) {
+                User.create('horseman', 'eathay', 'horse@man.show', (err, result) => {
 
                     Code.expect(err).to.not.exist();
                     Code.expect(result).to.be.an.instanceOf(User);
@@ -227,15 +228,15 @@ lab.experiment('User Class Methods', function () {
                     cb(null, result);
                 });
             }
-        }, function (err, results) {
+        }, (err, results) => {
 
             if (err) {
                 return done(err);
             }
 
-            var username = results.user.username;
+            const username = results.user.username;
 
-            User.findByUsername(username, function (err, result) {
+            User.findByUsername(username, (err, result) => {
 
                 Code.expect(err).to.not.exist();
                 Code.expect(result).to.be.an.instanceOf(User);
@@ -247,39 +248,39 @@ lab.experiment('User Class Methods', function () {
 });
 
 
-lab.experiment('User Instance Methods', function () {
+lab.experiment('User Instance Methods', () => {
 
-    lab.test('it returns false when roles are missing', function (done) {
+    lab.test('it returns false when roles are missing', (done) => {
 
-        var user = new User({ username: 'ren' });
+        const user = new User({ username: 'ren' });
 
-        Code.expect(user.canPlayRole('admin')).to.equal(false);
+        Code.expect(user.canPlayRole('admin')).to.be.false();
 
         done();
     });
 
 
-    lab.test('it returns correctly for the specified role', function (done) {
+    lab.test('it returns correctly for the specified role', (done) => {
 
-        var user = new User({
+        const user = new User({
             username: 'ren',
             roles: {
                 account: { _id: '953P150D35' }
             }
         });
 
-        Code.expect(user.canPlayRole('admin')).to.equal(false);
-        Code.expect(user.canPlayRole('account')).to.equal(true);
+        Code.expect(user.canPlayRole('admin')).to.be.false();
+        Code.expect(user.canPlayRole('account')).to.be.true();
 
         done();
     });
 
 
-    lab.test('it exits early when hydrating roles where roles are missing', function (done) {
+    lab.test('it exits early when hydrating roles where roles are missing', (done) => {
 
-        var user = new User({ username: 'ren' });
+        const user = new User({ username: 'ren' });
 
-        user.hydrateRoles(function (err) {
+        user.hydrateRoles((err) => {
 
             Code.expect(err).to.not.exist();
             done();
@@ -287,9 +288,9 @@ lab.experiment('User Instance Methods', function () {
     });
 
 
-    lab.test('it exits early when hydrating roles where hydrated roles exist', function (done) {
+    lab.test('it exits early when hydrating roles where hydrated roles exist', (done) => {
 
-        var user = new User({
+        const user = new User({
             username: 'ren',
             roles: {
                 admin: {
@@ -306,7 +307,7 @@ lab.experiment('User Instance Methods', function () {
             }
         };
 
-        user.hydrateRoles(function (err) {
+        user.hydrateRoles((err) => {
 
             Code.expect(err).to.not.exist();
 
@@ -315,15 +316,15 @@ lab.experiment('User Instance Methods', function () {
     });
 
 
-    lab.test('it returns an error when hydrating roles and find by id fails', function (done) {
+    lab.test('it returns an error when hydrating roles and find by id fails', (done) => {
 
-        var realFindById = stub.Admin.findById;
+        const realFindById = stub.Admin.findById;
         stub.Admin.findById = function (id, callback) {
 
             callback(Error('find by id failed'));
         };
 
-        var user = new User({
+        const user = new User({
             username: 'ren',
             roles: {
                 admin: {
@@ -333,7 +334,7 @@ lab.experiment('User Instance Methods', function () {
             }
         });
 
-        user.hydrateRoles(function (err) {
+        user.hydrateRoles((err) => {
 
             Code.expect(err).to.be.an.object();
 
@@ -344,9 +345,9 @@ lab.experiment('User Instance Methods', function () {
     });
 
 
-    lab.test('it returns successful when hydrating roles', function (done) {
+    lab.test('it returns successful when hydrating roles', (done) => {
 
-        var realAccountFindById = stub.Account.findById;
+        const realAccountFindById = stub.Account.findById;
         stub.Admin.findById = function (id, callback) {
 
             callback(null, new Admin({
@@ -358,7 +359,7 @@ lab.experiment('User Instance Methods', function () {
             }));
         };
 
-        var realAdminFindById = stub.Admin.findById;
+        const realAdminFindById = stub.Admin.findById;
         stub.Account.findById = function (id, callback) {
 
             callback(null, new Account({
@@ -371,7 +372,7 @@ lab.experiment('User Instance Methods', function () {
             }));
         };
 
-        var user = new User({
+        const user = new User({
             username: 'ren',
             roles: {
                 account: {
@@ -385,7 +386,7 @@ lab.experiment('User Instance Methods', function () {
             }
         });
 
-        user.hydrateRoles(function (err) {
+        user.hydrateRoles((err) => {
 
             Code.expect(err).to.not.exist();
 
@@ -397,14 +398,14 @@ lab.experiment('User Instance Methods', function () {
     });
 
 
-    lab.test('it returns successful when hydrating roles where there are none defined', function (done) {
+    lab.test('it returns successful when hydrating roles where there are none defined', (done) => {
 
-        var user = new User({
+        const user = new User({
             username: 'ren',
             roles: {}
         });
 
-        user.hydrateRoles(function (err) {
+        user.hydrateRoles((err) => {
 
             Code.expect(err).to.not.exist();
 

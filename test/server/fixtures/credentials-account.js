@@ -1,8 +1,9 @@
-var User = require('../../../server/models/user');
-var Account = require('../../../server/models/account');
+'use strict';
+const Account = require('../../../server/models/account');
+const User = require('../../../server/models/user');
 
 
-var user = new User({
+const user = new User({
     username: 'stimpy',
     roles: {
         account: {
@@ -24,7 +25,7 @@ var user = new User({
 
 
 module.exports = {
-    user: user,
+    user,
     roles: user._roles,
     scope: Object.keys(user.roles)
 };

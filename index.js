@@ -1,9 +1,17 @@
-var Glue = require('glue');
-var Manifest = require('./manifest');
+'use strict';
+const BabelRegister = require('babel-core/register');
+const Glue = require('glue');
+const Manifest = require('./manifest');
 
 
-var composeOptions = {
-    relativeTo: __dirname
+const composeOptions = {
+    relativeTo: __dirname,
+    preRegister: function (server, next) {
+
+        BabelRegister();
+
+        next();
+    }
 };
 
 

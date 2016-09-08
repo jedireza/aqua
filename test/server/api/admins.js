@@ -1,61 +1,73 @@
-var Lab = require('lab');
-var Code = require('code');
-var Path = require('path');
-var Config = require('../../../config');
-var Manifest = require('../../../manifest');
-var Hapi = require('hapi');
-var HapiAuth = require('hapi-auth-cookie');
-var Proxyquire = require('proxyquire');
-var AuthPlugin = require('../../../server/auth');
-var AdminPlugin = require('../../../server/api/admins');
-var AuthenticatedUser = require('../fixtures/credentials-admin');
+'use strict';
+const AdminPlugin = require('../../../server/api/admins');
+const AuthPlugin = require('../../../server/auth');
+const AuthenticatedUser = require('../fixtures/credentials-admin');
+const Code = require('code');
+const Config = require('../../../config');
+const Hapi = require('hapi');
+const HapiAuth = require('hapi-auth-cookie');
+const Lab = require('lab');
+const Manifest = require('../../../manifest');
+const Path = require('path');
+const Proxyquire = require('proxyquire');
 
 
-var lab = exports.lab = Lab.script();
-var ModelsPlugin, request, server, stub;
+const lab = exports.lab = Lab.script();
+let request;
+let server;
+let stub;
 
 
-lab.before(function (done) {
+lab.before((done) => {
 
     stub = {
         Admin: {},
         User: {}
     };
 
-
-    var proxy = {};
+    const proxy = {};
     proxy[Path.join(process.cwd(), './server/models/admin')] = stub.Admin;
     proxy[Path.join(process.cwd(), './server/models/user')] = stub.User;
 
-    ModelsPlugin = {
+    const ModelsPlugin = {
         register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/plugins')['hapi-mongo-models']
+        options: Manifest.get('/registrations').filter((reg) => {
+
+            if (reg.plugin &&
+                reg.plugin.register &&
+                reg.plugin.register === 'hapi-mongo-models') {
+
+                return true;
+            }
+
+            return false;
+        })[0].plugin.options
     };
 
-    var plugins = [HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin];
+    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, function (err) {
+    server.register(plugins, (err) => {
 
         if (err) {
             return done(err);
         }
 
-        done();
+        server.initialize(done);
     });
 });
 
 
-lab.after(function (done) {
+lab.after((done) => {
 
     server.plugins['hapi-mongo-models'].BaseModel.disconnect();
     done();
 });
 
 
-lab.experiment('Admins Plugin Result List', function () {
+lab.experiment('Admins Plugin Result List', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'GET',
@@ -67,17 +79,17 @@ lab.experiment('Admins Plugin Result List', function () {
     });
 
 
-    lab.test('it returns an error when paged find fails', function (done) {
+    lab.test('it returns an error when paged find fails', (done) => {
 
         stub.Admin.pagedFind = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(Error('paged find failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -85,17 +97,17 @@ lab.experiment('Admins Plugin Result List', function () {
     });
 
 
-    lab.test('it returns an array of documents successfully', function (done) {
+    lab.test('it returns an array of documents successfully', (done) => {
 
         stub.Admin.pagedFind = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(null, { data: [{}, {}, {}] });
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
@@ -106,19 +118,19 @@ lab.experiment('Admins Plugin Result List', function () {
     });
 
 
-    lab.test('it returns an array of documents successfully using filters', function (done) {
+    lab.test('it returns an array of documents successfully (using filters)', (done) => {
 
         stub.Admin.pagedFind = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(null, { data: [{}, {}, {}] });
         };
 
-        request.url = '/admins?username=stimpy';
+        request.url += '?username=ren';
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
@@ -130,9 +142,9 @@ lab.experiment('Admins Plugin Result List', function () {
 });
 
 
-lab.experiment('Admins Plugin Read', function () {
+lab.experiment('Admins Plugin Read', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'GET',
@@ -144,14 +156,14 @@ lab.experiment('Admins Plugin Read', function () {
     });
 
 
-    lab.test('it returns an error when find by id fails', function (done) {
+    lab.test('it returns an error when find by id fails', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
             callback(Error('find by id failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -159,14 +171,14 @@ lab.experiment('Admins Plugin Read', function () {
     });
 
 
-    lab.test('it returns a not found when find by id misses', function (done) {
+    lab.test('it returns a not found when find by id misses', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
             callback();
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             Code.expect(response.result.message).to.match(/document not found/i);
@@ -176,14 +188,14 @@ lab.experiment('Admins Plugin Read', function () {
     });
 
 
-    lab.test('it returns a document successfully', function (done) {
+    lab.test('it returns a document successfully', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
             callback(null, { _id: '93EP150D35' });
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
@@ -194,9 +206,9 @@ lab.experiment('Admins Plugin Read', function () {
 });
 
 
-lab.experiment('Admins Plugin Create', function () {
+lab.experiment('Admins Plugin Create', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'POST',
@@ -211,14 +223,14 @@ lab.experiment('Admins Plugin Create', function () {
     });
 
 
-    lab.test('it returns an error when create fails', function (done) {
+    lab.test('it returns an error when create fails', (done) => {
 
         stub.Admin.create = function (name, callback) {
 
             callback(Error('create failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -226,14 +238,14 @@ lab.experiment('Admins Plugin Create', function () {
     });
 
 
-    lab.test('it creates a document successfully', function (done) {
+    lab.test('it creates a document successfully', (done) => {
 
         stub.Admin.create = function (name, callback) {
 
             callback(null, {});
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
@@ -244,16 +256,19 @@ lab.experiment('Admins Plugin Create', function () {
 });
 
 
-lab.experiment('Admins Plugin Update', function () {
+lab.experiment('Admins Plugin Update', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'PUT',
             url: '/admins/93EP150D35',
             payload: {
-                nameFirst: 'Ren',
-                nameLast: 'Höek'
+                name: {
+                    first: 'Ren',
+                    middle: '',
+                    last: 'Höek'
+                }
             },
             credentials: AuthenticatedUser
         };
@@ -262,14 +277,14 @@ lab.experiment('Admins Plugin Update', function () {
     });
 
 
-    lab.test('it returns an error when update fails', function (done) {
+    lab.test('it returns an error when update fails', (done) => {
 
         stub.Admin.findByIdAndUpdate = function (id, update, callback) {
 
             callback(Error('update failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -277,14 +292,14 @@ lab.experiment('Admins Plugin Update', function () {
     });
 
 
-    lab.test('it returns not found when find by id misses', function (done) {
+    lab.test('it returns not found when find by id misses', (done) => {
 
         stub.Admin.findByIdAndUpdate = function (id, update, callback) {
 
             callback(null, undefined);
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             done();
@@ -292,14 +307,14 @@ lab.experiment('Admins Plugin Update', function () {
     });
 
 
-    lab.test('it updates a document successfully', function (done) {
+    lab.test('it updates a document successfully', (done) => {
 
         stub.Admin.findByIdAndUpdate = function (id, update, callback) {
 
             callback(null, {});
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
@@ -310,9 +325,9 @@ lab.experiment('Admins Plugin Update', function () {
 });
 
 
-lab.experiment('Admins Plugin Update Permissions', function () {
+lab.experiment('Admins Plugin Update Permissions', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'PUT',
@@ -327,14 +342,14 @@ lab.experiment('Admins Plugin Update Permissions', function () {
     });
 
 
-    lab.test('it returns an error when update fails', function (done) {
+    lab.test('it returns an error when update fails', (done) => {
 
         stub.Admin.findByIdAndUpdate = function (id, update, callback) {
 
             callback(Error('update failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -342,14 +357,14 @@ lab.experiment('Admins Plugin Update Permissions', function () {
     });
 
 
-    lab.test('it updates a document successfully', function (done) {
+    lab.test('it updates a document successfully', (done) => {
 
         stub.Admin.findByIdAndUpdate = function (id, update, callback) {
 
             callback(null, {});
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
@@ -360,9 +375,9 @@ lab.experiment('Admins Plugin Update Permissions', function () {
 });
 
 
-lab.experiment('Admins Plugin Update Groups', function () {
+lab.experiment('Admins Plugin Update Groups', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'PUT',
@@ -377,14 +392,14 @@ lab.experiment('Admins Plugin Update Groups', function () {
     });
 
 
-    lab.test('it returns an error when update fails', function (done) {
+    lab.test('it returns an error when update fails', (done) => {
 
         stub.Admin.findByIdAndUpdate = function (id, update, callback) {
 
             callback(Error('update failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -392,14 +407,14 @@ lab.experiment('Admins Plugin Update Groups', function () {
     });
 
 
-    lab.test('it updates a document successfully', function (done) {
+    lab.test('it updates a document successfully', (done) => {
 
         stub.Admin.findByIdAndUpdate = function (id, update, callback) {
 
             callback(null, {});
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
@@ -410,9 +425,9 @@ lab.experiment('Admins Plugin Update Groups', function () {
 });
 
 
-lab.experiment('Admins Plugin Link User', function () {
+lab.experiment('Admins Plugin Link User', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'PUT',
@@ -427,14 +442,14 @@ lab.experiment('Admins Plugin Link User', function () {
     });
 
 
-    lab.test('it returns an error when (Admin) find by id fails', function (done) {
+    lab.test('it returns an error when (Admin) find by id fails', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
             callback(Error('find by id failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -442,14 +457,14 @@ lab.experiment('Admins Plugin Link User', function () {
     });
 
 
-    lab.test('it returns not found when (Admin) find by id misses', function (done) {
+    lab.test('it returns not found when (Admin) find by id misses', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
             callback();
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             done();
@@ -457,7 +472,7 @@ lab.experiment('Admins Plugin Link User', function () {
     });
 
 
-    lab.test('it returns an error when (User) find by username fails', function (done) {
+    lab.test('it returns an error when (User) find by username fails', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
@@ -469,7 +484,7 @@ lab.experiment('Admins Plugin Link User', function () {
             callback(Error('find by username failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -477,7 +492,7 @@ lab.experiment('Admins Plugin Link User', function () {
     });
 
 
-    lab.test('it returns not found when (User) find by username misses', function (done) {
+    lab.test('it returns not found when (User) find by username misses', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
@@ -489,7 +504,7 @@ lab.experiment('Admins Plugin Link User', function () {
             callback();
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             done();
@@ -497,7 +512,7 @@ lab.experiment('Admins Plugin Link User', function () {
     });
 
 
-    lab.test('it returns conflict when an admin role already exists', function (done) {
+    lab.test('it returns conflict when an admin role already exists', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
@@ -506,7 +521,7 @@ lab.experiment('Admins Plugin Link User', function () {
 
         stub.User.findByUsername = function (id, callback) {
 
-            var user = {
+            const user = {
                 roles: {
                     admin: {
                         id: '535H0W35',
@@ -518,7 +533,7 @@ lab.experiment('Admins Plugin Link User', function () {
             callback(null, user);
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
             done();
@@ -526,11 +541,11 @@ lab.experiment('Admins Plugin Link User', function () {
     });
 
 
-    lab.test('it returns conflict when the admin is linked to another user', function (done) {
+    lab.test('it returns conflict when the admin is linked to another user', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
-            var admin = {
+            const admin = {
                 _id: 'DUD3N0T1T',
                 user: {
                     id: '535H0W35',
@@ -543,7 +558,7 @@ lab.experiment('Admins Plugin Link User', function () {
 
         stub.User.findByUsername = function (id, callback) {
 
-            var user = {
+            const user = {
                 _id: 'N0T1TDUD3',
                 roles: {
                     admin: {
@@ -556,7 +571,7 @@ lab.experiment('Admins Plugin Link User', function () {
             callback(null, user);
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
             done();
@@ -564,11 +579,11 @@ lab.experiment('Admins Plugin Link User', function () {
     });
 
 
-    lab.test('it returns an error when find by id and update fails', function (done) {
+    lab.test('it returns an error when find by id and update fails', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
-            var admin = {
+            const admin = {
                 _id: '93EP150D35',
                 name: {
                     first: 'Ren',
@@ -581,7 +596,7 @@ lab.experiment('Admins Plugin Link User', function () {
 
         stub.User.findByUsername = function (id, callback) {
 
-            var user = {
+            const user = {
                 _id: '535H0W35',
                 username: 'ren'
             };
@@ -599,7 +614,7 @@ lab.experiment('Admins Plugin Link User', function () {
             callback(Error('find by id and update failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -607,16 +622,16 @@ lab.experiment('Admins Plugin Link User', function () {
     });
 
 
-    lab.test('it successfuly links an admin and user', function (done) {
+    lab.test('it successfuly links an admin and user', (done) => {
 
-        var admin = {
+        const admin = {
             _id: '93EP150D35',
             name: {
                 first: 'Ren',
                 last: 'Höek'
             }
         };
-        var user = {
+        const user = {
             _id: '535H0W35',
             username: 'ren',
             roles: {}
@@ -642,7 +657,7 @@ lab.experiment('Admins Plugin Link User', function () {
             callback(null, user);
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             done();
@@ -651,9 +666,9 @@ lab.experiment('Admins Plugin Link User', function () {
 });
 
 
-lab.experiment('Admins Plugin Unlink User', function () {
+lab.experiment('Admins Plugin Unlink User', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'DELETE',
@@ -665,14 +680,14 @@ lab.experiment('Admins Plugin Unlink User', function () {
     });
 
 
-    lab.test('it returns an error when (Admin) find by id fails', function (done) {
+    lab.test('it returns an error when (Admin) find by id fails', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
             callback(Error('find by id failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -680,14 +695,14 @@ lab.experiment('Admins Plugin Unlink User', function () {
     });
 
 
-    lab.test('it returns not found when (Admin) find by id misses', function (done) {
+    lab.test('it returns not found when (Admin) find by id misses', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
             callback();
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             done();
@@ -695,14 +710,14 @@ lab.experiment('Admins Plugin Unlink User', function () {
     });
 
 
-    lab.test('it returns early admin is void of a user', function (done) {
+    lab.test('it returns early admin is void of a user', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
             callback(null, {});
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             done();
@@ -710,14 +725,14 @@ lab.experiment('Admins Plugin Unlink User', function () {
     });
 
 
-    lab.test('it returns early admin is void of a user.id', function (done) {
+    lab.test('it returns early admin is void of a user.id', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
             callback(null, { user: {} });
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             done();
@@ -725,11 +740,11 @@ lab.experiment('Admins Plugin Unlink User', function () {
     });
 
 
-    lab.test('it returns an error when (User) find by id fails', function (done) {
+    lab.test('it returns an error when (User) find by id fails', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
-            var admin = {
+            const admin = {
                 user: {
                     id: '93EP150D35',
                     name: 'ren'
@@ -744,7 +759,7 @@ lab.experiment('Admins Plugin Unlink User', function () {
             callback(Error('find by id failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -752,11 +767,11 @@ lab.experiment('Admins Plugin Unlink User', function () {
     });
 
 
-    lab.test('it returns not found when (User) find by username misses', function (done) {
+    lab.test('it returns not found when (User) find by username misses', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
-            var admin = {
+            const admin = {
                 user: {
                     id: '93EP150D35',
                     name: 'ren'
@@ -771,7 +786,7 @@ lab.experiment('Admins Plugin Unlink User', function () {
             callback();
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             done();
@@ -779,11 +794,11 @@ lab.experiment('Admins Plugin Unlink User', function () {
     });
 
 
-    lab.test('it returns an error when find by id and update fails', function (done) {
+    lab.test('it returns an error when find by id and update fails', (done) => {
 
         stub.Admin.findById = function (id, callback) {
 
-            var admin = {
+            const admin = {
                 _id: '93EP150D35',
                 user: {
                     id: '535H0W35',
@@ -796,7 +811,7 @@ lab.experiment('Admins Plugin Unlink User', function () {
 
         stub.User.findById = function (id, callback) {
 
-            var user = {
+            const user = {
                 _id: '535H0W35',
                 roles: {
                     admin: {
@@ -819,7 +834,7 @@ lab.experiment('Admins Plugin Unlink User', function () {
             callback(Error('find by id and update failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -827,9 +842,9 @@ lab.experiment('Admins Plugin Unlink User', function () {
     });
 
 
-    lab.test('it successfully unlinks an admin from a user', function (done) {
+    lab.test('it successfully unlinks an admin from a user', (done) => {
 
-        var user = {
+        const user = {
             _id: '535H0W35',
             roles: {
                 admin: {
@@ -838,7 +853,7 @@ lab.experiment('Admins Plugin Unlink User', function () {
                 }
             }
         };
-        var admin = {
+        const admin = {
             _id: '93EP150D35',
             user: {
                 id: '535H0W35',
@@ -866,7 +881,7 @@ lab.experiment('Admins Plugin Unlink User', function () {
             callback(null, user);
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             done();
@@ -875,9 +890,9 @@ lab.experiment('Admins Plugin Unlink User', function () {
 });
 
 
-lab.experiment('Admins Plugin Delete', function () {
+lab.experiment('Admins Plugin Delete', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'DELETE',
@@ -889,14 +904,14 @@ lab.experiment('Admins Plugin Delete', function () {
     });
 
 
-    lab.test('it returns an error when delete by id fails', function (done) {
+    lab.test('it returns an error when delete by id fails', (done) => {
 
         stub.Admin.findByIdAndDelete = function (id, callback) {
 
             callback(Error('delete by id failed'));
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
             done();
@@ -904,14 +919,14 @@ lab.experiment('Admins Plugin Delete', function () {
     });
 
 
-    lab.test('it returns a not found when delete by id misses', function (done) {
+    lab.test('it returns a not found when delete by id misses', (done) => {
 
         stub.Admin.findByIdAndDelete = function (id, callback) {
 
             callback(null, undefined);
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             Code.expect(response.result.message).to.match(/document not found/i);
@@ -921,14 +936,14 @@ lab.experiment('Admins Plugin Delete', function () {
     });
 
 
-    lab.test('it deletes a document successfully', function (done) {
+    lab.test('it deletes a document successfully', (done) => {
 
         stub.Admin.findByIdAndDelete = function (id, callback) {
 
             callback(null, 1);
         };
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.message).to.match(/success/i);

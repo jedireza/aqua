@@ -1,9 +1,10 @@
-var Joi = require('joi');
-var ObjectAssign = require('object-assign');
-var BaseModel = require('hapi-mongo-models').BaseModel;
+'use strict';
+const Joi = require('joi');
+const ObjectAssign = require('object-assign');
+const BaseModel = require('hapi-mongo-models').BaseModel;
 
 
-var NoteEntry = BaseModel.extend({
+const NoteEntry = BaseModel.extend({
     constructor: function (attrs) {
 
         ObjectAssign(this, attrs);

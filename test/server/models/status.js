@@ -1,26 +1,27 @@
-var Lab = require('lab');
-var Code = require('code');
-var Config = require('../../../config');
-var Status = require('../../../server/models/status');
+'use strict';
+const Code = require('code');
+const Config = require('../../../config');
+const Lab = require('lab');
+const Status = require('../../../server/models/status');
 
 
-var lab = exports.lab = Lab.script();
+const lab = exports.lab = Lab.script();
 
 
-lab.experiment('Status Class Methods', function () {
+lab.experiment('Status Class Methods', () => {
 
-    lab.before(function (done) {
+    lab.before((done) => {
 
-        Status.connect(Config.get('/hapiMongoModels/mongodb'), function (err, db) {
+        Status.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
 
             done(err);
         });
     });
 
 
-    lab.after(function (done) {
+    lab.after((done) => {
 
-        Status.deleteMany({}, function (err, count) {
+        Status.deleteMany({}, (err, count) => {
 
             Status.disconnect();
 
@@ -29,9 +30,9 @@ lab.experiment('Status Class Methods', function () {
     });
 
 
-    lab.test('it returns a new instance when create succeeds', function (done) {
+    lab.test('it returns a new instance when create succeeds', (done) => {
 
-        Status.create('Order', 'Complete', function (err, result) {
+        Status.create('Order', 'Complete', (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.be.an.instanceOf(Status);
@@ -41,18 +42,18 @@ lab.experiment('Status Class Methods', function () {
     });
 
 
-    lab.test('it returns an error when create fails', function (done) {
+    lab.test('it returns an error when create fails', (done) => {
 
-        var realInsertOne = Status.insertOne;
+        const realInsertOne = Status.insertOne;
         Status.insertOne = function () {
 
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+            const args = Array.prototype.slice.call(arguments);
+            const callback = args.pop();
 
             callback(Error('insert failed'));
         };
 
-        Status.create('Order', 'Fulfilled', function (err, result) {
+        Status.create('Order', 'Fulfilled', (err, result) => {
 
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();

@@ -1,13 +1,14 @@
-var Joi = require('joi');
-var Async = require('async');
-var Bcrypt = require('bcrypt');
-var ObjectAssign = require('object-assign');
-var BaseModel = require('hapi-mongo-models').BaseModel;
-var Account = require('./account');
-var Admin = require('./admin');
+'use strict';
+const Account = require('./account');
+const Admin = require('./admin');
+const Async = require('async');
+const BaseModel = require('hapi-mongo-models').BaseModel;
+const Bcrypt = require('bcrypt');
+const Joi = require('joi');
+const ObjectAssign = require('object-assign');
 
 
-var User = BaseModel.extend({
+const User = BaseModel.extend({
     constructor: function (attrs) {
 
         ObjectAssign(this, attrs);
@@ -36,8 +37,8 @@ var User = BaseModel.extend({
             return callback(null, this._roles);
         }
 
-        var self = this;
-        var tasks = {};
+        const self = this;
+        const tasks = {};
 
         if (this.roles.account) {
             tasks.account = function (done) {
@@ -53,7 +54,7 @@ var User = BaseModel.extend({
             };
         }
 
-        Async.auto(tasks, function (err, results) {
+        Async.auto(tasks, (err, results) => {
 
             if (err) {
                 return callback(err);
@@ -74,8 +75,8 @@ User.schema = Joi.object().keys({
     _id: Joi.object(),
     isActive: Joi.boolean().default(true),
     username: Joi.string().token().lowercase().required(),
-    email: Joi.string().email().lowercase().required(),
     password: Joi.string(),
+    email: Joi.string().email().lowercase().required(),
     roles: Joi.object().keys({
         admin: Joi.object().keys({
             id: Joi.string().required(),
@@ -95,8 +96,8 @@ User.schema = Joi.object().keys({
 
 
 User.indexes = [
-    [{ username: 1 }, { unique: true }],
-    [{ email: 1 }, { unique: true }]
+    { key: { username: 1, unique: true } },
+    { key: { email: 1, unique: true } }
 ];
 
 
@@ -107,18 +108,18 @@ User.generatePasswordHash = function (password, callback) {
 
             Bcrypt.genSalt(10, done);
         },
-        hash: ['salt', function (done, results) {
+        hash: ['salt', function (results, done) {
 
             Bcrypt.hash(password, results.salt, done);
         }]
-    }, function (err, results) {
+    }, (err, results) => {
 
         if (err) {
             return callback(err);
         }
 
         callback(null, {
-            password: password,
+            password,
             hash: results.hash
         });
     });
@@ -126,23 +127,23 @@ User.generatePasswordHash = function (password, callback) {
 
 User.create = function (username, password, email, callback) {
 
-    var self = this;
+    const self = this;
 
     Async.auto({
         passwordHash: this.generatePasswordHash.bind(this, password),
-        newUser: ['passwordHash', function (done, results) {
+        newUser: ['passwordHash', function (results, done) {
 
-            var document = {
+            const document = {
                 isActive: true,
                 username: username.toLowerCase(),
-                email: email.toLowerCase(),
                 password: results.passwordHash.hash,
+                email: email.toLowerCase(),
                 timeCreated: new Date()
             };
 
             self.insertOne(document, done);
         }]
-    }, function (err, results) {
+    }, (err, results) => {
 
         if (err) {
             return callback(err);
@@ -157,12 +158,12 @@ User.create = function (username, password, email, callback) {
 
 User.findByCredentials = function (username, password, callback) {
 
-    var self = this;
+    const self = this;
 
     Async.auto({
         user: function (done) {
 
-            var query = {
+            const query = {
                 isActive: true
             };
 
@@ -175,16 +176,16 @@ User.findByCredentials = function (username, password, callback) {
 
             self.findOne(query, done);
         },
-        passwordMatch: ['user', function (done, results) {
+        passwordMatch: ['user', function (results, done) {
 
             if (!results.user) {
                 return done(null, false);
             }
 
-            var source = results.user.password;
+            const source = results.user.password;
             Bcrypt.compare(password, source, done);
         }]
-    }, function (err, results) {
+    }, (err, results) => {
 
         if (err) {
             return callback(err);
@@ -201,7 +202,7 @@ User.findByCredentials = function (username, password, callback) {
 
 User.findByUsername = function (username, callback) {
 
-    var query = { username: username.toLowerCase() };
+    const query = { username: username.toLowerCase() };
     this.findOne(query, callback);
 };
 

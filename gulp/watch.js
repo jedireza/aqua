@@ -1,7 +1,8 @@
-var Gulp = require('gulp');
+'use strict';
+const Gulp = require('gulp');
 
 
-Gulp.task('watch', function () {
+Gulp.task('watch', () => {
 
     global.isWatching = true;
     Gulp.watch('./client/**/*.less', ['less']);

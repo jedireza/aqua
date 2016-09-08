@@ -1,47 +1,54 @@
-var Lab = require('lab');
-var Code = require('code');
-var Path = require('path');
-var Config = require('../../../config');
-var Manifest = require('../../../manifest');
-var Hapi = require('hapi');
-var HapiAuth = require('hapi-auth-cookie');
-var AuthPlugin = require('../../../server/auth');
-var AdminPlugin = require('../../../server/web/admin/index');
-var AuthenticatedAdmin = require('../fixtures/credentials-admin');
+'use strict';
+const AdminPlugin = require('../../../server/web/admin/index');
+const AuthPlugin = require('../../../server/auth');
+const AuthenticatedAdmin = require('../fixtures/credentials-admin');
+const Code = require('code');
+const Config = require('../../../config');
+const Hapi = require('hapi');
+const HapiAuth = require('hapi-auth-cookie');
+const Lab = require('lab');
+const Manifest = require('../../../manifest');
+const Path = require('path');
+const Vision = require('vision');
 
 
-var lab = exports.lab = Lab.script();
-var request, server;
-var ModelsPlugin = {
+const lab = exports.lab = Lab.script();
+const ModelsPlugin = {
     register: require('hapi-mongo-models'),
-    options: Manifest.get('/plugins')['hapi-mongo-models']
+    options: Manifest.get('/registrations').filter((reg) => {
+
+        return reg.plugin.register === 'hapi-mongo-models';
+    })[0].plugin.options
 };
+let request;
+let server;
 
 
-lab.beforeEach(function (done) {
+lab.beforeEach((done) => {
 
-    var plugins = [HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin];
+    const plugins = [Vision, HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
-    server.views({
-        engines: { jsx: require('hapi-react-views') },
-        path: './server/web',
-        relativeTo: Path.join(__dirname, '..', '..', '..')
-    });
-    server.register(plugins, function (err) {
+    server.register(plugins, (err) => {
 
         if (err) {
             return done(err);
         }
 
-        done();
+        server.views({
+            engines: { jsx: require('hapi-react-views') },
+            path: './server/web',
+            relativeTo: Path.join(__dirname, '..', '..', '..')
+        });
+
+        server.initialize(done);
     });
 });
 
 
-lab.experiment('Admin Page View', function () {
+lab.experiment('Admin Page View', () => {
 
-    lab.beforeEach(function (done) {
+    lab.beforeEach((done) => {
 
         request = {
             method: 'GET',
@@ -54,11 +61,11 @@ lab.experiment('Admin Page View', function () {
 
 
 
-    lab.test('Admin page renders properly', function (done) {
+    lab.test('Admin page renders properly', (done) => {
 
-        server.inject(request, function (response) {
+        server.inject(request, (response) => {
 
-            Code.expect(response.result).to.match(/Admin/i);
+            Code.expect(response.result).to.match(/admin/i);
             Code.expect(response.statusCode).to.equal(200);
 
             done();
