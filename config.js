@@ -40,7 +40,7 @@ const config = {
         mongodb: {
             url: {
                 $filter: 'env',
-                production: process.env.MONGOLAB_URI,
+                production: process.env.MONGODB_URI,
                 test: 'mongodb://localhost:27017/aqua-test',
                 $default: 'mongodb://localhost:27017/aqua'
             }
