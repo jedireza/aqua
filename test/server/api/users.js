@@ -614,6 +614,7 @@ lab.experiment('Users Plugin (My) Update', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+
             done();
         });
     });
@@ -634,6 +635,7 @@ lab.experiment('Users Plugin (My) Update', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
+
             done();
         });
     });
@@ -654,6 +656,7 @@ lab.experiment('Users Plugin (My) Update', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+
             done();
         });
     });
@@ -674,6 +677,7 @@ lab.experiment('Users Plugin (My) Update', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
+
             done();
         });
     });
@@ -697,6 +701,7 @@ lab.experiment('Users Plugin (My) Update', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+
             done();
         });
     });

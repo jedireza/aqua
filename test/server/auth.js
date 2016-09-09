@@ -399,7 +399,7 @@ lab.experiment('Auth Plugin', () => {
 
         server.inject(request, (response) => {
 
-            Code.expect(response.result.message).to.match(/permission denied/i);
+            Code.expect(response.result.message).to.match(/missing admin group membership/i);
 
             done();
         });
@@ -472,6 +472,144 @@ lab.experiment('Auth Plugin', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.result).to.match(/ok/i);
+
+            done();
+        });
+    });
+
+
+    lab.test('it continues through pre handler when not acting the root user', (done) => {
+
+        stub.Session.findByCredentials = function (username, key, callback) {
+
+            callback(null, new Session({ _id: '2D', userId: '1D', key: 'baddog' }));
+        };
+
+        stub.User.findById = function (id, callback) {
+
+            const user = new User({
+                username: 'ren',
+                roles: {
+                    admin: {
+                        id: '953P150D35',
+                        name: 'Ren Höek'
+                    }
+                }
+            });
+
+            user._roles = {
+                admin: new Admin({
+                    _id: '953P150D35',
+                    name: {
+                        first: 'Ren',
+                        last: 'Höek'
+                    }
+                })
+            };
+
+            callback(null, user);
+        };
+
+        server.route({
+            method: 'GET',
+            path: '/',
+            config: {
+                auth: {
+                    strategy: 'session',
+                    scope: 'admin'
+                },
+                pre: [
+                    AuthPlugin.preware.ensureNotRoot
+                ]
+            },
+            handler: function (request, reply) {
+
+                Code.expect(request.auth.credentials).to.be.an.object();
+
+                reply('ok');
+            }
+        });
+
+        const request = {
+            method: 'GET',
+            url: '/',
+            headers: {
+                cookie: CookieAdmin
+            }
+        };
+
+        server.inject(request, (response) => {
+
+            Code.expect(response.result).to.match(/ok/i);
+
+            done();
+        });
+    });
+
+
+    lab.test('it takes over when acting as the root user', (done) => {
+
+        stub.Session.findByCredentials = function (username, key, callback) {
+
+            callback(null, new Session({ _id: '2D', userId: '1D', key: 'baddog' }));
+        };
+
+        stub.User.findById = function (id, callback) {
+
+            const user = new User({
+                username: 'root',
+                roles: {
+                    admin: {
+                        id: '953P150D35',
+                        name: 'Root Admin'
+                    }
+                }
+            });
+
+            user._roles = {
+                admin: new Admin({
+                    _id: '953P150D35',
+                    name: {
+                        first: 'Root',
+                        last: 'Admin'
+                    }
+                })
+            };
+
+            callback(null, user);
+        };
+
+        server.route({
+            method: 'GET',
+            path: '/',
+            config: {
+                auth: {
+                    strategy: 'session',
+                    scope: 'admin'
+                },
+                pre: [
+                    AuthPlugin.preware.ensureNotRoot
+                ]
+            },
+            handler: function (request, reply) {
+
+                Code.expect(request.auth.credentials).to.be.an.object();
+
+                reply('ok');
+            }
+        });
+
+        const request = {
+            method: 'GET',
+            url: '/',
+            headers: {
+                cookie: CookieAdmin
+            }
+        };
+
+        server.inject(request, (response) => {
+
+            Code.expect(response.result.message).to.match(/not permitted for root user/i);
 
             done();
         });

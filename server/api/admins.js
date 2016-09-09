@@ -130,6 +130,9 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             validate: {
+                params: {
+                    id: Joi.string().invalid('111111111111111111111111')
+                },
                 payload: {
                     name: Joi.object().keys({
                         first: Joi.string().required(),
@@ -180,6 +183,9 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             validate: {
+                params: {
+                    id: Joi.string().invalid('111111111111111111111111')
+                },
                 payload: {
                     permissions: Joi.object().required()
                 }
@@ -218,6 +224,9 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             validate: {
+                params: {
+                    id: Joi.string().invalid('111111111111111111111111')
+                },
                 payload: {
                     groups: Joi.object().required()
                 }
@@ -256,6 +265,9 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             validate: {
+                params: {
+                    id: Joi.string().invalid('111111111111111111111111')
+                },
                 payload: {
                     username: Joi.string().lowercase().required()
                 }
@@ -369,6 +381,11 @@ internals.applyRoutes = function (server, next) {
                 strategy: 'session',
                 scope: 'admin'
             },
+            validate: {
+                params: {
+                    id: Joi.string().invalid('111111111111111111111111')
+                }
+            },
             pre: [
                 AuthPlugin.preware.ensureAdminGroup('root'),
                 {
@@ -456,6 +473,11 @@ internals.applyRoutes = function (server, next) {
             auth: {
                 strategy: 'session',
                 scope: 'admin'
+            },
+            validate: {
+                params: {
+                    id: Joi.string().invalid('111111111111111111111111')
+                }
             },
             pre: [
                 AuthPlugin.preware.ensureAdminGroup('root')

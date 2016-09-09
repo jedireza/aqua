@@ -1,55 +1,19 @@
-#!/usr/bin/env node
 'use strict';
 const Async = require('async');
-const Fs = require('fs');
-const Handlebars = require('handlebars');
 const Mongodb = require('mongodb');
-const Path = require('path');
 const Promptly = require('promptly');
 
 
-const configTemplatePath = Path.resolve(__dirname, 'config.example');
-const configPath = Path.resolve(__dirname, 'config.js');
-
-
-if (process.env.NODE_ENV === 'test') {
-    const options = { encoding: 'utf-8' };
-    const source = Fs.readFileSync(configTemplatePath, options);
-    const configTemplateTest = Handlebars.compile(source);
-    const context = {
-        projectName: 'Aqua',
-        mongodbUrl: 'mongodb://localhost:27017/aqua',
-        rootEmail: 'root@root',
-        rootPassword: 'root',
-        systemEmail: 'sys@tem',
-        smtpHost: 'smtp.gmail.com',
-        smtpPort: 465,
-        smtpUsername: '',
-        smtpPassword: ''
-    };
-    Fs.writeFileSync(configPath, configTemplateTest(context));
-    console.log('Setup complete.');
-    process.exit(0);
-}
-
 Async.auto({
-    projectName: function (done) {
-
-        const options = {
-            default: 'Aqua'
-        };
-
-        Promptly.prompt(`Project name: (${options.default})`, options, done);
-    },
-    mongodbUrl: ['projectName', (results, done) => {
+    mongodbUrl: (done) => {
 
         const options = {
             default: 'mongodb://localhost:27017/aqua'
         };
 
         Promptly.prompt(`MongoDB URL: (${options.default})`, options, done);
-    }],
-    testMongo: ['rootPassword', (results, done) => {
+    },
+    testMongo: ['mongodbUrl', (results, done) => {
 
         Mongodb.MongoClient.connect(results.mongodbUrl, {}, (err, db) => {
 
@@ -62,7 +26,7 @@ Async.auto({
             done(null, true);
         });
     }],
-    rootEmail: ['mongodbUrl', (results, done) => {
+    rootEmail: ['testMongo', (results, done) => {
 
         Promptly.prompt('Root user email:', done);
     }],
@@ -70,63 +34,16 @@ Async.auto({
 
         Promptly.password('Root user password:', done);
     }],
-    systemEmail: ['rootPassword', (results, done) => {
-
-        const options = {
-            default: results.rootEmail
-        };
-
-        Promptly.prompt(`System email: (${options.default})`, options, done);
-    }],
-    smtpHost: ['systemEmail', (results, done) => {
-
-        const options = {
-            default: 'smtp.gmail.com'
-        };
-
-        Promptly.prompt(`SMTP host: (${options.default})`, options, done);
-    }],
-    smtpPort: ['smtpHost', (results, done) => {
-
-        const options = {
-            default: 465
-        };
-
-        Promptly.prompt(`SMTP port: (${options.default})`, options, done);
-    }],
-    smtpUsername: ['smtpPort', (results, done) => {
-
-        const options = {
-            default: results.systemEmail
-        };
-
-        Promptly.prompt(`SMTP username: (${options.default})`, options, done);
-    }],
-    smtpPassword: ['smtpUsername', (results, done) => {
-
-        Promptly.password('SMTP password:', done);
-    }],
-    createConfig: ['smtpPassword', (results, done) => {
-
-        const fsOptions = { encoding: 'utf-8' };
-
-        Fs.readFile(configTemplatePath, fsOptions, (err, src) => {
-
-            if (err) {
-                console.error('Failed to read config template.');
-                return done(err);
-            }
-
-            const configTemplate = Handlebars.compile(src);
-            Fs.writeFile(configPath, configTemplate(results), done);
-        });
-    }],
-    setupRootUser: ['createConfig', (results, done) => {
+    setupRootUser: ['rootPassword', (results, done) => {
 
         const BaseModel = require('hapi-mongo-models').BaseModel;
-        const User = require('./server/models/user');
-        const Admin = require('./server/models/admin');
+        const Account = require('./server/models/account');
         const AdminGroup = require('./server/models/admin-group');
+        const Admin = require('./server/models/admin');
+        const AuthAttempt = require('./server/models/auth-attempt');
+        const Session = require('./server/models/session');
+        const Status = require('./server/models/status');
+        const User = require('./server/models/user');
 
         Async.auto({
             connect: function (done) {
@@ -136,9 +53,13 @@ Async.auto({
             clean: ['connect', (dbResults, done) => {
 
                 Async.parallel([
-                    User.deleteMany.bind(User, {}),
+                    Account.deleteMany.bind(Account, {}),
+                    AdminGroup.deleteMany.bind(AdminGroup, {}),
                     Admin.deleteMany.bind(Admin, {}),
-                    AdminGroup.deleteMany.bind(AdminGroup, {})
+                    AuthAttempt.deleteMany.bind(AuthAttempt, {}),
+                    Session.deleteMany.bind(Session, {}),
+                    Status.deleteMany.bind(Status, {}),
+                    User.deleteMany.bind(User, {})
                 ], done);
             }],
             adminGroup: ['clean', function (dbResults, done) {
@@ -147,11 +68,45 @@ Async.auto({
             }],
             admin: ['clean', function (dbResults, done) {
 
-                Admin.create('Root Admin', done);
+                const document = {
+                    _id: Admin.ObjectId('111111111111111111111111'),
+                    name: {
+                        first: 'Root',
+                        middle: '',
+                        last: 'Admin'
+                    },
+                    timeCreated: new Date()
+                };
+
+                Admin.insertOne(document, (err, docs) => {
+
+                    done(err, docs && docs[0]);
+                });
             }],
             user: ['clean', function (dbResults, done) {
 
-                User.create('root', results.rootPassword, results.rootEmail, done);
+                Async.auto({
+                    passwordHash: User.generatePasswordHash.bind(this, results.rootPassword)
+                }, (err, passResults) => {
+
+                    if (err) {
+                        return done(err);
+                    }
+
+                    const document = {
+                        _id: Admin.ObjectId('000000000000000000000000'),
+                        isActive: true,
+                        username: 'root',
+                        password: passResults.passwordHash.hash,
+                        email: results.rootEmail.toLowerCase(),
+                        timeCreated: new Date()
+                    };
+
+                    User.insertOne(document, (err, docs) => {
+
+                        done(err, docs && docs[0]);
+                    });
+                });
             }],
             adminMembership: ['admin', function (dbResults, done) {
 

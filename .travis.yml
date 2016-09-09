@@ -6,8 +6,6 @@ services:
   - mongodb
 env:
   - NODE_ENV=test CXX=g++-4.8
-before_script:
-  - npm run setup
 addons:
   apt:
     sources:

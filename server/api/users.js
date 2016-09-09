@@ -213,6 +213,9 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             validate: {
+                params: {
+                    id: Joi.string().invalid('000000000000000000000000')
+                },
                 payload: {
                     isActive: Joi.boolean().required(),
                     username: Joi.string().token().lowercase().required(),
@@ -301,7 +304,7 @@ internals.applyRoutes = function (server, next) {
         config: {
             auth: {
                 strategy: 'session',
-                scope: ['account', 'admin']
+                scope: ['admin', 'account']
             },
             validate: {
                 payload: {
@@ -309,51 +312,54 @@ internals.applyRoutes = function (server, next) {
                     email: Joi.string().email().lowercase().required()
                 }
             },
-            pre: [{
-                assign: 'usernameCheck',
-                method: function (request, reply) {
+            pre: [
+                AuthPlugin.preware.ensureNotRoot,
+                {
+                    assign: 'usernameCheck',
+                    method: function (request, reply) {
 
-                    const conditions = {
-                        username: request.payload.username,
-                        _id: { $ne: request.auth.credentials.user._id }
-                    };
+                        const conditions = {
+                            username: request.payload.username,
+                            _id: { $ne: request.auth.credentials.user._id }
+                        };
 
-                    User.findOne(conditions, (err, user) => {
+                        User.findOne(conditions, (err, user) => {
 
-                        if (err) {
-                            return reply(err);
-                        }
+                            if (err) {
+                                return reply(err);
+                            }
 
-                        if (user) {
-                            return reply(Boom.conflict('Username already in use.'));
-                        }
+                            if (user) {
+                                return reply(Boom.conflict('Username already in use.'));
+                            }
 
-                        reply(true);
-                    });
+                            reply(true);
+                        });
+                    }
+                }, {
+                    assign: 'emailCheck',
+                    method: function (request, reply) {
+
+                        const conditions = {
+                            email: request.payload.email,
+                            _id: { $ne: request.auth.credentials.user._id }
+                        };
+
+                        User.findOne(conditions, (err, user) => {
+
+                            if (err) {
+                                return reply(err);
+                            }
+
+                            if (user) {
+                                return reply(Boom.conflict('Email already in use.'));
+                            }
+
+                            reply(true);
+                        });
+                    }
                 }
-            }, {
-                assign: 'emailCheck',
-                method: function (request, reply) {
-
-                    const conditions = {
-                        email: request.payload.email,
-                        _id: { $ne: request.auth.credentials.user._id }
-                    };
-
-                    User.findOne(conditions, (err, user) => {
-
-                        if (err) {
-                            return reply(err);
-                        }
-
-                        if (user) {
-                            return reply(Boom.conflict('Email already in use.'));
-                        }
-
-                        reply(true);
-                    });
-                }
-            }]
+            ]
         },
         handler: function (request, reply) {
 
@@ -389,6 +395,9 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             validate: {
+                params: {
+                    id: Joi.string().invalid('000000000000000000000000')
+                },
                 payload: {
                     password: Joi.string().required()
                 }
@@ -438,27 +447,30 @@ internals.applyRoutes = function (server, next) {
         config: {
             auth: {
                 strategy: 'session',
-                scope: ['account', 'admin']
+                scope: ['admin', 'account']
             },
             validate: {
                 payload: {
                     password: Joi.string().required()
                 }
             },
-            pre: [{
-                assign: 'password',
-                method: function (request, reply) {
+            pre: [
+                AuthPlugin.preware.ensureNotRoot,
+                {
+                    assign: 'password',
+                    method: function (request, reply) {
 
-                    User.generatePasswordHash(request.payload.password, (err, hash) => {
+                        User.generatePasswordHash(request.payload.password, (err, hash) => {
 
-                        if (err) {
-                            return reply(err);
-                        }
+                            if (err) {
+                                return reply(err);
+                            }
 
-                        reply(hash);
-                    });
+                            reply(hash);
+                        });
+                    }
                 }
-            }]
+            ]
         },
         handler: function (request, reply) {
 
@@ -491,6 +503,11 @@ internals.applyRoutes = function (server, next) {
             auth: {
                 strategy: 'session',
                 scope: 'admin'
+            },
+            validate: {
+                params: {
+                    id: Joi.string().invalid('000000000000000000000000')
+                }
             },
             pre: [
                 AuthPlugin.preware.ensureAdminGroup('root')
