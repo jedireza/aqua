@@ -17,9 +17,7 @@ class HomePage extends React.Component {
                 <div className="jumbotron">
                     <h1>Success</h1>
                     <div>
-                        <p className="lead">Your Node.js website and user
-                        system is running. May the force be with you.</p>
-
+                        <p className="lead">Your Node.js website and user system is running.</p>
                         <div>
                             <a className="btn btn-primary btn-lg" href="/signup">
                                 Create an account
