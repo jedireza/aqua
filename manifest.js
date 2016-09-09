@@ -22,7 +22,15 @@ const manifest = {
     },
     connections: [{
         port: Config.get('/port/web'),
-        labels: ['web']
+        labels: ['web'],
+        state: {
+            isHttpOnly: false,
+            isSecure: {
+                $filter: 'env',
+                production: true,
+                $default: false
+            }
+        }
     }],
     registrations: [
         {
