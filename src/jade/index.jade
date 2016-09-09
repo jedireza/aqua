@@ -12,40 +12,15 @@ html(lang='en')
       p.text-center: a.btn.btn-primary.btn-lg(href='https://getaqua.herokuapp.com/')
         |Live Demo on Heroku
       ul.project-links
-        li: a(href='https://github.com/jedireza/aqua/') View GitHub Project
-        li Version 3.3.0
-        li: a(href='https://github.com/jedireza/aqua/zipball/master') Download Aqua
+        li: a(href='https://github.com/jedireza/aqua/') <i class="fa fa-github"></i> View GitHub Project
+        li (Version 4.x)
       div.gh-btns
         iframe(src='http://ghbtns.com/github-btn.html?user=jedireza&repo=aqua&type=watch&count=true&size=large', allowtransparency='true', frameborder='0', scrolling='0', width='135px', height='30px')
         iframe(src='http://ghbtns.com/github-btn.html?user=jedireza&repo=aqua&type=fork&count=true&size=large', allowtransparency='true', frameborder='0', scrolling='0', width='125px', height='30px')
         iframe(src='http://ghbtns.com/github-btn.html?user=jedireza&repo=aqua&type=follow&count=false&size=large', allowtransparency='true', frameborder='0', scrolling='0', width='173px', height='30px')
     div.container.marketing
-      h2.text-center The front-end pages
-      p.lead Home, about, sign-up and contact us
-      div.well.well-video
-        div.video-container
-          iframe(src='https://www.youtube-nocookie.com/embed/4592vS31EOk?rel=0', frameborder='0', width='560', height='315')
-      hr
-      h2.text-center Authentication screens
-      p.lead Login, forgot password and reset password
-      div.well.well-video
-        div.video-container
-          iframe(src='https://www.youtube-nocookie.com/embed/IvbKSzIsCWU?rel=0', frameborder='0', width='560', height='315')
-      hr
-      h2.text-center The account area
-      p.lead Mock dashboard and account settings
-      div.well.well-video
-        div.video-container
-          iframe(src='https://www.youtube-nocookie.com/embed/IyQCcs79Gqk?rel=0', frameborder='0', width='560', height='315')
-      hr
-      h2.text-center The administration area
-      p.lead Manage users, accounts, admins, admin groups, and statuses
-      div.well.well-video
-        div.video-container
-          iframe(src='https://www.youtube-nocookie.com/embed/XbIZ4-fNx5E?rel=0', frameborder='0', width='560', height='315')
-      hr
-      h2.text-center The core api
-      p.lead The essential business logic, totally isolated
+      h2.text-center Core features
+      p.lead A restful json API, data models and a few helpful utilities
       div.row
         div.col-sm-4
           h3
@@ -97,16 +72,88 @@ html(lang='en')
             individually for an <code>Admin</code>. <code>Admin</code>
             permissions will win over their group's permission.
       hr
+      h2.text-center The front-end pages
+      p.lead Home, about, sign-up and contact us
+      div.row
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/01.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/03.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/04.png")
+      hr
+      h2.text-center Authentication screens
+      p.lead Login, forgot password and reset password
+      div.row
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/05.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/06.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/07.png")
+      hr
+      h2.text-center The account area
+      p.lead Mock dashboard and account settings
+      div.row
+        div.col-md-6
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/19.png")
+        div.col-md-6
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/20.png")
+      hr
+      h2.text-center The administration area
+      p.lead Manage users, accounts, admins, admin groups, and statuses
+      div.row
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/08.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/09.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/10.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/11.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/12.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/13.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/14.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/15.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/16.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/17.png")
+        div.col-md-4
+          a.thumbnail(href="#screenModal" data-toggle="modal")
+            img.img-responsive(src="screenshots/18.png")
+      hr
       h2.text-center Most importantly
       p.lead What you build with Aqua is more important than Aqua
     footer
       div.container
         p.
-          Made using the force by <a href='http://twitter.com/jedireza', target='_blank'>@jedireza</a>.
-          Code licensed under The MIT License.
+          Made using a <i class="fa fa-keyboard-o"></i> and <i class="fa fa-mouse-pointer"></i> by <a href='http://twitter.com/jedireza', target='_blank'>@jedireza</a> and <a href="https://github.com/jedireza/aqua/graphs/contributors">contributors</a>.
+          Code licensed MIT.
         p.
-          A special thanks goes to the creators and contributors of the tools
-          Aqua is built with.
+          Special thanks to all creators and maintainers of open source sofware. Aqua wouldn't be here without you.
         ul.footer-links
           li: a(href='https://github.com/jedireza/aqua/issues?state=open') Submit issues
           li.muted ·
