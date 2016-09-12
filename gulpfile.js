@@ -1,65 +1,74 @@
-var gulp = require('gulp');
-var uglify = require('gulp-uglify');
-var less = require('gulp-less');
-var jade = require('gulp-jade');
-var concat = require('gulp-concat');
+'use strict';
+const Concat = require('gulp-concat');
+const Gulp = require('gulp');
+const Jade = require('gulp-jade');
+const Less = require('gulp-less');
+const Merge = require('merge-stream');
+const Path = require('path');
+const Uglify = require('gulp-uglify');
 
 
-var paths = {
+const paths = {
     scripts: [
         './node_modules/jquery/dist/jquery.js',
-        './node_modules/bootstrap/dist/js/bootstrap.js'
+        './node_modules/bootstrap/dist/js/bootstrap.js',
+        './src/index.js',
     ],
     less: [
         './node_modules/bootstrap/less/bootstrap.less',
-        './src/less/font-awesome.less',
-        './src/less/index.less',
+        './src/font-awesome.less',
+        './src/index.less',
     ],
-    jade: './src/jade/*.jade'
+    jade: './src/*.jade'
 };
 
 
-gulp.task('copy', function (cb) {
+Gulp.task('copy', function (cb) {
 
-    return gulp.src('./node_modules/font-awesome/fonts/*.*')
-        .pipe(gulp.dest('./public/fonts/'));
+    const screenshots = Gulp.src('./src/screenshots/*')
+        .pipe(Gulp.dest(Path.join('./public', 'screenshots')));
+
+    const fonts = Gulp.src('./node_modules/font-awesome/fonts/**')
+        .pipe(Gulp.dest(Path.join('./public', 'fonts')));
+
+    return Merge(screenshots, fonts);
 });
 
 
-gulp.task('less', function (cb) {
+Gulp.task('less', function (cb) {
 
-    return gulp.src(paths.less)
-        .pipe(less({
+    return Gulp.src(paths.less)
+        .pipe(Less({
             compress: true
         }))
-        .pipe(concat('build.css'))
-        .pipe(gulp.dest('public'));
+        .pipe(Concat('build.css'))
+        .pipe(Gulp.dest('public'));
 });
 
 
-gulp.task('scripts', function () {
+Gulp.task('scripts', function () {
 
-    return gulp.src(paths.scripts)
-        .pipe(uglify())
-        .pipe(concat('build.js'))
-        .pipe(gulp.dest('public'));
+    return Gulp.src(paths.scripts)
+        .pipe(Uglify())
+        .pipe(Concat('build.js'))
+        .pipe(Gulp.dest('public'));
 });
 
 
-gulp.task('jade', function () {
+Gulp.task('jade', function () {
 
-    return gulp.src(paths.jade)
-        .pipe(jade({}))
-        .pipe(gulp.dest('./'));
+    return Gulp.src(paths.jade)
+        .pipe(Jade({}))
+        .pipe(Gulp.dest('./'));
 });
 
 
-gulp.task('watch', function() {
+Gulp.task('watch', function() {
 
-    gulp.watch(paths.scripts, ['scripts']);
-    gulp.watch(paths.less, ['less']);
-    gulp.watch(paths.jade, ['jade']);
+    Gulp.watch(paths.scripts, ['scripts']);
+    Gulp.watch(paths.less, ['less']);
+    Gulp.watch(paths.jade, ['jade']);
 });
 
 
-gulp.task('default', ['copy', 'scripts', 'less', 'jade', 'watch']);
+Gulp.task('default', ['copy', 'scripts', 'less', 'jade', 'watch']);
