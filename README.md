@@ -119,7 +119,7 @@ and restarts the app automatically. [`gulp`](https://github.com/gulpjs/gulp) and
 re-build those automatically too.
 
 We also pass the `--inspect` flag to Node so you have a debugger available.
-Watch the output of `npm start` and look for the debugging URL and open it in
+Watch the output of `$ npm start` and look for the debugging URL and open it in
 Chrome. It looks something like this:
 
 `chrome-devtools://devtools/remote/serve_file/@62cd277117e6f8ec53e31b1be58290a6f7ab42ef/inspector.html?experiments=true&v8only=true&ws=localhost:9229/node`
@@ -132,7 +132,7 @@ $ node server.js
 ```
 
 Unlike `$ npm start` this doesn't watch for file changes. Also be sure to set
-these environment variables in your production environment.
+these environment variables in your production environment:
 
  - `NODE_ENV=production` - This is important for many different optimizations,
    both server-side and with the front-end build files.
@@ -193,6 +193,7 @@ $ npm test
 ## License
 
 MIT
+
 
 ## Don't forget
 
