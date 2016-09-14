@@ -7,13 +7,15 @@ const Lab = require('lab');
 
 
 const lab = exports.lab = Lab.script();
+const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
+const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
 
 
 lab.experiment('Account Class Methods', () => {
 
     lab.before((done) => {
 
-        Account.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
+        Account.connect(mongoUri, mongoOptions, (err, db) => {
 
             done(err);
         });
