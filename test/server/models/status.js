@@ -6,13 +6,15 @@ const Status = require('../../../server/models/status');
 
 
 const lab = exports.lab = Lab.script();
+const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
+const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
 
 
 lab.experiment('Status Class Methods', () => {
 
     lab.before((done) => {
 
-        Status.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
+        Status.connect(mongoUri, mongoOptions, (err, db) => {
 
             done(err);
         });

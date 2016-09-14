@@ -7,6 +7,9 @@ const transformer = function (content, filename) {
     if (/^node_modules/.test(filename)) {
         return content;
     }
+    if (/^server\/models/.test(filename)) {
+        return content;
+    }
 
     const transformed = Babel.transform(content, {
         filename,

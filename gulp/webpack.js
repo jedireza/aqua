@@ -22,12 +22,16 @@ Gulp.task('webpack', (callback) => {
         })
     ];
 
+    let devtool = 'source-map';
+
     if (process.env.NODE_ENV === 'production') {
         plugins.push(new Webpack.optimize.UglifyJsPlugin({
             compressor: {
                 warnings: false
             }
         }));
+
+        devtool = 'cheap-module-source-map';
     }
 
     const config = {
@@ -57,7 +61,7 @@ Gulp.task('webpack', (callback) => {
                 }
             }]
         },
-        devtool: 'cheap-module-source-map',
+        devtool,
         plugins
     };
 

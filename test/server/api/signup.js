@@ -6,6 +6,7 @@ const Hapi = require('hapi');
 const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
 const MailerPlugin = require('../../../server/mailer');
+const MakeMockModel = require('../fixtures/make-mock-model');
 const Manifest = require('../../../manifest');
 const Path = require('path');
 const Proxyquire = require('proxyquire');
@@ -21,9 +22,9 @@ let stub;
 lab.before((done) => {
 
     stub = {
-        Account: {},
-        Session: {},
-        User: {}
+        Account: MakeMockModel(),
+        Session: MakeMockModel(),
+        User: MakeMockModel()
     };
 
     const proxy = {};
@@ -62,7 +63,7 @@ lab.before((done) => {
 
 lab.after((done) => {
 
-    server.plugins['hapi-mongo-models'].BaseModel.disconnect();
+    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
     done();
 });
 

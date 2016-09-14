@@ -6,13 +6,15 @@ const Lab = require('lab');
 
 
 const lab = exports.lab = Lab.script();
+const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
+const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
 
 
 lab.experiment('AdminGroup Class Methods', () => {
 
     lab.before((done) => {
 
-        AdminGroup.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
+        AdminGroup.connect(mongoUri, mongoOptions, (err, db) => {
 
             done(err);
         });
@@ -70,7 +72,7 @@ lab.experiment('AdminGroup Instance Methods', () => {
 
     lab.before((done) => {
 
-        AdminGroup.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
+        AdminGroup.connect(mongoUri, mongoOptions, (err, db) => {
 
             done(err);
         });
@@ -94,7 +96,7 @@ lab.experiment('AdminGroup Instance Methods', () => {
 
             Code.expect(err).to.not.exist();
             Code.expect(adminGroup).to.be.an.instanceOf(AdminGroup);
-            Code.expect(adminGroup.hasPermissionTo('SPACE_MADNESS')).to.be.false();
+            Code.expect(adminGroup.hasPermissionTo('SPACE_MADNESS')).to.equal(false);
 
             done();
         });
@@ -113,8 +115,8 @@ lab.experiment('AdminGroup Instance Methods', () => {
                 UNTAMED_WORLD: false
             };
 
-            Code.expect(adminGroup.hasPermissionTo('SPACE_MADNESS')).to.be.true();
-            Code.expect(adminGroup.hasPermissionTo('UNTAMED_WORLD')).to.be.false();
+            Code.expect(adminGroup.hasPermissionTo('SPACE_MADNESS')).to.equal(true);
+            Code.expect(adminGroup.hasPermissionTo('UNTAMED_WORLD')).to.equal(false);
 
             done();
         });

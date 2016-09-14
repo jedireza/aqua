@@ -1,30 +1,61 @@
 'use strict';
-const Joi = require('joi');
-const Async = require('async');
-const ObjectAssign = require('object-assign');
-const BaseModel = require('hapi-mongo-models').BaseModel;
 const AdminGroup = require('./admin-group');
+const Async = require('async');
+const Joi = require('joi');
+const MongoModels = require('mongo-models');
 
 
-const Admin = BaseModel.extend({
-    constructor: function (attrs) {
+class Admin extends MongoModels {
+    static create(name, callback) {
 
-        ObjectAssign(this, attrs);
+        const nameParts = name.trim().split(/\s/);
+
+        const document = {
+            name: {
+                first: nameParts.shift(),
+                middle: nameParts.length > 1 ? nameParts.shift() : undefined,
+                last: nameParts.join(' ')
+            },
+            timeCreated: new Date()
+        };
+
+        this.insertOne(document, (err, docs) => {
+
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, docs[0]);
+        });
+    }
+
+    static findByUsername(username, callback) {
+
+        const query = { 'user.name': username.toLowerCase() };
+
+        this.findOne(query, callback);
+    }
+
+    constructor(attrs) {
+
+        super(attrs);
 
         Object.defineProperty(this, '_groups', {
             writable: true,
             enumerable: false
         });
-    },
-    isMemberOf: function (group) {
+    }
+
+    isMemberOf(group) {
 
         if (!this.groups) {
             return false;
         }
 
         return this.groups.hasOwnProperty(group);
-    },
-    hydrateGroups: function (callback) {
+    }
+
+    hydrateGroups(callback) {
 
         if (!this.groups) {
             this._groups = {};
@@ -55,8 +86,9 @@ const Admin = BaseModel.extend({
 
             callback(null, this._groups);
         });
-    },
-    hasPermissionTo: function (permission, callback) {
+    }
+
+    hasPermissionTo(permission, callback) {
 
         if (this.permissions && this.permissions.hasOwnProperty(permission)) {
             return callback(null, this.permissions[permission]);
@@ -80,10 +112,10 @@ const Admin = BaseModel.extend({
             callback(null, groupHasPermission);
         });
     }
-});
+}
 
 
-Admin._collection = 'admins';
+Admin.collection = 'admins';
 
 
 Admin.schema = Joi.object().keys({
@@ -107,37 +139,6 @@ Admin.indexes = [
     { key: { 'user.id': 1 } },
     { key: { 'user.name': 1 } }
 ];
-
-
-Admin.create = function (name, callback) {
-
-    const nameParts = name.trim().split(/\s/);
-
-    const document = {
-        name: {
-            first: nameParts.shift(),
-            middle: nameParts.length > 1 ? nameParts.shift() : '',
-            last: nameParts.join(' ')
-        },
-        timeCreated: new Date()
-    };
-
-    this.insertOne(document, (err, docs) => {
-
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, docs[0]);
-    });
-};
-
-
-Admin.findByUsername = function (username, callback) {
-
-    const query = { 'user.name': username.toLowerCase() };
-    this.findOne(query, callback);
-};
 
 
 module.exports = Admin;

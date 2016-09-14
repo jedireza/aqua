@@ -1,20 +1,44 @@
 'use strict';
 const Joi = require('joi');
-const ObjectAssign = require('object-assign');
-const BaseModel = require('hapi-mongo-models').BaseModel;
-const StatusEntry = require('./status-entry');
+const MongoModels = require('mongo-models');
 const NoteEntry = require('./note-entry');
+const StatusEntry = require('./status-entry');
 
 
-const Account = BaseModel.extend({
-    constructor: function (attrs) {
+class Account extends MongoModels {
+    static create(name, callback) {
 
-        ObjectAssign(this, attrs);
+        const nameParts = name.trim().split(/\s/);
+
+        const document = {
+            name: {
+                first: nameParts.shift(),
+                middle: nameParts.length > 1 ? nameParts.shift() : undefined,
+                last: nameParts.join(' ')
+            },
+            timeCreated: new Date()
+        };
+
+        this.insertOne(document, (err, docs) => {
+
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, docs[0]);
+        });
     }
-});
+
+    static findByUsername(username, callback) {
+
+        const query = { 'user.name': username.toLowerCase() };
+
+        this.findOne(query, callback);
+    }
+}
 
 
-Account._collection = 'accounts';
+Account.collection = 'accounts';
 
 
 Account.schema = Joi.object().keys({
@@ -45,37 +69,6 @@ Account.indexes = [
     { key: { 'user.id': 1 } },
     { key: { 'user.name': 1 } }
 ];
-
-
-Account.create = function (name, callback) {
-
-    const nameParts = name.trim().split(/\s/);
-
-    const document = {
-        name: {
-            first: nameParts.shift(),
-            middle: nameParts.length > 1 ? nameParts.shift() : '',
-            last: nameParts.join(' ')
-        },
-        timeCreated: new Date()
-    };
-
-    this.insertOne(document, (err, docs) => {
-
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, docs[0]);
-    });
-};
-
-
-Account.findByUsername = function (username, callback) {
-
-    const query = { 'user.name': username.toLowerCase() };
-    this.findOne(query, callback);
-};
 
 
 module.exports = Account;

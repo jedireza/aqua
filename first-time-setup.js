@@ -1,21 +1,22 @@
 'use strict';
 const Async = require('async');
+const MongoModels = require('mongo-models');
 const Mongodb = require('mongodb');
 const Promptly = require('promptly');
 
 
 Async.auto({
-    mongodbUrl: (done) => {
+    mongodbUri: (done) => {
 
         const options = {
             default: 'mongodb://localhost:27017/aqua'
         };
 
-        Promptly.prompt(`MongoDB URL: (${options.default})`, options, done);
+        Promptly.prompt(`MongoDB URI: (${options.default})`, options, done);
     },
-    testMongo: ['mongodbUrl', (results, done) => {
+    testMongo: ['mongodbUri', (results, done) => {
 
-        Mongodb.MongoClient.connect(results.mongodbUrl, {}, (err, db) => {
+        Mongodb.MongoClient.connect(results.mongodbUri, {}, (err, db) => {
 
             if (err) {
                 console.error('Failed to connect to Mongodb.');
@@ -36,7 +37,6 @@ Async.auto({
     }],
     setupRootUser: ['rootPassword', (results, done) => {
 
-        const BaseModel = require('hapi-mongo-models').BaseModel;
         const Account = require('./server/models/account');
         const AdminGroup = require('./server/models/admin-group');
         const Admin = require('./server/models/admin');
@@ -48,7 +48,7 @@ Async.auto({
         Async.auto({
             connect: function (done) {
 
-                BaseModel.connect({ url: results.mongodbUrl }, done);
+                MongoModels.connect(results.mongodbUri, {}, done);
             },
             clean: ['connect', (dbResults, done) => {
 

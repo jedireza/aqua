@@ -7,6 +7,8 @@ const Proxyquire = require('proxyquire');
 
 
 const lab = exports.lab = Lab.script();
+const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
+const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
 const stub = {
     AdminGroup: {}
 };
@@ -20,7 +22,7 @@ lab.experiment('Admin Class Methods', () => {
 
     lab.before((done) => {
 
-        Admin.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
+        Admin.connect(mongoUri, mongoOptions, (err, db) => {
 
             done(err);
         });
@@ -128,7 +130,7 @@ lab.experiment('Admin Instance Methods', () => {
 
     lab.before((done) => {
 
-        Admin.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
+        Admin.connect(mongoUri, mongoOptions, (err, db) => {
 
             done(err);
         });
@@ -155,7 +157,7 @@ lab.experiment('Admin Instance Methods', () => {
             }
         });
 
-        Code.expect(admin.isMemberOf('sales')).to.be.false();
+        Code.expect(admin.isMemberOf('sales')).to.equal(false);
 
         done();
     });
@@ -174,8 +176,8 @@ lab.experiment('Admin Instance Methods', () => {
             }
         });
 
-        Code.expect(admin.isMemberOf('sales')).to.be.true();
-        Code.expect(admin.isMemberOf('support')).to.be.true();
+        Code.expect(admin.isMemberOf('sales')).to.equal(true);
+        Code.expect(admin.isMemberOf('support')).to.equal(true);
 
         done();
     });
@@ -313,7 +315,7 @@ lab.experiment('Admin Instance Methods', () => {
         admin.hasPermissionTo('SPACE_MADNESS', (err, permit) => {
 
             Code.expect(err).to.not.exist();
-            Code.expect(permit).to.be.true();
+            Code.expect(permit).to.equal(true);
 
             done();
         });
@@ -393,8 +395,8 @@ lab.experiment('Admin Instance Methods', () => {
         }, (err, results) => {
 
             Code.expect(err).to.not.exist();
-            Code.expect(results.test1).to.be.true();
-            Code.expect(results.test2).to.be.false();
+            Code.expect(results.test1).to.equal(true);
+            Code.expect(results.test2).to.equal(false);
 
             done(err);
         });

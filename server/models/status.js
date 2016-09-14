@@ -1,19 +1,31 @@
 'use strict';
-const BaseModel = require('hapi-mongo-models').BaseModel;
 const Joi = require('joi');
-const ObjectAssign = require('object-assign');
+const MongoModels = require('mongo-models');
 const Slug = require('slug');
 
 
-const Status = BaseModel.extend({
-    constructor: function (attrs) {
+class Status extends MongoModels {
+    static create(pivot, name, callback) {
 
-        ObjectAssign(this, attrs);
+        const document = {
+            _id: Slug(pivot + ' ' + name).toLowerCase(),
+            pivot,
+            name
+        };
+
+        this.insertOne(document, (err, docs) => {
+
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, docs[0]);
+        });
     }
-});
+}
 
 
-Status._collection = 'statuses';
+Status.collection = 'statuses';
 
 
 Status._idClass = String;
@@ -30,25 +42,6 @@ Status.indexes = [
     { key: { pivot: 1 } },
     { key: { name: 1 } }
 ];
-
-
-Status.create = function (pivot, name, callback) {
-
-    const document = {
-        _id: Slug(pivot + ' ' + name).toLowerCase(),
-        pivot,
-        name
-    };
-
-    this.insertOne(document, (err, docs) => {
-
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, docs[0]);
-    });
-};
 
 
 module.exports = Status;

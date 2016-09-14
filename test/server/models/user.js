@@ -7,6 +7,8 @@ const Proxyquire = require('proxyquire');
 
 
 const lab = exports.lab = Lab.script();
+const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
+const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
 const stub = {
     Account: {},
     Admin: {},
@@ -25,7 +27,7 @@ lab.experiment('User Class Methods', () => {
 
     lab.before((done) => {
 
-        User.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
+        User.connect(mongoUri, mongoOptions, (err, db) => {
 
             done(err);
         });
@@ -254,7 +256,7 @@ lab.experiment('User Instance Methods', () => {
 
         const user = new User({ username: 'ren' });
 
-        Code.expect(user.canPlayRole('admin')).to.be.false();
+        Code.expect(user.canPlayRole('admin')).to.equal(false);
 
         done();
     });
@@ -269,8 +271,8 @@ lab.experiment('User Instance Methods', () => {
             }
         });
 
-        Code.expect(user.canPlayRole('admin')).to.be.false();
-        Code.expect(user.canPlayRole('account')).to.be.true();
+        Code.expect(user.canPlayRole('admin')).to.equal(false);
+        Code.expect(user.canPlayRole('account')).to.equal(true);
 
         done();
     });
@@ -283,6 +285,7 @@ lab.experiment('User Instance Methods', () => {
         user.hydrateRoles((err) => {
 
             Code.expect(err).to.not.exist();
+
             done();
         });
     });

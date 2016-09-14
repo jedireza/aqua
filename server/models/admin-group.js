@@ -1,16 +1,28 @@
 'use strict';
 const Joi = require('joi');
-const ObjectAssign = require('object-assign');
-const BaseModel = require('hapi-mongo-models').BaseModel;
+const MongoModels = require('mongo-models');
 const Slug = require('slug');
 
 
-const AdminGroup = BaseModel.extend({
-    constructor: function (attrs) {
+class AdminGroup extends MongoModels {
+    static create(name, callback) {
 
-        ObjectAssign(this, attrs);
-    },
-    hasPermissionTo: function (permission) {
+        const document = {
+            _id: Slug(name).toLowerCase(),
+            name
+        };
+
+        this.insertOne(document, (err, docs) => {
+
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, docs[0]);
+        });
+    }
+
+    hasPermissionTo(permission) {
 
         if (this.permissions && this.permissions.hasOwnProperty(permission)) {
             return this.permissions[permission];
@@ -18,10 +30,10 @@ const AdminGroup = BaseModel.extend({
 
         return false;
     }
-});
+}
 
 
-AdminGroup._collection = 'adminGroups';
+AdminGroup.collection = 'adminGroups';
 
 
 AdminGroup._idClass = String;
@@ -32,24 +44,6 @@ AdminGroup.schema = Joi.object().keys({
     name: Joi.string().required(),
     permissions: Joi.object().description('{ permission: boolean, ... }')
 });
-
-
-AdminGroup.create = function (name, callback) {
-
-    const document = {
-        _id: Slug(name).toLowerCase(),
-        name
-    };
-
-    this.insertOne(document, (err, docs) => {
-
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, docs[0]);
-    });
-};
 
 
 module.exports = AdminGroup;

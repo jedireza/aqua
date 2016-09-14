@@ -7,6 +7,8 @@ const Proxyquire = require('proxyquire');
 
 
 const lab = exports.lab = Lab.script();
+const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
+const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
 const stub = {
     bcrypt: {}
 };
@@ -17,7 +19,7 @@ lab.experiment('Session Class Methods', () => {
 
     lab.before((done) => {
 
-        Session.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
+        Session.connect(mongoUri, mongoOptions, (err, db) => {
 
             done(err);
         });

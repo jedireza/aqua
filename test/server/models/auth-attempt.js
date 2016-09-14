@@ -7,13 +7,15 @@ const Lab = require('lab');
 
 
 const lab = exports.lab = Lab.script();
+const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
+const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
 
 
 lab.experiment('AuthAttempt Class Methods', () => {
 
     lab.before((done) => {
 
-        AuthAttempt.connect(Config.get('/hapiMongoModels/mongodb'), (err, db) => {
+        AuthAttempt.connect(mongoUri, mongoOptions, (err, db) => {
 
             done(err);
         });
@@ -71,7 +73,7 @@ lab.experiment('AuthAttempt Class Methods', () => {
         AuthAttempt.abuseDetected('127.0.0.1', 'ren', (err, result) => {
 
             Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.false();
+            Code.expect(result).to.equal(false);
 
             done();
         });
@@ -102,7 +104,7 @@ lab.experiment('AuthAttempt Class Methods', () => {
             AuthAttempt.abuseDetected('127.0.0.1', 'stimpy', (err, result) => {
 
                 Code.expect(err).to.not.exist();
-                Code.expect(result).to.be.true();
+                Code.expect(result).to.equal(true);
 
                 done();
             });
@@ -135,7 +137,7 @@ lab.experiment('AuthAttempt Class Methods', () => {
             AuthAttempt.abuseDetected('127.0.0.2', 'yak', (err, result) => {
 
                 Code.expect(err).to.not.exist();
-                Code.expect(result).to.be.true();
+                Code.expect(result).to.equal(true);
 
                 done();
             });
