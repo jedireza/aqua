@@ -22,7 +22,7 @@ A website and user system starter.
 
 ## Technology
 
-Server side, Aqua is built with the [hapi](https://hapijs.com/) framework.
+Server side, Aqua is built with the [hapi](http://hapijs.com/) framework.
 We're using [MongoDB](http://www.mongodb.org/) as a data store.
 
 The front-end is built with [React](https://github.com/facebook/react). We use
