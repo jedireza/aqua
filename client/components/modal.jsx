@@ -82,7 +82,7 @@ class Modal extends React.Component {
 
         const modalBgStyles = {
             height: this.state.bgHeight + 'px',
-            top: document.body.scrollTop + 'px'
+            top: '0px'
         };
         const containerStyles = { display: 'none' };
 
