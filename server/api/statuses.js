@@ -29,10 +29,7 @@ internals.applyRoutes = function (server, next) {
                     limit: Joi.number().default(20),
                     page: Joi.number().default(1)
                 }
-            },
-            pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
-            ]
+            }
         },
         handler: function (request, reply) {
 
