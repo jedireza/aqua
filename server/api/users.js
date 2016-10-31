@@ -1,6 +1,7 @@
 'use strict';
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
+const EscapeRegExp = require('escape-string-regexp');
 const Joi = require('joi');
 
 
@@ -22,7 +23,7 @@ internals.applyRoutes = function (server, next) {
             },
             validate: {
                 query: {
-                    username: Joi.string().token().lowercase().allow(''),
+                    username: Joi.string().allow(''),
                     isActive: Joi.string().allow(''),
                     role: Joi.string().allow(''),
                     fields: Joi.string(),
@@ -39,7 +40,7 @@ internals.applyRoutes = function (server, next) {
 
             const query = {};
             if (request.query.username) {
-                query.username = new RegExp('^.*?' + request.query.username + '.*$', 'i');
+                query.username = new RegExp('^.*?' + EscapeRegExp(request.query.username) + '.*$', 'i');
             }
             if (request.query.isActive) {
                 query.isActive = request.query.isActive === 'true';

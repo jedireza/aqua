@@ -24,6 +24,7 @@
     "confidence": "3.x.x",
     "crumb": "6.x.x",
     "dotenv": "2.x.x",
+    "escape-string-regexp": "1.x.x",
     "glue": "4.x.x",
     "handlebars": "4.x.x",
     "hapi": "15.x.x",
