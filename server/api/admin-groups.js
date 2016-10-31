@@ -1,6 +1,7 @@
 'use strict';
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
+const EscapeRegExp = require('escape-string-regexp');
 const Joi = require('joi');
 
 
@@ -37,7 +38,7 @@ internals.applyRoutes = function (server, next) {
 
             const query = {};
             if (request.query.name) {
-                query.name = new RegExp('^.*?' + request.query.name + '.*$', 'i');
+                query.name = new RegExp('^.*?' + EscapeRegExp(request.query.name) + '.*$', 'i');
             }
             const fields = request.query.fields;
             const sort = request.query.sort;
