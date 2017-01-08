@@ -48,9 +48,6 @@ const manifest = {
             }
         },
         {
-            plugin: 'inert'
-        },
-        {
             plugin: 'vision'
         },
         {
