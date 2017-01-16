@@ -1,4 +1,4 @@
-FROM node:6
+FROM node:4
 
 # Provides cached layer for node_modules (hack)
 # Update npm to latest
