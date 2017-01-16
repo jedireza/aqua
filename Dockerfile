@@ -17,4 +17,4 @@ COPY . /usr/src
 EXPOSE 8000
 
 # Run app
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
