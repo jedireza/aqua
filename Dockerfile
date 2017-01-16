@@ -9,9 +9,11 @@ RUN mkdir -p /usr/src
 WORKDIR /usr/src
 COPY package.json /usr/src/
 
-RUN npm install --production
+RUN npm install
 
 COPY . /usr/src
+
+RUN npm run postinstall
 
 # Expose port
 EXPOSE 8000
