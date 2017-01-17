@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "gulp",
+    "dev:win": "SET DEBUG=DEBUGGER && npm run start",
+    "dev:mac": "DEBUG=INSPECTER,DEBUGGER npm run start",
     "first-time-setup": "node first-time-setup.js",
     "test": "lab -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/lab/client-before.js ./test/client/ ./test/lab/client-after.js ./test/server/ ./test/lab/server-after.js ./test/misc/",
     "test-client": "lab -v -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/lab/client-before.js $TEST_TARGET ./test/lab/client-after.js || true",
