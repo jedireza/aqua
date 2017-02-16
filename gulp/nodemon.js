@@ -1,14 +1,20 @@
 'use strict';
 const Gulp = require('gulp');
 const Nodemon = require('gulp-nodemon');
-
+//const Config = require('./../config.js');
+require('./../config.js');
 
 Gulp.task('nodemon', () => {
 
-    const nodeArgs = ['--inspect'];
+    let nodeArgs = [];
+
+    if (process.env.INSPECTER){
+        nodeArgs = ['--inspect'];
+    }
 
     if (process.env.DEBUGGER) {
         nodeArgs.push('--debug');
+        console.log('debug');
     }
 
     Nodemon({

@@ -1,5 +1,5 @@
 'use strict';
-const AdminPlugin = require('../../../server/web/admin/index');
+//const AdminPlugin = require('../../../server/web/admin/index');
 const AuthPlugin = require('../../../server/auth');
 const AuthenticatedAdmin = require('../fixtures/credentials-admin');
 const Code = require('code');
@@ -7,26 +7,38 @@ const Config = require('../../../config');
 const Hapi = require('hapi');
 const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
-const Manifest = require('../../../manifest');
+//const Manifest = require('../../../manifest');
 const Path = require('path');
 const Vision = require('vision');
 
 
 const lab = exports.lab = Lab.script();
+const HapiModelsPlugin = {
+    register: require('hapi-sequelize'),
+    options: {
+        sequelize : require('../../misc/db'),
+        //todo not like dbsetup.js cause models are already registered in test/misc/db.js
+        sync: true
+    }
+};
+/*
 const ModelsPlugin = {
     register: require('hapi-mongo-models'),
     options: Manifest.get('/registrations').filter((reg) => {
+        console.log('regs is ', reg);
 
         return reg.plugin.register === 'hapi-mongo-models';
     })[0].plugin.options
 };
+*/
 let request;
 let server;
 
 
 lab.beforeEach((done) => {
 
-    const plugins = [Vision, HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin];
+    //const plugins = [Vision, HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin];
+    const plugins = [Vision, HapiAuth, HapiModelsPlugin, AuthPlugin, AccountPlugin];
     server = new Hapi.Server();
     server.connection({ port: Config.get('/port/web') });
     server.register(plugins, (err) => {

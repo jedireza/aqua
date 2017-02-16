@@ -17,10 +17,10 @@ const defaultProps = {
     hasError: {},
     help: {},
     options: [{
-        _id: 'some-foo',
+        id: 'some-foo',
         name: 'Some Foo'
     }, {
-        _id: 'some-bar',
+        id: 'some-bar',
         name: 'Some Bar'
     }],
     newStatus: '',
@@ -37,10 +37,10 @@ lab.experiment('Admin Accounts Status Form', () => {
             current: undefined,
             log: [{
                 name: 'Some Status',
-                userCreated: {
-                    name: 'stimpson'
+                User: {
+                    username: 'stimpson'
                 },
-                timeCreated: new Date()
+                createdAt: new Date()
             }]
         });
         const FormEl = React.createElement(Form, props);

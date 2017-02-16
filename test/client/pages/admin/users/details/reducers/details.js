@@ -94,7 +94,7 @@ lab.experiment('Admin Users Details Reducer', () => {
             type: Constants.SAVE_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz',
+                id: 'abcxyz',
                 username: 'ren',
                 email: 'ren@hoek',
                 isActive: true

@@ -14,7 +14,7 @@ const propTypes = {
 const defaultValues = {
     pivot: '',
     name: '',
-    sort: '_id',
+    sort: 'id',
     limit: '20',
     page: '1'
 };
@@ -51,8 +51,8 @@ class FilterForm extends React.Component {
                         onChange={this.props.linkSelectState}
                         disabled={this.props.loading}>
 
-                        <option value="_id">id &#9650;</option>
-                        <option value="-_id">id &#9660;</option>
+                        <option value="id">id &#9650;</option>
+                        <option value="-id">id &#9660;</option>
                         <option value="name">name &#9650;</option>
                         <option value="-name">name &#9660;</option>
                     </SelectControl>

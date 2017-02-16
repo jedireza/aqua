@@ -1,123 +1,187 @@
 'use strict';
 const Async = require('async');
 const Bcrypt = require('bcrypt');
-const Joi = require('joi');
-const MongoModels = require('mongo-models');
 const Uuid = require('node-uuid');
 
+module.exports = function (sequelize, DataTypes){
 
-class Session extends MongoModels {
-    static generateKeyHash(callback) {
+    const Session = sequelize.define('Session', {
+        id: {
+            primaryKey: true,
+            defaultValue: DataTypes.UUIDV1,
+            type: DataTypes.UUID
+        },
+        userId: DataTypes.UUID,
+        key: { type:DataTypes.STRING, allowNull: false }
+    },{
+        classMethods : {
 
-        const key = Uuid.v4();
+            pagedFind: function (where, page, limit, order, include, callback){
 
-        Async.auto({
-            salt: function (done) {
+                const offset = (page - 1) * limit;
+                this.findAndCount(
+                    {
+                        where,
+                        offset,
+                        limit,
+                        order,
+                        include
+                    }
+            ).then( (result) => {
 
-                Bcrypt.genSalt(10, done);
-            },
-            hash: ['salt', function (results, done) {
-
-                Bcrypt.hash(key, results.salt, done);
-            }]
-        }, (err, results) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, {
-                key,
-                hash: results.hash
-            });
-        });
-    }
-
-    static create(userId, callback) {
-
-        const self = this;
-
-        Async.auto({
-            keyHash: this.generateKeyHash.bind(this),
-            newSession: ['keyHash', function (results, done) {
-
-                const document = {
-                    userId,
-                    key: results.keyHash.hash,
-                    time: new Date()
+                const output = {
+                    data: undefined,
+                    pages: {
+                        current: page,
+                        prev: 0,
+                        hasPrev: false,
+                        next: 0,
+                        hasNext: false,
+                        total: 0
+                    },
+                    items: {
+                        limit,
+                        begin: ((page * limit) - limit) + 1,
+                        end: page * limit,
+                        total: 0
+                    }
                 };
+                output.data = result.rows;
+                output.items.total = result.count;
 
-                self.insertOne(document, done);
-            }],
-            clean: ['newSession', function (results, done) {
-
-                const query = {
-                    userId,
-                    key: { $ne: results.keyHash.hash }
-                };
-
-                self.deleteOne(query, done);
-            }]
-        }, (err, results) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            results.newSession[0].key = results.keyHash.key;
-
-            callback(null, results.newSession[0]);
-        });
-    }
-
-    static findByCredentials(id, key, callback) {
-
-        const self = this;
-
-        Async.auto({
-            session: function (done) {
-
-                self.findById(id, done);
-            },
-            keyMatch: ['session', function (results, done) {
-
-                if (!results.session) {
-                    return done(null, false);
+                // paging calculations
+                output.pages.total = Math.ceil(output.items.total / limit);
+                output.pages.next = output.pages.current + 1;
+                output.pages.hasNext = output.pages.next <= output.pages.total;
+                output.pages.prev = output.pages.current - 1;
+                output.pages.hasPrev = output.pages.prev !== 0;
+                if (output.items.begin > output.items.total) {
+                    output.items.begin = output.items.total;
+                }
+                if (output.items.end > output.items.total) {
+                    output.items.end = output.items.total;
                 }
 
-                const source = results.session.key;
-                Bcrypt.compare(key, source, done);
-            }]
-        }, (err, results) => {
+                callback(null, output);
 
-            if (err) {
+
+            }, (err) => {
+
                 return callback(err);
+            });
+            },
+            generateKeyHash: function (callback){
+
+                const key = Uuid.v4();
+
+                Async.auto({
+                    salt: function (done) {
+
+                        Bcrypt.genSalt(10, done);
+                    },
+                    hash: ['salt', function (results, done) {
+
+                        Bcrypt.hash(key, results.salt, done);
+                    }]
+                }, (err, results) => {
+
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    callback(null, {
+                        key,
+                        hash: results.hash
+                    });
+                });
+            },
+            createNew: function (userId, callback) {
+
+                const self = this;
+
+                Async.auto({
+                    keyHash: function (done){
+
+                        self.generateKeyHash(done);
+                    },
+                    newSession: ['keyHash', function (results, done) {
+
+                        self.create({
+                            userId,
+                            key: results.keyHash.hash
+                        }).then((session) => {
+
+                            done(null,session);
+                        }, (err) => {
+
+                            done(err);
+                        });
+                    }],
+                    clean: ['newSession', function (results, done) {
+
+                        self.destroy({
+                            where: {
+                                userId,
+                                key: { $ne: results.keyHash.hash }
+                            }
+                        }).then(() => {
+
+                            done(null);
+                        }, (err) => {
+
+                            done(err);
+                        });
+                    }]
+                }, (err, results) => {
+
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    results.newSession.key = results.keyHash.key;
+
+                    callback(null, results.newSession);
+                });
+            },
+            findByCredentials: function (id, key, callback) {
+
+                const self = this;
+
+                Async.auto({
+                    session: function (done) {
+
+                        self.findById(id).then((session) => {
+
+                            done(null, session);
+                        }, (err) => {
+
+                            done(err);
+                        });
+                    },
+                    keyMatch: ['session', function (results, done) {
+
+                        if (!results.session) {
+                            return done(null, false);
+                        }
+
+                        const source = results.session.get('key');
+                        Bcrypt.compare(key, source, done);
+                    }]
+                }, (err, results) => {
+
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    if (results.keyMatch) {
+                        return callback(null, results.session);
+                    }
+
+                    callback();
+                });
             }
+        }
+    });
 
-            if (results.keyMatch) {
-                return callback(null, results.session);
-            }
-
-            callback();
-        });
-    }
-}
-
-
-Session.collection = 'sessions';
-
-
-Session.schema = Joi.object().keys({
-    _id: Joi.object(),
-    userId: Joi.string().required(),
-    key: Joi.string().required(),
-    time: Joi.date().required()
-});
-
-
-Session.indexes = [
-    { key: { userId: 1 } }
-];
-
-
-module.exports = Session;
+    return Session;
+};

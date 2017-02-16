@@ -19,6 +19,7 @@ class SearchPage extends React.Component {
         super(props);
 
         Actions.getResults(this.props.location.query);
+        //Actions.getSqlResults(this.props.location.query);
 
         this.els = {};
         this.state = Store.getState();
@@ -27,6 +28,7 @@ class SearchPage extends React.Component {
     componentWillReceiveProps(nextProps) {
 
         Actions.getResults(nextProps.location.query);
+        //Actions.getSqlResults(nextProps.location.query);
     }
 
     componentDidMount() {

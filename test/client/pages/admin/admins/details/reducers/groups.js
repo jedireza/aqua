@@ -16,7 +16,7 @@ lab.experiment('Admin Admins Groups Reducer', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz'
+                id: 'abcxyz'
             }
         });
 
@@ -29,11 +29,11 @@ lab.experiment('Admin Admins Groups Reducer', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz',
-                groups: {
-                    sales: 'Sales',
-                    service: 'Service'
-                }
+                id: 'abcxyz',
+                AdminGroups: [
+                    { id : 'abc', name: 'group 1' },
+                    { id : 'def', name: 'group 2' }
+                ]
             }
         });
 
@@ -53,7 +53,7 @@ lab.experiment('Admin Admins Groups Reducer', () => {
         Store.dispatch({
             type: Constants.GET_GROUP_OPTIONS_RESPONSE,
             err: null,
-            response: {}
+            response: []
         });
 
         state = Store.getState().groups;
@@ -82,10 +82,10 @@ lab.experiment('Admin Admins Groups Reducer', () => {
             type: Constants.SAVE_GROUPS,
             request: {
                 data: {
-                    groups: {
-                        sales: 'Sales',
-                        service: 'Service'
-                    }
+                    groups: [//pretty sure it doesn't actually use this one.
+                        { id : 'abc', name: 'group 1' },//it uses the one from above
+                        { id : 'def', name: 'group 2' }//cause reducer doesn't swap out
+                    ]
                 }
             }
         });
@@ -93,8 +93,8 @@ lab.experiment('Admin Admins Groups Reducer', () => {
         const state = Store.getState().groups;
 
         Code.expect(state.loading).to.be.true();
-        Code.expect(state.groups.sales).to.equal('Sales');
-        Code.expect(state.groups.service).to.equal('Service');
+        Code.expect(state.groups[0].id).to.equal('abc');
+        Code.expect(state.groups[1].id).to.equal('def');
 
         done();
     });
@@ -106,14 +106,14 @@ lab.experiment('Admin Admins Groups Reducer', () => {
             type: Constants.SAVE_GROUPS_RESPONSE,
             err: null,
             response: {
-                groups: {}
+                groups: []
             }
         });
 
         let state = Store.getState().groups;
 
         Code.expect(state.loading).to.be.false();
-        Code.expect(state.groups).to.have.length(0);
+        Code.expect(state.groups).to.have.length(2);
 
         Store.dispatch({
             type: Constants.SAVE_GROUPS_RESPONSE,

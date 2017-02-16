@@ -18,7 +18,7 @@ const reducer = function (state = initialState, action) {
 
     if (action.type === Constants.GET_DETAILS_RESPONSE) {
         return ObjectAssign({}, initialState, {
-            userId: action.response._id
+            userId: action.response.id
         });
     }
 

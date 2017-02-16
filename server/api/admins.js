@@ -1,19 +1,14 @@
 'use strict';
-const Async = require('async');
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
-const EscapeRegExp = require('escape-string-regexp');
 const Joi = require('joi');
+const Promise = require('promise');
 
 
 const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
-
-    const Admin = server.plugins['hapi-mongo-models'].Admin;
-    const User = server.plugins['hapi-mongo-models'].User;
-
 
     server.route({
         method: 'GET',
@@ -27,27 +22,31 @@ internals.applyRoutes = function (server, next) {
                 query: {
                     username: Joi.string().allow(''),
                     fields: Joi.string(),
-                    sort: Joi.string().default('_id'),
+                    sort: Joi.string().default('id'),
                     limit: Joi.number().default(20),
                     page: Joi.number().default(1)
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
+            const Admin = request.getDb('aqua').getModel('Admin');
+            const User = request.getDb('aqua').getModel('User');
             const query = {};
+            const include = [{ model: User }];
             if (request.query.username) {
-                query['user.name'] = new RegExp('^.*?' + EscapeRegExp(request.query.username) + '.*$', 'i');
+                include[0].where = { username: { $like : '%' + request.query.username + '%' } };
             }
-            const fields = request.query.fields;
+            //const fields = request.query.fields;
             const sort = request.query.sort;
             const limit = request.query.limit;
             const page = request.query.page;
 
-            Admin.pagedFind(query, fields, sort, limit, page, (err, results) => {
+
+            Admin.pagedFind(query, page, limit, sort, include, (err, results) => {
 
                 if (err) {
                     return reply(err);
@@ -68,22 +67,38 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            Admin.findById(request.params.id, (err, admin) => {
+            const Admin = request.getDb('aqua').getModel('Admin');
+            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
+            const AdminPermissionEntry = request.getDb('aqua').getModel('AdminPermissionEntry');
+            const Permission = request.getDb('aqua').getModel('Permission');
+            const User = request.getDb('aqua').getModel('User');
 
-                if (err) {
-                    return reply(err);
-                }
+            Admin.findOne({
+                where: {
+                    id: request.params.id
+                },
+                include: [
+                    //todo exlucde or include correctly
+                    { model: User, attributes:{ exclude:['password_hash'] } },
+                    { model: AdminGroup },
+                    { model: AdminPermissionEntry, include: [{ model: Permission }] }
+                ]
+            }).then((admin) => {
 
                 if (!admin) {
-                    return reply(Boom.notFound('Document not found.'));
+                    return reply(Boom.notFound('Admin not found.'));
                 }
 
                 reply(admin);
+
+            }, (err) => {
+
+                return reply(err);
             });
         }
     });
@@ -103,20 +118,28 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            const name = request.payload.name;
-
-            Admin.create(name, (err, admin) => {
-
-                if (err) {
-                    return reply(err);
-                }
+            const Admin = request.getDb('aqua').getModel('Admin');
+            const nameParts = request.payload.name.trim().split(/\s/);
+            const name = {
+                first: nameParts.shift(),
+                middle: nameParts.length > 1 ? nameParts.shift() : '',
+                last: nameParts.join(' ')
+            };
+            Admin.create({
+                first: name.first,
+                middle: name.middle,
+                last: name.last
+            }).then((admin) => {
 
                 reply(admin);
+            }, (err) => {
+
+                return reply(err);
             });
         }
     });
@@ -135,41 +158,42 @@ internals.applyRoutes = function (server, next) {
                     id: Joi.string().invalid('111111111111111111111111')
                 },
                 payload: {
-                    name: Joi.object().keys({
-                        first: Joi.string().required(),
-                        middle: Joi.string().allow(''),
-                        last: Joi.string().required()
-                    }).required()
+                    first: Joi.string().required(),
+                    middle: Joi.string().allow(''),
+                    last: Joi.string().required()
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
+            const Admin = request.getDb('aqua').getModel('Admin');
+
             const id = request.params.id;
-            const update = {
-                $set: {
-                    name: {
-                        first: request.payload.name.first,
-                        middle: request.payload.name.middle,
-                        last: request.payload.name.last
+            Admin.update(
+                {
+                    first: request.payload.first,
+                    middle: request.payload.middle,
+                    last: request.payload.last
+                },
+                {
+                    where:{
+                        id
                     }
                 }
-            };
-
-            Admin.findByIdAndUpdate(id, update, (err, admin) => {
-
-                if (err) {
-                    return reply(err);
-                }
+            ).then((admin) => {
 
                 if (!admin) {
-                    return reply(Boom.notFound('Document not found.'));
+                    return reply(Boom.notFound('Admin not found.'));
                 }
 
                 reply(admin);
+
+            }, (err) => {
+
+                return reply(err);
             });
         }
     });
@@ -188,30 +212,56 @@ internals.applyRoutes = function (server, next) {
                     id: Joi.string().invalid('111111111111111111111111')
                 },
                 payload: {
-                    permissions: Joi.object().required()
+                    permissionEntries: Joi.array().required()
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
             const id = request.params.id;
-            const update = {
-                $set: {
-                    permissions: request.payload.permissions
-                }
-            };
+            const AdminPermissionEntry = request.getDb('aqua').getModel('AdminPermissionEntry');
+            const Permission = request.getDb('aqua').getModel('Permission');
+            const adminPermissionEntries = request.payload.permissionEntries;
+            const ids = adminPermissionEntries.map((permission) => {
 
-            Admin.findByIdAndUpdate(id, update, (err, admin) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(admin);
+                return permission.id;
             });
+            //delete those not in set
+            AdminPermissionEntry.destroy(
+                {
+                    where : {
+                        admin_id : id,
+                        id : { $notIn: ids }
+                    }
+                }
+            ).then((count) => {
+
+                const promises = adminPermissionEntries.map((ape) => {
+
+                    return AdminPermissionEntry.upsert(
+                        ape
+                    );
+                });
+                return Promise.all(promises);
+            }).then((results) => {
+
+                return AdminPermissionEntry.findAll(
+                    {
+                        where : { admin_id: id },
+                        include: [{ model: Permission }]
+                    }
+                );
+            }).then( (permissionEntries) => {
+
+                reply({ permissionEntries });
+            }, (err) => {
+
+                return reply(err);
+            });
+
         }
     });
 
@@ -229,30 +279,33 @@ internals.applyRoutes = function (server, next) {
                     id: Joi.string().invalid('111111111111111111111111')
                 },
                 payload: {
-                    groups: Joi.object().required()
+                    groups: Joi.array().required()
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            const id = request.params.id;
-            const update = {
-                $set: {
-                    groups: request.payload.groups
+            const Admin = request.getDb('aqua').getModel('Admin');
+            Admin.findById(request.params.id).then((admin) => {
+
+                if (!admin){
+                    return reply(Boom.notFound('Admin not found'));
                 }
-            };
+                return admin.setAdminGroups(request.payload.groups);
+            }).then(
 
-            Admin.findByIdAndUpdate(id, update, (err, admin) => {
+                (result) => {
 
-                if (err) {
-                    return reply(err);
+                    reply(result);
+                },
+                (err) => {
+
+                    reply(err);
                 }
-
-                reply(admin);
-            });
+            );
         }
     });
 
@@ -274,102 +327,72 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root'),
+                AuthPlugin.preware.ensureAdminGroup('Root'),
                 {
                     assign: 'admin',
                     method: function (request, reply) {
 
-                        Admin.findById(request.params.id, (err, admin) => {
+                        const Admin = request.getDb('aqua').getModel('Admin');
+                        Admin.findById(request.params.id).then((account) => {
 
-                            if (err) {
-                                return reply(err);
+                            if (!account) {
+                                return reply(Boom.notFound('Account not found.'));
                             }
+                            reply(account);
+                        }, (err) => {
 
-                            if (!admin) {
-                                return reply(Boom.notFound('Document not found.'));
-                            }
-
-                            reply(admin);
+                            return reply(err);
                         });
                     }
                 }, {
                     assign: 'user',
                     method: function (request, reply) {
 
-                        User.findByUsername(request.payload.username, (err, user) => {
-
-                            if (err) {
-                                return reply(err);
+                        const User = request.getDb('aqua').getModel('User');
+                        User.findOne(
+                            {
+                                where: {
+                                    username: request.payload.username
+                                }
                             }
+                    ).then((user) => {
 
-                            if (!user) {
-                                return reply(Boom.notFound('User document not found.'));
-                            }
-
-                            if (user.roles &&
-                                user.roles.admin &&
-                                user.roles.admin.id !== request.params.id) {
-
-                                return reply(Boom.conflict('User is already linked to another admin. Unlink first.'));
-                            }
-
-                            reply(user);
-                        });
+                        if (!user) {
+                            return reply(Boom.notFound('User not found.'));
+                        }
+                        reply(user);
+                    });
                     }
                 }, {
                     assign: 'userCheck',
                     method: function (request, reply) {
 
-                        if (request.pre.admin.user &&
-                            request.pre.admin.user.id !== request.pre.user._id.toString()) {
+                        request.pre.user.getAccount().then(
 
-                            return reply(Boom.conflict('Admin is already linked to another user. Unlink first.'));
+                        (account) => {
+
+                            if ( account ){
+                                return reply(Boom.conflict('User is already linked to another account. Unlink first.'));
+                            }
+                            reply();
                         }
-
-                        reply(true);
+                    );
                     }
-                }
-            ]
+                }]
         },
         handler: function (request, reply) {
 
-            Async.auto({
-                admin: function (done) {
+            request.pre.admin.setUser(request.pre.user).then(
 
-                    const id = request.params.id;
-                    const update = {
-                        $set: {
-                            user: {
-                                id: request.pre.user._id.toString(),
-                                name: request.pre.user.username
-                            }
-                        }
-                    };
+                (results) => {
 
-                    Admin.findByIdAndUpdate(id, update, done);
+                    reply(results);
                 },
-                user: function (done) {
+                (err) => {
 
-                    const id = request.pre.user._id;
-                    const update = {
-                        $set: {
-                            'roles.admin': {
-                                id: request.pre.admin._id.toString(),
-                                name: request.pre.admin.name.first + ' ' + request.pre.admin.name.last
-                            }
-                        }
-                    };
-
-                    User.findByIdAndUpdate(id, update, done);
+                    reply(err);
                 }
-            }, (err, results) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(results.admin);
-            });
+            );
         }
     });
 
@@ -388,80 +411,26 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root'),
-                {
-                    assign: 'admin',
-                    method: function (request, reply) {
-
-                        Admin.findById(request.params.id, (err, admin) => {
-
-                            if (err) {
-                                return reply(err);
-                            }
-
-                            if (!admin) {
-                                return reply(Boom.notFound('Document not found.'));
-                            }
-
-                            if (!admin.user || !admin.user.id) {
-                                return reply(admin).takeover();
-                            }
-
-                            reply(admin);
-                        });
-                    }
-                }, {
-                    assign: 'user',
-                    method: function (request, reply) {
-
-                        User.findById(request.pre.admin.user.id, (err, user) => {
-
-                            if (err) {
-                                return reply(err);
-                            }
-
-                            if (!user) {
-                                return reply(Boom.notFound('User document not found.'));
-                            }
-
-                            reply(user);
-                        });
-                    }
-                }
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            Async.auto({
-                admin: function (done) {
+            const Admin = request.getDb('aqua').getModel('Admin');
 
-                    const id = request.params.id;
-                    const update = {
-                        $unset: {
-                            user: undefined
-                        }
-                    };
-
-                    Admin.findByIdAndUpdate(id, update, done);
-                },
-                user: function (done) {
-
-                    const id = request.pre.user._id.toString();
-                    const update = {
-                        $unset: {
-                            'roles.admin': undefined
-                        }
-                    };
-
-                    User.findByIdAndUpdate(id, update, done);
+            Admin.find({
+                where: {
+                    id : request.params.id
                 }
-            }, (err, results) => {
+            }).then((admin) => {
 
-                if (err) {
-                    return reply(err);
-                }
+                return admin.setUser(null);
+            }).then( (result) => {
 
-                reply(results.admin);
+                reply(result);
+            }, (err) => {
+
+                return reply(err);
             });
         }
     });
@@ -481,23 +450,27 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
 
-            Admin.findByIdAndDelete(request.params.id, (err, admin) => {
+            const Admin = request.getDb('aqua').getModel('Admin');
 
-                if (err) {
-                    return reply(err);
+            Admin.find({
+                where: {
+                    id : request.params.id
                 }
+            }).then((admin) => {
 
-                if (!admin) {
-                    return reply(Boom.notFound('Document not found.'));
-                }
+                return admin.setUser(null);
+            }).then( (result) => {
 
-                reply({ message: 'Success.' });
+                reply(result);
+            }, (err) => {
+
+                return reply(err);
             });
         }
     });
@@ -509,7 +482,7 @@ internals.applyRoutes = function (server, next) {
 
 exports.register = function (server, options, next) {
 
-    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
+    server.dependency(['auth', 'hapi-sequelize', 'dbconfig'], internals.applyRoutes);
 
     next();
 };

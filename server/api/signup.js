@@ -10,11 +10,6 @@ const internals = {};
 
 internals.applyRoutes = function (server, next) {
 
-    const Account = server.plugins['hapi-mongo-models'].Account;
-    const Session = server.plugins['hapi-mongo-models'].Session;
-    const User = server.plugins['hapi-mongo-models'].User;
-
-
     server.route({
         method: 'POST',
         path: '/signup',
@@ -40,42 +35,44 @@ internals.applyRoutes = function (server, next) {
                 assign: 'usernameCheck',
                 method: function (request, reply) {
 
+                    const User = request.getDb('aqua').getModel('User');
+
                     const conditions = {
                         username: request.payload.username
                     };
+                    User.findOne({
+                        where: conditions
+                    }).then( (user) => {
 
-                    User.findOne(conditions, (err, user) => {
-
-                        if (err) {
-                            return reply(err);
-                        }
-
-                        if (user) {
+                        if ( user ){
                             return reply(Boom.conflict('Username already in use.'));
                         }
-
                         reply(true);
+                    }, (err) => {
+
+                        reply(err);
                     });
                 }
             }, {
                 assign: 'emailCheck',
                 method: function (request, reply) {
 
+                    const User = request.getDb('aqua').getModel('User');
                     const conditions = {
                         email: request.payload.email
                     };
 
-                    User.findOne(conditions, (err, user) => {
+                    User.findOne({
+                        where : conditions
+                    }).then( (user) => {
 
-                        if (err) {
-                            return reply(err);
-                        }
-
-                        if (user) {
+                        if ( user ){
                             return reply(Boom.conflict('Email already in use.'));
                         }
-
                         reply(true);
+                    }, (err) => {
+
+                        reply(err);
                     });
                 }
             }]
@@ -83,6 +80,9 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const mailer = request.server.plugins.mailer;
+            const Account = request.getDb('aqua').getModel('Account');
+            const User = request.getDb('aqua').getModel('User');
+            const Session = request.getDb('aqua').getModel('Session');
 
             Async.auto({
                 user: function (done) {
@@ -92,44 +92,50 @@ internals.applyRoutes = function (server, next) {
                     const email = request.payload.email;
 
                     User.create(username, password, email, done);
+                    User.create({
+                        username : request.payload.username,
+                        isActive: true,
+                        password : request.payload.password,
+                        email : request.payload.email
+                    }).then( (user) => {
+
+                        done(null, user);
+                    }, (err) => {
+
+                        done(err);
+                    });
                 },
                 account: ['user', function (results, done) {
 
-                    const name = request.payload.name;
+                    const name = Account.parseName(request.payload.name);
+                    Account.create({
+                        first: name.first,
+                        middle: name.middle,
+                        last: name.last
+                    }).then( (account) => {
 
-                    Account.create(name, done);
+                        done(null, account);
+                    }, (err) => {
+
+                        return done(err);
+                    });
+
                 }],
                 linkUser: ['account', function (results, done) {
 
-                    const id = results.account._id.toString();
-                    const update = {
-                        $set: {
-                            user: {
-                                id: results.user._id.toString(),
-                                name: results.user.username
-                            }
+                    const account = results.account;
+                    account.setUser(results.user).then(
+                        (accountUpdated) => {
+
+                            done(null, accountUpdated);
+                        },
+                        (err) => {
+
+                            done(err);
                         }
-                    };
-
-                    Account.findByIdAndUpdate(id, update, done);
+                    );
                 }],
-                linkAccount: ['account', function (results, done) {
-
-                    const id = results.user._id.toString();
-                    const update = {
-                        $set: {
-                            roles: {
-                                account: {
-                                    id: results.account._id.toString(),
-                                    name: results.account.name.first + ' ' + results.account.name.last
-                                }
-                            }
-                        }
-                    };
-
-                    User.findByIdAndUpdate(id, update, done);
-                }],
-                welcome: ['linkUser', 'linkAccount', function (results, done) {
+                welcome: ['linkUser', function (results, done) {
 
                     const emailOptions = {
                         subject: 'Your ' + Config.get('/projectName') + ' account',
@@ -149,9 +155,15 @@ internals.applyRoutes = function (server, next) {
 
                     done();
                 }],
-                session: ['linkUser', 'linkAccount', function (results, done) {
+                session: ['linkUser', function (results, done) {
 
-                    Session.create(results.user._id.toString(), done);
+                    Session.createNew(results.user.id.toString(), (err, session) => {
+
+                        if (err) {
+                            return done(err);
+                        }
+                        return done(null, session);
+                    });
                 }]
             }, (err, results) => {
 
@@ -159,12 +171,12 @@ internals.applyRoutes = function (server, next) {
                     return reply(err);
                 }
 
-                const user = results.linkAccount;
+                const user = results.linkUser;
                 const credentials = user.username + ':' + results.session.key;
                 const authHeader = 'Basic ' + new Buffer(credentials).toString('base64');
                 const result = {
                     user: {
-                        _id: user._id,
+                        id: user.id,
                         username: user.username,
                         email: user.email,
                         roles: user.roles
@@ -186,7 +198,7 @@ internals.applyRoutes = function (server, next) {
 
 exports.register = function (server, options, next) {
 
-    server.dependency(['mailer', 'hapi-mongo-models'], internals.applyRoutes);
+    server.dependency(['mailer', 'hapi-sequelize', 'dbconfig'], internals.applyRoutes);
 
     next();
 };

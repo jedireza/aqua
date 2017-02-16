@@ -1,4 +1,6 @@
 node_modules/*
 public/*
 test/artifacts/*
+.DS_Store
+.vscode
 .env

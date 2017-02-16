@@ -1,7 +1,6 @@
 'use strict';
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
-const EscapeRegExp = require('escape-string-regexp');
 const Joi = require('joi');
 
 
@@ -9,9 +8,6 @@ const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
-
-    const Status = server.plugins['hapi-mongo-models'].Status;
-
 
     server.route({
         method: 'GET',
@@ -26,7 +22,7 @@ internals.applyRoutes = function (server, next) {
                     name: Joi.string().allow(''),
                     pivot: Joi.string().allow(''),
                     fields: Joi.string(),
-                    sort: Joi.string().default('_id'),
+                    sort: Joi.string().default('id'),
                     limit: Joi.number().default(20),
                     page: Joi.number().default(1)
                 }
@@ -34,21 +30,34 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
+            const Status = request.getDb('aqua').getModel('Status');
             const query = {};
             if (request.query.pivot) {
-                query.pivot = new RegExp('^.*?' + EscapeRegExp(request.query.pivot) + '.*$', 'i');
+                query.pivot = { $like: '%' + request.query.pivot + '%' };
             }
             if (request.query.name) {
-                query.name = new RegExp('^.*?' + EscapeRegExp(request.query.name) + '.*$', 'i');
+                query.name = { $like: '%' + request.query.name + '%' };
             }
-            const fields = request.query.fields;
-            const sort = request.query.sort;
+            //const fields = request.query.fields;
             const limit = request.query.limit;
             const page = request.query.page;
 
-            Status.pagedFind(query, fields, sort, limit, page, (err, results) => {
+            let sort = request.query.sort;
+            let order = '';
+            if ( sort !== ''){
+                let dir = 'ASC';
+                if ( sort.indexOf('-') === 0 ){
+
+                    dir = 'DESC';
+                    sort = sort.substring(1);
+                }
+                order = [[sort, dir]];
+
+            }
+            Status.pagedFind(query, page, limit, order, (err, results) => {
 
                 if (err) {
+
                     return reply(err);
                 }
 
@@ -67,22 +76,29 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            Status.findById(request.params.id, (err, status) => {
-
-                if (err) {
-                    return reply(err);
+            const Status = request.getDb('aqua').getModel('Status');
+            Status.findOne(
+                {
+                    where: {
+                        id: request.params.id
+                    }
                 }
+            ).then( (status) => {
 
                 if (!status) {
                     return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply(status);
+
+            }, (err) => {
+
+                return reply(err);
             });
         }
     });
@@ -103,22 +119,28 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
+            const Status = request.getDb('aqua').getModel('Status');
             const pivot = request.payload.pivot;
             const name = request.payload.name;
 
-            Status.create(pivot, name, (err, status) => {
-
-                if (err) {
-                    return reply(err);
+            Status.create(
+                {
+                    pivot,
+                    name
                 }
+            ).then((status) => {
 
                 reply(status);
+            },(err) => {
+
+                return reply(err);
             });
+
         }
     });
 
@@ -137,30 +159,34 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
             const id = request.params.id;
-            const update = {
-                $set: {
+            const Status = request.getDb('aqua').getModel('Status');
+
+            Status.update(
+                {
                     name: request.payload.name
-                }
-            };
+                },
+                {
+                    where:{
+                        id
+                    }
+                }).then((status) => {
 
-            Status.findByIdAndUpdate(id, update, (err, status) => {
+                    if (!status) {
+                        return reply(Boom.notFound('Document not found.'));
+                    }
 
-                if (err) {
+                    reply(status);
+
+                }, (err) => {
+
                     return reply(err);
-                }
-
-                if (!status) {
-                    return reply(Boom.notFound('Document not found.'));
-                }
-
-                reply(status);
-            });
+                });
         }
     });
 
@@ -174,22 +200,26 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            Status.findByIdAndDelete(request.params.id, (err, status) => {
-
-                if (err) {
-                    return reply(err);
+            const Status = request.getDb('aqua').getModel('Status');
+            Status.destroy(
+                {
+                    where: { id : request.params.id }
                 }
+            ).then((count) => {
 
-                if (!status) {
+                if (count === 0) {
                     return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply({ message: 'Success.' });
+            }, (err) => {
+
+                reply(err);
             });
         }
     });
@@ -201,7 +231,7 @@ internals.applyRoutes = function (server, next) {
 
 exports.register = function (server, options, next) {
 
-    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
+    server.dependency(['auth', 'hapi-sequelize', 'dbconfig'], internals.applyRoutes);
 
     next();
 };

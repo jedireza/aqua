@@ -11,11 +11,6 @@ const internals = {};
 
 internals.applyRoutes = function (server, next) {
 
-    const AuthAttempt = server.plugins['hapi-mongo-models'].AuthAttempt;
-    const Session = server.plugins['hapi-mongo-models'].Session;
-    const User = server.plugins['hapi-mongo-models'].User;
-
-
     server.route({
         method: 'POST',
         path: '/login',
@@ -32,6 +27,7 @@ internals.applyRoutes = function (server, next) {
 
                     const ip = request.info.remoteAddress;
                     const username = request.payload.username;
+                    const AuthAttempt = request.getDb('aqua').getModel('AuthAttempt');
 
                     AuthAttempt.abuseDetected(ip, username, (err, detected) => {
 
@@ -52,14 +48,26 @@ internals.applyRoutes = function (server, next) {
 
                     const username = request.payload.username;
                     const password = request.payload.password;
-
+                    const User = request.getDb('aqua').getModel('User');
                     User.findByCredentials(username, password, (err, user) => {
 
                         if (err) {
                             return reply(err);
                         }
+                        if ( user ){
+                            user.hydrateRoles(request.getDb('aqua'), (err) => {
 
-                        reply(user);
+                                if ( err ){
+                                    reply(err);
+                                }
+                                else {
+                                    reply(user);
+                                }
+                            });
+                        }
+                        else {
+                            reply(null);
+                        }
                     });
                 }
             }, {
@@ -72,26 +80,32 @@ internals.applyRoutes = function (server, next) {
 
                     const ip = request.info.remoteAddress;
                     const username = request.payload.username;
+                    const AuthAttempt = request.getDb('aqua').getModel('AuthAttempt');
 
-                    AuthAttempt.create(ip, username, (err, authAttempt) => {
-
-                        if (err) {
-                            return reply(err);
+                    AuthAttempt.create(
+                        {
+                            ip,
+                            username
                         }
+                    ).then((authAttempt) => {
 
                         return reply(Boom.badRequest('Username and password combination not found or account is inactive.'));
+
+                    }, (err) => {
+
+                        return reply(err);
                     });
                 }
             }, {
                 assign: 'session',
                 method: function (request, reply) {
 
-                    Session.create(request.pre.user._id.toString(), (err, session) => {
+                    const Session = request.getDb('aqua').getModel('Session');
+                    Session.createNew(request.pre.user.id.toString(), (err, session) => {
 
                         if (err) {
                             return reply(err);
                         }
-
                         return reply(session);
                     });
                 }
@@ -99,12 +113,12 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const credentials = request.pre.session._id.toString() + ':' + request.pre.session.key;
+            const credentials = request.pre.session.id.toString() + ':' + request.pre.session.key;
             const authHeader = 'Basic ' + new Buffer(credentials).toString('base64');
 
             const result = {
                 user: {
-                    _id: request.pre.user._id,
+                    id: request.pre.user.id,
                     username: request.pre.user.username,
                     email: request.pre.user.email,
                     roles: request.pre.user.roles
@@ -132,28 +146,36 @@ internals.applyRoutes = function (server, next) {
                 assign: 'user',
                 method: function (request, reply) {
 
+                    const User = request.getDb('aqua').getModel('User');
+
                     const conditions = {
                         email: request.payload.email
                     };
 
-                    User.findOne(conditions, (err, user) => {
-
-                        if (err) {
-                            return reply(err);
+                    User.findOne(
+                        {
+                            where : conditions
                         }
+                    ).then((user) => {
 
                         if (!user) {
-                            return reply({ message: 'Success.' }).takeover();
+                            reply({ message: 'Success.' }).takeover();
                         }
+                        else {
+                            reply(user);
+                        }
+                    }, (err) => {
 
-                        reply(user);
+                        reply(err);
                     });
+
                 }
             }]
         },
         handler: function (request, reply) {
 
             const mailer = request.server.plugins.mailer;
+            const Session = request.getDb('aqua').getModel('Session');
 
             Async.auto({
                 keyHash: function (done) {
@@ -162,17 +184,19 @@ internals.applyRoutes = function (server, next) {
                 },
                 user: ['keyHash', function (results, done) {
 
-                    const id = request.pre.user._id.toString();
-                    const update = {
-                        $set: {
-                            resetPassword: {
-                                token: results.keyHash.hash,
-                                expires: Date.now() + 10000000
-                            }
+                    request.pre.user.update(
+                        {
+                            reset_token : results.keyHash.hash,
+                            reset_expires: Date.now() + 10000000
                         }
-                    };
+                    ).then( (user) => {
 
-                    User.findByIdAndUpdate(id, update, done);
+                        done(null);
+                    }, ( err ) => {
+
+                        done(err);
+                    });
+                    //User.findByIdAndUpdate(id, update, done);
                 }],
                 email: ['user', function (results, done) {
 
@@ -187,6 +211,8 @@ internals.applyRoutes = function (server, next) {
                         key: results.keyHash.key
                     };
 
+                    //console.log("key ", results.keyHash.key);
+                    //done();
                     mailer.sendEmail(emailOptions, template, context, done);
                 }]
             }, (err, results) => {
@@ -216,23 +242,28 @@ internals.applyRoutes = function (server, next) {
                 assign: 'user',
                 method: function (request, reply) {
 
+                    const User = request.getDb('aqua').getModel('User');
                     const conditions = {
                         email: request.payload.email,
-                        'resetPassword.expires': { $gt: Date.now() }
+                        'reset_expires': { $gt: Date.now() }
                     };
 
-                    User.findOne(conditions, (err, user) => {
+                    User.findOne(
+                        {
+                            where: conditions
+                        }).then((user) => {
 
-                        if (err) {
-                            return reply(err);
+                            if (!user) {
+                                return reply(Boom.badRequest('Invalid email or key.'));
+                            }
+
+                            reply(user);
+                        },
+                        (err) => {
+
+                            reply(err);
                         }
-
-                        if (!user) {
-                            return reply(Boom.badRequest('Invalid email or key.'));
-                        }
-
-                        reply(user);
-                    });
+                    );
                 }
             }]
         },
@@ -242,7 +273,7 @@ internals.applyRoutes = function (server, next) {
                 keyMatch: function (done) {
 
                     const key = request.payload.key;
-                    const token = request.pre.user.resetPassword.token;
+                    const token = request.pre.user.reset_token;
                     Bcrypt.compare(key, token, done);
                 },
                 passwordHash: ['keyMatch', function (results, done) {
@@ -250,22 +281,16 @@ internals.applyRoutes = function (server, next) {
                     if (!results.keyMatch) {
                         return reply(Boom.badRequest('Invalid email or key.'));
                     }
+                    request.pre.user.update({
+                        password:request.payload.password,
+                        reset_token: undefined
+                    }).then( (user) => {
 
-                    User.generatePasswordHash(request.payload.password, done);
-                }],
-                user: ['passwordHash', function (results, done) {
+                        done(null, user);
+                    }, (err) => {
 
-                    const id = request.pre.user._id.toString();
-                    const update = {
-                        $set: {
-                            password: results.passwordHash.hash
-                        },
-                        $unset: {
-                            resetPassword: undefined
-                        }
-                    };
-
-                    User.findByIdAndUpdate(id, update, done);
+                        done(err);
+                    } );
                 }]
             }, (err, results) => {
 
@@ -285,7 +310,7 @@ internals.applyRoutes = function (server, next) {
 
 exports.register = function (server, options, next) {
 
-    server.dependency(['mailer', 'hapi-mongo-models'], internals.applyRoutes);
+    server.dependency(['mailer', 'hapi-sequelize', 'dbconfig'], internals.applyRoutes);
 
     next();
 };

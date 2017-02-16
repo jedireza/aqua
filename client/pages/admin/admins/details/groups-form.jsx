@@ -14,7 +14,7 @@ const propTypes = {
     showSaveSuccess: React.PropTypes.bool,
     options: React.PropTypes.array,
     adminId: React.PropTypes.string,
-    groups: React.PropTypes.object
+    groups: React.PropTypes.array
 };
 
 
@@ -38,11 +38,16 @@ class GroupsForm extends React.Component {
             return;
         }
 
-        const label = selectedOption.innerText;
+        //const label = selectedOption.innerText;
         const value = selectedOption.value;
         const updatedGroups = this.state.groups;
+        const group = this.props.options.find( ( g ) => {
 
-        updatedGroups[value] = label;
+            if ( g.id === value){
+                return true;
+            }
+        });
+        updatedGroups.push(group);
 
         this.setState({
             groups: updatedGroups,
@@ -54,7 +59,12 @@ class GroupsForm extends React.Component {
 
         const updatedGroups = this.state.groups;
 
-        delete updatedGroups[key];
+        for ( let i = updatedGroups.length - 1; i >= 0; --i){
+            if ( updatedGroups[i].id === key){
+                updatedGroups.splice(i,1);
+                break;
+            }
+        };
 
         this.setState({
             groups: updatedGroups,
@@ -69,7 +79,10 @@ class GroupsForm extends React.Component {
 
         const id = this.props.adminId;
         const data = {
-            groups: this.state.groups
+            groups: this.state.groups.map( (group) => {
+
+                return group.id;
+            })
         };
 
         Actions.saveGroups(id, data);
@@ -97,24 +110,24 @@ class GroupsForm extends React.Component {
         }
 
         const groups = this.state.groups;
-        const groupKeys = Object.keys(groups).sort((a, b) => {
+        groups.sort((a, b) => {
 
-            return a.toLowerCase().localeCompare(b.toLowerCase());
+            return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
         });
-        let groupsUi = groupKeys.map((key) => {
+        let groupsUi = groups.map((group) => {
 
-            const deleteHandler = this.handleDeleteGroup.bind(this, key);
+            const deleteHandler = this.handleDeleteGroup.bind(this, group.id);
 
             return (
                 <div
-                    key={key}
+                    key={group.id}
                     className="input-group">
 
                     <input
                         type="text"
                         className="form-control"
                         disabled={true}
-                        value={this.state.groups[key]}
+                        value={group.name}
                     />
                     <span className="input-group-btn">
                         <button
@@ -130,20 +143,23 @@ class GroupsForm extends React.Component {
             );
         });
 
-        if (groupKeys.length === 0) {
+        if (groups.length === 0) {
             groupsUi = <div>
                 <span className="label label-default">none</span>
             </div>;
         }
 
-        const currentGroupIds = Object.keys(groups);
+        const currentGroupIds = groups.map((group) => {
+
+            return group.id;
+        });
         const groupOptions = this.props.options.map((group) => {
 
             return (
                 <option
-                    key={group._id}
-                    value={group._id}
-                    disabled={currentGroupIds.includes(group._id)}>
+                    key={group.id}
+                    value={group.id}
+                    disabled={currentGroupIds.includes(group.id)}>
 
                     {group.name}
                 </option>

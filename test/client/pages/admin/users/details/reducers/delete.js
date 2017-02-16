@@ -16,7 +16,7 @@ lab.experiment('Admin Users Delete Reducer', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz'
+                id: 'abcxyz'
             }
         });
 

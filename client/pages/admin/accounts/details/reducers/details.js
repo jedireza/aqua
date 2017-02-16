@@ -12,8 +12,10 @@ const initialState = {
     error: undefined,
     hasError: {},
     help: {},
-    _id: undefined,
-    name: {}
+    id: undefined,
+    first: undefined,
+    middle: undefined,
+    last: undefined
 };
 const reducer = function (state = initialState, action) {
 
@@ -32,15 +34,19 @@ const reducer = function (state = initialState, action) {
             loading: false,
             showFetchFailure: !!action.err,
             error: validation.error,
-            _id: action.response._id,
-            name: action.response.name
+            id: action.response.id,
+            first: action.response.first,
+            middle: action.response.middle,
+            last: action.response.last
         });
     }
 
     if (action.type === Constants.SAVE_DETAILS) {
         return ObjectAssign({}, state, {
             loading: true,
-            name: action.request.data.name
+            first: action.request.data.first,
+            middle: action.request.data.middle,
+            last: action.request.data.last
         });
     }
 
@@ -54,8 +60,14 @@ const reducer = function (state = initialState, action) {
             help: validation.help
         };
 
-        if (action.response.hasOwnProperty('name')) {
-            stateUpdates.name = action.response.name;
+        if (action.response.hasOwnProperty('first')) {
+            stateUpdates.first = action.response.first;
+        }
+        if (action.response.hasOwnProperty('middle')) {
+            stateUpdates.middle = action.response.middle;
+        }
+        if (action.response.hasOwnProperty('last')) {
+            stateUpdates.last = action.response.last;
         }
 
         return ObjectAssign({}, state, stateUpdates);

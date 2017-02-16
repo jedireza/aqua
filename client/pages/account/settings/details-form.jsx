@@ -16,11 +16,9 @@ const propTypes = {
     error: React.PropTypes.string,
     hasError: React.PropTypes.object,
     help: React.PropTypes.object,
-    name: React.PropTypes.shape({
-        first: React.PropTypes.string,
-        middle: React.PropTypes.string,
-        last: React.PropTypes.string
-    })
+    first: React.PropTypes.string,
+    middle: React.PropTypes.string,
+    last: React.PropTypes.string
 };
 
 
@@ -30,14 +28,18 @@ class DetailsForm extends React.Component {
         super(props);
 
         this.state = {
-            name: props.name
+            first: props.first,
+            middle: props.middle,
+            last: props.last
         };
     }
 
     componentWillReceiveProps(nextProps) {
 
         this.setState({
-            name: nextProps.name
+            first: nextProps.first,
+            middle: nextProps.middle,
+            last: nextProps.last
         });
     }
 
@@ -47,7 +49,9 @@ class DetailsForm extends React.Component {
         event.stopPropagation();
 
         Actions.saveDetails({
-            name: this.state.name
+            first: this.state.first,
+            middle: this.state.middle,
+            last: this.state.last
         });
     }
 
@@ -86,30 +90,30 @@ class DetailsForm extends React.Component {
                     <legend>Contact info</legend>
                     {alerts}
                     <TextControl
-                        name="name.first"
+                        name="first"
                         label="First name"
-                        value={this.state.name.first}
+                        value={this.state.first}
                         onChange={LinkState.bind(this)}
-                        hasError={this.props.hasError['name.first']}
-                        help={this.props.help['name.first']}
+                        hasError={this.props.hasError.first}
+                        help={this.props.help.first}
                         disabled={this.props.loading}
                     />
                     <TextControl
-                        name="name.middle"
+                        name="middle"
                         label="Middle name"
-                        value={this.state.name.middle}
+                        value={this.state.middle}
                         onChange={LinkState.bind(this)}
-                        hasError={this.props.hasError['name.middle']}
-                        help={this.props.help['name.middle']}
+                        hasError={this.props.hasError.middle}
+                        help={this.props.help.middle}
                         disabled={this.props.loading}
                     />
                     <TextControl
-                        name="name.last"
+                        name="last"
                         label="Last name"
-                        value={this.state.name.last}
+                        value={this.state.last}
                         onChange={LinkState.bind(this)}
-                        hasError={this.props.hasError['name.last']}
-                        help={this.props.help['name.last']}
+                        hasError={this.props.hasError.last}
+                        help={this.props.help.last}
                         disabled={this.props.loading}
                     />
                     <ControlGroup hideLabel={true} hideHelp={true}>

@@ -16,8 +16,9 @@ const Form = Proxyquire('../../../../../../client/pages/admin/admin-groups/detai
 const defaultProps = {
     hasError: {},
     help: {},
+    options: [],
     adminId: undefined,
-    permissions: {}
+    permissionEntries: []
 };
 
 
@@ -34,6 +35,7 @@ lab.experiment('Admin Groups Permissions Form', () => {
     });
 
 
+    /* there are no text boxes anymore
     lab.test('it handles adding a new permission (only when one is supplied, with a button click or enter key)', (done) => {
 
         const FormEl = React.createElement(Form, defaultProps);
@@ -58,28 +60,41 @@ lab.experiment('Admin Groups Permissions Form', () => {
         Code.expect(form.state.permissions).to.have.length(1);
 
         done();
-    });
+    });*/
 
 
     lab.test('it handles toggling a permission', (done) => {
 
         const props = Object.assign({}, defaultProps, {
-            permissions: {
-                FOO: true,
-                BAR: false
-            }
+            permissionEntries: [
+                {
+                    id: 'abc', active: true,
+                    Permission: { id: 'abc',  name: 'goo' }
+                },
+                {
+                    id: 'def', active: false,
+                    Permission:  { id: 'def', name: 'boo' }
+                }
+            ]
         });
         const FormEl = React.createElement(Form, props);
         const form = ReactTestUtils.renderIntoDocument(FormEl);
 
-        Code.expect(form.state.permissions.FOO).to.be.true();
-        Code.expect(form.state.permissions.BAR).to.be.false();
+        const find = (id) => {
 
-        form.handleTogglePermission('FOO');
-        form.handleTogglePermission('BAR');
+            return form.state.permissionEntries.find( ( elem ) => {
 
-        Code.expect(form.state.permissions.FOO).to.be.false();
-        Code.expect(form.state.permissions.BAR).to.be.true();
+                return elem.id === id;
+            });
+        };
+        Code.expect(find('abc').active).to.be.true();
+        Code.expect(find('def').active).to.be.false();
+
+        form.handleTogglePermission('abc');
+        form.handleTogglePermission('def');
+
+        Code.expect(find('abc').active).to.be.false();
+        Code.expect(find('def').active).to.be.true();
 
         done();
     });
@@ -88,20 +103,26 @@ lab.experiment('Admin Groups Permissions Form', () => {
     lab.test('it handles removing a permission', (done) => {
 
         const props = Object.assign({}, defaultProps, {
-            permissions: {
-                FOO: true,
-                BAR: false
-            }
+            permissionEntries: [
+                {
+                    id: 'abc', active: true,
+                    Permission: { id: 'abc',  name: 'goo' }
+                },
+                {
+                    id: 'def', active: false,
+                    Permission:  { id: 'def',  name: 'boo' }
+                }
+            ]
         });
         const FormEl = React.createElement(Form, props);
         const form = ReactTestUtils.renderIntoDocument(FormEl);
         const button = ReactTestUtils.scryRenderedDOMComponentsWithClass(form, 'btn-warning')[0];
 
-        Code.expect(form.state.permissions).to.have.length(2);
+        Code.expect(form.state.permissionEntries).to.have.length(2);
 
         ReactTestUtils.Simulate.click(button);
 
-        Code.expect(form.state.permissions).to.have.length(1);
+        Code.expect(form.state.permissionEntries).to.have.length(1);
 
         done();
     });

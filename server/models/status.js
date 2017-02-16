@@ -1,47 +1,86 @@
 'use strict';
-const Joi = require('joi');
-const MongoModels = require('mongo-models');
-const Slug = require('slug');
 
+module.exports = function (sequelize, DataTypes){
 
-class Status extends MongoModels {
-    static create(pivot, name, callback) {
+    const Status = sequelize.define('Status', {
+        id: {
+            primaryKey: true,
+            defaultValue: DataTypes.UUIDV1,
+            type: DataTypes.UUID
+        },
+        pivot: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: { min: 1 }
+        },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: { min: 1 }
+        }
+    }, {
+        classMethods: {
+            associate: function (db) {
 
-        const document = {
-            _id: Slug(pivot + ' ' + name).toLowerCase(),
-            pivot,
-            name
-        };
+                Status.hasMany(db.StatusEntry, { foreignKey: 'status_id' });
+            },
+            pagedFind: function (where, page, limit, order, callback){
 
-        this.insertOne(document, (err, docs) => {
+                const offset = (page - 1) * limit;
+                this.findAndCount(
+                    {
+                        where,
+                        offset,
+                        limit,
+                        order
+                    }
+        ).then((result) => {
 
-            if (err) {
-                return callback(err);
+            const output = {
+                data: undefined,
+                pages: {
+                    current: page,
+                    prev: 0,
+                    hasPrev: false,
+                    next: 0,
+                    hasNext: false,
+                    total: 0
+                },
+                items: {
+                    limit,
+                    begin: ((page * limit) - limit) + 1,
+                    end: page * limit,
+                    total: 0
+                }
+            };
+            output.data = result.rows;
+            output.items.total = result.count;
+
+          // paging calculations
+            output.pages.total = Math.ceil(output.items.total / limit);
+            output.pages.next = output.pages.current + 1;
+            output.pages.hasNext = output.pages.next <= output.pages.total;
+            output.pages.prev = output.pages.current - 1;
+            output.pages.hasPrev = output.pages.prev !== 0;
+            if (output.items.begin > output.items.total) {
+                output.items.begin = output.items.total;
+            }
+            if (output.items.end > output.items.total) {
+                output.items.end = output.items.total;
             }
 
-            callback(null, docs[0]);
+            callback(null, output);
+
+
+        }, (err) => {
+
+            return callback(err);
         });
-    }
-}
 
+            }
+        },
+        version: true
+    });
 
-Status.collection = 'statuses';
-
-
-Status._idClass = String;
-
-
-Status.schema = Joi.object().keys({
-    _id: Joi.string(),
-    pivot: Joi.string().required(),
-    name: Joi.string().required()
-});
-
-
-Status.indexes = [
-    { key: { pivot: 1 } },
-    { key: { name: 1 } }
-];
-
-
-module.exports = Status;
+    return Status;
+};

@@ -15,21 +15,20 @@ lab.experiment('Admin Accounts Search Results', () => {
 
         const props = {
             data: [{
-                _id: 'abcxyz',
-                name: {
-                    first: 'Ren',
-                    middle: '',
-                    last: 'Hoek'
+                id: 'abcxyz',
+                first: 'Ren',
+                middle: '',
+                last: 'Hoek',
+                User: {
+                    username: 'RenH'
                 }
             }, {
-                _id: 'xyzabc',
-                name: {
-                    first: 'Stimpson',
-                    middle: '',
-                    last: 'Cat'
-                },
-                user: {
-                    name: 'stimpy'
+                id: 'xyzabc',
+                first: 'Stimpson',
+                middle: '',
+                last: 'Cat',
+                User: {
+                    username: 'stimpy'
                 }
             }]
         };

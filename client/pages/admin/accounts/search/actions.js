@@ -55,7 +55,7 @@ class Actions {
                 if (!err) {
                     this.hideCreateNew();
 
-                    const path = `/admin/accounts/${response._id}`;
+                    const path = `/admin/accounts/${response.id}`;
 
                     ReactRouter.browserHistory.push(path);
 

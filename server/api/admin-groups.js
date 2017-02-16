@@ -1,7 +1,6 @@
 'use strict';
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
-const EscapeRegExp = require('escape-string-regexp');
 const Joi = require('joi');
 
 
@@ -9,9 +8,6 @@ const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
-
-    const AdminGroup = server.plugins['hapi-mongo-models'].AdminGroup;
-
 
     server.route({
         method: 'GET',
@@ -25,27 +21,30 @@ internals.applyRoutes = function (server, next) {
                 query: {
                     name: Joi.string().allow(''),
                     fields: Joi.string(),
-                    sort: Joi.string().default('_id'),
+                    sort: Joi.string().default('id'),
                     limit: Joi.number().default(20),
                     page: Joi.number().default(1)
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
+            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
+            const Admin = request.getDb('aqua').getModel('Admin');
             const query = {};
-            if (request.query.name) {
-                query.name = new RegExp('^.*?' + EscapeRegExp(request.query.name) + '.*$', 'i');
+            const include = [{ model: Admin }];
+            if (request.query.username) {
+                query.name = { $like : '%' + request.query.name + '%'  };
             }
-            const fields = request.query.fields;
+            //const fields = request.query.fields;
             const sort = request.query.sort;
             const limit = request.query.limit;
             const page = request.query.page;
 
-            AdminGroup.pagedFind(query, fields, sort, limit, page, (err, results) => {
+            AdminGroup.pagedFind(query, page, limit, sort, include, (err, results) => {
 
                 if (err) {
                     return reply(err);
@@ -66,22 +65,35 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            AdminGroup.findById(request.params.id, (err, adminGroup) => {
-
-                if (err) {
-                    return reply(err);
+            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
+            const Admin = request.getDb('aqua').getModel('Admin');
+            const AdminGroupPermissionEntry = request.getDb('aqua').getModel('AdminGroupPermissionEntry');
+            const Permission = request.getDb('aqua').getModel('Permission');
+            AdminGroup.findOne(
+                {
+                    where: {
+                        id: request.params.id
+                    },
+                    include: [{ model : Admin },
+                               { model: AdminGroupPermissionEntry, include: [{ model: Permission }] }
+                    ]
                 }
+            ).then((adminGroup) => {
 
                 if (!adminGroup) {
-                    return reply(Boom.notFound('Document not found.'));
+                    return reply(Boom.notFound('Admin Group not found.'));
                 }
 
                 reply(adminGroup);
+
+            }, (err) => {
+
+                return reply(err);
             });
         }
     });
@@ -101,19 +113,23 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            const name = request.payload.name;
+            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
 
-            AdminGroup.create(name, (err, adminGroup) => {
+            AdminGroup.create({
+                name: request.payload.name
+            }).then((adminGroup) => {
+
+                reply(adminGroup);
+            }, (err) => {
 
                 if (err) {
                     return reply(err);
                 }
-
                 reply(adminGroup);
             });
         }
@@ -130,37 +146,42 @@ internals.applyRoutes = function (server, next) {
             },
             validate: {
                 params: {
-                    id: Joi.string().invalid('root')
+                    id: Joi.string().invalid('Root')
                 },
                 payload: {
                     name: Joi.string().required()
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
             const id = request.params.id;
-            const update = {
-                $set: {
+            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
+            AdminGroup.update(
+                {
                     name: request.payload.name
+                },
+                {
+                    where:{
+                        id
+                    }
                 }
-            };
-
-            AdminGroup.findByIdAndUpdate(id, update, (err, adminGroup) => {
-
-                if (err) {
-                    return reply(err);
-                }
+            ).then((adminGroup) => {
 
                 if (!adminGroup) {
-                    return reply(Boom.notFound('Document not found.'));
+                    return reply(Boom.notFound('Admin Group not found.'));
                 }
 
                 reply(adminGroup);
+
+            }, (err) => {
+
+                return reply(err);
             });
+
         }
     });
 
@@ -175,32 +196,57 @@ internals.applyRoutes = function (server, next) {
             },
             validate: {
                 params: {
-                    id: Joi.string().invalid('root')
+                    id: Joi.string().invalid('Root')
                 },
                 payload: {
-                    permissions: Joi.object().required()
+                    permissionEntries: Joi.array().required()
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
             const id = request.params.id;
-            const update = {
-                $set: {
-                    permissions: request.payload.permissions
+            const AdminGroupPermissionEntry = request.getDb('aqua').getModel('AdminGroupPermissionEntry');
+            const Permission = request.getDb('aqua').getModel('Permission');
+            const adminGroupPermissionEntries = request.payload.permissionEntries;
+            const ids = adminGroupPermissionEntries.map((permission) => {
+
+                return permission.id;
+            });
+            //delete those not in set
+            AdminGroupPermissionEntry.destroy(
+                {
+                    where : {
+                        admin_group_id : id,
+                        id : { $notIn: ids }
+                    }
                 }
-            };
+            ).then((count) => {
 
-            AdminGroup.findByIdAndUpdate(id, update, (err, adminGroup) => {
+                const promises = adminGroupPermissionEntries.map((agpe) => {
 
-                if (err) {
-                    return reply(err);
-                }
+                    return AdminGroupPermissionEntry.upsert(
+                        agpe
+                    );
+                });
+                return Promise.all(promises);
+            }).then((results) => {
 
-                reply(adminGroup);
+                return AdminGroupPermissionEntry.findAll(
+                    {
+                        where : { admin_group_id: id },
+                        include: [{ model: Permission }]
+                    }
+                );
+            }).then( (permissionEntries) => {
+
+                reply({ permissionEntries });
+            }, (err) => {
+
+                return reply(err);
             });
         }
     });
@@ -216,26 +262,31 @@ internals.applyRoutes = function (server, next) {
             },
             validate: {
                 params: {
-                    id: Joi.string().invalid('root')
+                    id: Joi.string().invalid('Root')
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            AdminGroup.findByIdAndDelete(request.params.id, (err, adminGroup) => {
+            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
 
-                if (err) {
-                    return reply(err);
+            AdminGroup.destroy(
+                {
+                    where: { id: request.params.id }
                 }
+            ).then((count) => {
 
-                if (!adminGroup) {
-                    return reply(Boom.notFound('Document not found.'));
+                if (count === 0) {
+                    return reply(Boom.notFound('Admin Group not found.'));
                 }
 
                 reply({ message: 'Success.' });
+            }, (err) => {
+
+                reply(err);
             });
         }
     });
@@ -247,7 +298,7 @@ internals.applyRoutes = function (server, next) {
 
 exports.register = function (server, options, next) {
 
-    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
+    server.dependency(['auth', 'hapi-sequelize', 'dbconfig'], internals.applyRoutes);
 
     next();
 };

@@ -19,7 +19,7 @@ const propTypes = {
     help: React.PropTypes.object,
     id: React.PropTypes.string,
     loading: React.PropTypes.bool,
-    name: React.PropTypes.string,
+    username: React.PropTypes.string,
     showSaveSuccess: React.PropTypes.bool
 };
 
@@ -89,7 +89,7 @@ class UserForm extends React.Component {
                         type="text"
                         className="form-control"
                         disabled={true}
-                        value={this.props.name}
+                        value={this.props.username}
                     />
                     <span className="input-group-btn">
                         <Link

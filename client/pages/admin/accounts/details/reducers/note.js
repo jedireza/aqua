@@ -19,10 +19,10 @@ const reducer = function (state = initialState, action) {
     if (action.type === Constants.GET_DETAILS_RESPONSE) {
         const stateUpdates = ObjectAssign({}, initialState);
 
-        stateUpdates.accountId = action.response._id;
+        stateUpdates.accountId = action.response.id;
 
-        if (action.response.hasOwnProperty('notes')) {
-            stateUpdates.notes = action.response.notes.reverse();
+        if (action.response.hasOwnProperty('NoteEntries')) {
+            stateUpdates.notes = action.response.NoteEntries.reverse();
         }
 
         return ObjectAssign({}, stateUpdates);
@@ -45,9 +45,9 @@ const reducer = function (state = initialState, action) {
             help: validation.help
         };
 
-        if (action.response.hasOwnProperty('notes')) {
+        if (action.response.hasOwnProperty('NoteEntries')) {
             stateUpdates.newNote = '';
-            stateUpdates.notes = action.response.notes.reverse();
+            stateUpdates.notes = action.response.NoteEntries.reverse();
         }
 
         return ObjectAssign({}, state, stateUpdates);

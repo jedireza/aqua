@@ -23,6 +23,7 @@ class DetailsPage extends React.Component {
 
         Actions.getDetails(this.props.params.id);
         Actions.getGroupOptions();
+        Actions.getPermissions();
 
         this.state = Store.getState();
     }
@@ -67,9 +68,10 @@ class DetailsPage extends React.Component {
             );
         }
 
-        const id = this.state.details._id;
-        const name = this.state.details.name;
-        const fullName = `${name.first} ${name.last}`;
+        const id = this.state.details.id;
+        const first = this.state.details.first;
+        const last = this.state.details.last;
+        const fullName = `${first} ${last}`;
 
         return (
             <section className="container">

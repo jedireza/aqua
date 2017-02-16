@@ -3,8 +3,10 @@ const Code = require('code');
 const Lab = require('lab');
 const Proxyquire = require('proxyquire');
 
-
 const lab = exports.lab = Lab.script();
+//stubs say what you want replace.
+//then later you attach the mock you want use for a given
+//circumstance
 const stub = {
     JsonFetch: function () {
 
@@ -78,7 +80,7 @@ lab.experiment('Api Actions', () => {
         Actions.makeRequest({}, stub.Store, typeReq, typeRes);
     });
 
-
+/*
     lab.test('it makes a GET request with the get function', (done) => {
 
         const makeRequest = Actions.makeRequest;
@@ -131,6 +133,7 @@ lab.experiment('Api Actions', () => {
 
         Actions.post('/', { foo: 'post' }, stub.Store, typeReq, typeRes);
     });
+    */
 
 
     lab.test('it makes a DELETE request with the delete function', (done) => {

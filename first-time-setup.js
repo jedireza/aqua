@@ -1,153 +1,241 @@
 'use strict';
 const Async = require('async');
-const MongoModels = require('mongo-models');
-const Mongodb = require('mongodb');
+const Sequelize = require('sequelize');
 const Promptly = require('promptly');
 
 
 Async.auto({
-    mongodbUri: (done) => {
+    pgName: (done) => {
 
         const options = {
-            default: 'mongodb://localhost:27017/aqua'
+            default: 'aqua'
+        };
+        Promptly.prompt(`Postgres DB Name: (${options.default})`, options, done);
+    },
+    pgUser:['pgName', (results, done) => {
+
+        const options = {
+            default: 'aqua'
         };
 
-        Promptly.prompt(`MongoDB URI: (${options.default})`, options, done);
-    },
-    testMongo: ['mongodbUri', (results, done) => {
-
-        Mongodb.MongoClient.connect(results.mongodbUri, {}, (err, db) => {
-
-            if (err) {
-                console.error('Failed to connect to Mongodb.');
-                return done(err);
-            }
-
-            db.close();
-            done(null, true);
-        });
+        Promptly.prompt(`Postgres DB User: (${options.default})`, options, done);
     }],
-    rootEmail: ['testMongo', (results, done) => {
+    pgPass: ['pgUser', (results, done) => {
 
-        Promptly.prompt('Root user email:', done);
+        const options = {
+            default: 'test'
+        };
+        Promptly.prompt(`Postgres DB Password: (${options.default})`, options, done);
+    }],
+    testPg: ['pgPass', (results, done) => {
+
+        const sequelize = new Sequelize(results.pgName, results.pgUser, results.pgPass, {
+            host: 'localhost',
+            dialect: 'postgres',
+            pool: {
+                max: 5,
+                min: 0,
+                idle: 10000
+            }
+        });
+        sequelize.authenticate().then(
+             () => {
+
+                 console.log('connection successfull');
+                 done(null, sequelize);
+             },
+             (err) => {
+
+                 console.log('connection error: ', err);
+                 return done(err);
+             }
+        );
+    }],
+    pgTestName: ['testPg', (results, done) => {
+
+        const options = {
+            default: 'aqua_test'
+        };
+        Promptly.prompt(`Postgres Test DB Name: (${options.default})`, options, done);
+    }],
+    pgTestUser:['pgTestName', (results, done) => {
+
+        const options = {
+            default: 'aqua'
+        };
+
+        Promptly.prompt(`Postgres Test DB User: (${options.default})`, options, done);
+    }],
+    pgTestPass: ['pgTestUser', (results, done) => {
+
+        const options = {
+            default: 'test'
+        };
+        Promptly.prompt(`Postgres Test DB Password: (${options.default})`, options, done);
+    }],
+    testTestPg: ['pgTestPass', (results, done) => {
+
+        const sequelize = new Sequelize(results.pgTestName, results.pgTestUser, results.pgTestPass, {
+            host: 'localhost',
+            dialect: 'postgres',
+            pool: {
+                max: 5,
+                min: 0,
+                idle: 10000
+            }
+        });
+        sequelize.authenticate().then(
+             () => {
+
+                 console.log('connection successfull');
+                 done(null, sequelize);
+             },
+             (err) => {
+
+                 console.log('connection error: ', err);
+                 return done(err);
+             }
+        );
+    }],
+    rootEmail: ['testTestPg', (results, done) => {
+
+        const options = {
+            default: 'root@root.com'
+        };
+        Promptly.prompt('Root user email:', options, done);
     }],
     rootPassword: ['rootEmail', (results, done) => {
 
-        Promptly.password('Root user password:', done);
+        const options = {
+            default: 'password'
+        };
+        Promptly.password('Root user password:', options, done);
     }],
     setupRootUser: ['rootPassword', (results, done) => {
 
-        const Account = require('./server/models/account');
-        const AdminGroup = require('./server/models/admin-group');
-        const Admin = require('./server/models/admin');
-        const AuthAttempt = require('./server/models/auth-attempt');
-        const Session = require('./server/models/session');
-        const Status = require('./server/models/status');
-        const User = require('./server/models/user');
+        const sequelize = results.testPg;
+        const Account = sequelize.import('./server/models/account');
+        const Admin = sequelize.import('./server/models/admin');
+        const AdminGroup = sequelize.import('./server/models/admin-group');
+        sequelize.import('./server/models/admin-group-permission-entry');
+        sequelize.import('./server/models/admin-permission-entry');
+        sequelize.import('./server/models/auth-attempt');
+        sequelize.import('./server/models/note-entry');
+        sequelize.import('./server/models/permission');
+        sequelize.import('./server/models/session');
+        sequelize.import('./server/models/status');
+        sequelize.import('./server/models/status-entry');
+        const User = sequelize.import('./server/models/user');
+
+        Object.keys(sequelize.models).forEach((key) => {
+
+            const model = sequelize.models[key];
+            if ( 'associate' in model){
+                model.associate(sequelize.models);
+            }
+        });
 
         Async.auto({
-            connect: function (done) {
+            sync: function (done){
 
-                MongoModels.connect(results.mongodbUri, {}, done);
+                sequelize.sync({ force: true }).then(() => {
+
+                    done(null);
+                }, (err) => {
+
+                    done(err);
+                });
             },
-            clean: ['connect', (dbResults, done) => {
+            clean: ['sync', (iresults, done) => {
 
-                Async.parallel([
-                    Account.deleteMany.bind(Account, {}),
-                    AdminGroup.deleteMany.bind(AdminGroup, {}),
-                    Admin.deleteMany.bind(Admin, {}),
-                    AuthAttempt.deleteMany.bind(AuthAttempt, {}),
-                    Session.deleteMany.bind(Session, {}),
-                    Status.deleteMany.bind(Status, {}),
-                    User.deleteMany.bind(User, {})
-                ], done);
+                AdminGroup.destroy({ where: {} }).then(() => {
+
+                    return Admin.destroy({ where: {} });
+                }).then(() => {
+
+                    return Account.destroy({ where: {} });
+                }).then(() => {
+
+                    return User.destroy({ where: {} });
+                }).then(() => {
+
+                    done(null);
+                }, (err) => {
+
+                    done(err);
+                });
             }],
-            adminGroup: ['clean', function (dbResults, done) {
+            createAdmin: ['clean', function (iresults, done){
 
-                AdminGroup.create('Root', done);
-            }],
-            admin: ['clean', function (dbResults, done) {
-
-                const document = {
-                    _id: Admin.ObjectId('111111111111111111111111'),
-                    name: {
+                Admin.create(
+                    {
+                        id : '11111111-1111-1111-1111-111111111111',
                         first: 'Root',
                         middle: '',
                         last: 'Admin'
-                    },
-                    timeCreated: new Date()
-                };
+                    }).then((admin) => {
 
-                Admin.insertOne(document, (err, docs) => {
+                        done(null, admin);
+                    }, (err) => {
 
-                    done(err, docs && docs[0]);
-                });
-            }],
-            user: ['clean', function (dbResults, done) {
-
-                Async.auto({
-                    passwordHash: User.generatePasswordHash.bind(this, results.rootPassword)
-                }, (err, passResults) => {
-
-                    if (err) {
-                        return done(err);
-                    }
-
-                    const document = {
-                        _id: Admin.ObjectId('000000000000000000000000'),
-                        isActive: true,
-                        username: 'root',
-                        password: passResults.passwordHash.hash,
-                        email: results.rootEmail.toLowerCase(),
-                        timeCreated: new Date()
-                    };
-
-                    User.insertOne(document, (err, docs) => {
-
-                        done(err, docs && docs[0]);
+                        done(err);
                     });
+
+            }],
+            createAdminGroup: ['clean', function (iresults, done){
+
+                AdminGroup.create(
+                    {
+                        name: 'Root'
+                    }).then((adminGroup) => {
+
+                        done(null, adminGroup);
+                    }, (err) => {
+
+                        done(err);
+                    });
+            }],
+            createUser : ['clean',function (iresults, done){
+
+                User.create({
+                    id : '00000000-0000-0000-0000-000000000000',
+                    username : 'root',
+                    isActive: true,
+                    password : 'test',
+                    email : 'test@test.com'
+                }).then((user) => {
+
+                    done(null, user);
+                }, (err) => {
+
+                    done(err);
                 });
             }],
-            adminMembership: ['admin', function (dbResults, done) {
+            linkUser : ['createUser', 'createAdmin', function (iresults, done){
 
-                const id = dbResults.admin._id.toString();
-                const update = {
-                    $set: {
-                        groups: {
-                            root: 'Root'
-                        }
-                    }
-                };
+                iresults.createAdmin.setUser(iresults.createUser).then(
 
-                Admin.findByIdAndUpdate(id, update, done);
+                    () => {
+
+                        done(null);
+                    }, (err) => {
+
+                    done(err);
+                }
+                );
             }],
-            linkUser: ['admin', 'user', function (dbResults, done) {
+            linkAdmin : ['createAdmin', 'createAdminGroup', function (iresults, done){
 
-                const id = dbResults.user._id.toString();
-                const update = {
-                    $set: {
-                        'roles.admin': {
-                            id: dbResults.admin._id.toString(),
-                            name: 'Root Admin'
-                        }
-                    }
-                };
+                iresults.createAdminGroup.setAdmins(iresults.createAdmin).then(
 
-                User.findByIdAndUpdate(id, update, done);
-            }],
-            linkAdmin: ['admin', 'user', function (dbResults, done) {
+                    () => {
 
-                const id = dbResults.admin._id.toString();
-                const update = {
-                    $set: {
-                        user: {
-                            id: dbResults.user._id.toString(),
-                            name: 'root'
-                        }
-                    }
-                };
+                        done(null);
+                    }, (err) => {
 
-                Admin.findByIdAndUpdate(id, update, done);
+                    done(err);
+                }
+                );
             }]
         }, (err, dbResults) => {
 

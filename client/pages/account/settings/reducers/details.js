@@ -11,11 +11,9 @@ const initialState = {
     error: undefined,
     hasError: {},
     help: {},
-    name: {
-        first: '',
-        middle: '',
-        last: ''
-    }
+    first: '',
+    middle: '',
+    last: ''
 };
 const reducer = function (state = initialState, action) {
 
@@ -28,21 +26,24 @@ const reducer = function (state = initialState, action) {
 
     if (action.type === Constants.GET_DETAILS_RESPONSE) {
         const validation = ParseValidation(action.response);
-
         return ObjectAssign({}, state, {
             loading: false,
             hydrated: true,
             error: validation.error,
             hasError: validation.hasError,
             help: validation.help,
-            name: action.response.name
+            first: action.response.first,
+            middle: action.response.middle,
+            last: action.response.last
         });
     }
 
     if (action.type === Constants.SAVE_DETAILS) {
         return ObjectAssign({}, state, {
             loading: true,
-            name: action.request.data.name
+            first: action.request.data.first,
+            middle: action.request.data.middle,
+            last: action.request.data.last
         });
     }
 
@@ -56,8 +57,14 @@ const reducer = function (state = initialState, action) {
             help: validation.help
         };
 
-        if (action.response.hasOwnProperty('name')) {
-            stateUpdates.name = action.response.name;
+        if (action.response.hasOwnProperty('first')) {
+            stateUpdates.name = action.response.first;
+        }
+        if (action.response.hasOwnProperty('middle')) {
+            stateUpdates.name = action.response.middle;
+        }
+        if (action.response.hasOwnProperty('last')) {
+            stateUpdates.name = action.response.last;
         }
 
         return ObjectAssign({}, state, stateUpdates);

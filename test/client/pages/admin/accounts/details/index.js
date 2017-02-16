@@ -107,11 +107,9 @@ lab.experiment('Admin Accounts Details Page', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                name: {
-                    first: 'Ren',
-                    middle: '',
-                    last: 'Hoek'
-                }
+                first: 'Ren',
+                middle: '',
+                last: 'Hoek'
             }
         });
 

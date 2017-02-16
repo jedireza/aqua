@@ -12,7 +12,8 @@ const Store = require('../../../../../../client/pages/admin/admin-groups/details
 const lab = exports.lab = Lab.script();
 const stub = {
     Actions: {
-        getDetails: () => {}
+        getDetails: () => {},
+        getPermissions: () => {}
     }
 };
 const Page = Proxyquire('../../../../../../client/pages/admin/admin-groups/details/index.jsx', {

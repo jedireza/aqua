@@ -78,6 +78,9 @@ class Navbar extends React.Component {
                             <li className={this.isPathActive(/^\/admin\/statuses/)}>
                                 <Link to="/admin/statuses">Statuses</Link>
                             </li>
+                            <li className={this.isPathActive(/^\/admin\/permissions/)}>
+                                <Link to="/admin/permissions">Permissions</Link>
+                            </li>
                             <li className={this.isPathActive(/^\/admin\/users/)}>
                                 <Link to="/admin/users">Users</Link>
                             </li>

@@ -20,6 +20,7 @@ class DetailsPage extends React.Component {
         super(props);
 
         Actions.getDetails(this.props.params.id);
+        Actions.getPermissions();
 
         this.state = Store.getState();
     }

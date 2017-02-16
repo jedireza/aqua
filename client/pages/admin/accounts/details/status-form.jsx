@@ -70,7 +70,7 @@ class StatusForm extends React.Component {
         const statusOptions = this.props.options.map((status) => {
 
             return (
-                <option key={status._id} value={status._id}>
+                <option key={status.id} value={status.id}>
                     {status.name}
                 </option>
             );
@@ -78,21 +78,20 @@ class StatusForm extends React.Component {
 
         const statusHistory = this.props.log.map((status) => {
 
-            const moment = Moment(status.timeCreated);
+            const moment = Moment(status.createdAt);
 
             return (
-                <li key={status.timeCreated} className="list-group-item">
+                <li key={status.createdAt} className="list-group-item">
                     <span
                         title={moment.toString()}
                         className="badge pull-right">
 
-                        {status.userCreated.name} - {moment.fromNow()}
+                        {status.User.username} - {moment.fromNow()}
                     </span>
                     {status.name}
                 </li>
             );
         });
-
         const formElements = <fieldset>
             <legend>Status</legend>
             {alerts}

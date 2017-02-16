@@ -12,7 +12,7 @@ const initialState = {
     error: undefined,
     hasError: {},
     help: {},
-    _id: undefined,
+    id: undefined,
     pivot: undefined,
     name: undefined
 };
@@ -33,7 +33,7 @@ const reducer = function (state = initialState, action) {
             loading: false,
             showFetchFailure: !!action.err,
             error: validation.error,
-            _id: action.response._id,
+            id: action.response.id,
             pivot: action.response.pivot,
             name: action.response.name
         });

@@ -20,7 +20,7 @@ lab.experiment('Admin Accounts User Reducer', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz'
+                id: 'abcxyz'
             }
         });
 
@@ -34,10 +34,10 @@ lab.experiment('Admin Accounts User Reducer', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz',
-                user: {
+                id: 'abcxyz',
+                User: {
                     id: '123789',
-                    name: 'ren'
+                    username: 'ren'
                 }
             }
         });
@@ -45,7 +45,7 @@ lab.experiment('Admin Accounts User Reducer', () => {
         state = Store.getState().user;
 
         Code.expect(state.id).to.equal('123789');
-        Code.expect(state.name).to.equal('ren');
+        Code.expect(state.username).to.equal('ren');
 
         done();
     });
@@ -76,7 +76,7 @@ lab.experiment('Admin Accounts User Reducer', () => {
             type: Constants.LINK_USER_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz'
+                id: 'abcxyz'
             }
         });
 
@@ -90,10 +90,10 @@ lab.experiment('Admin Accounts User Reducer', () => {
             type: Constants.LINK_USER_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz',
-                user: {
+                id: 'abcxyz',
+                User: {
                     id: '789123',
-                    name: 'stimpy'
+                    username: 'stimpy'
                 }
             }
         });
@@ -102,7 +102,7 @@ lab.experiment('Admin Accounts User Reducer', () => {
 
         Code.expect(state.loading).to.be.false();
         Code.expect(state.id).to.equal('789123');
-        Code.expect(state.name).to.equal('stimpy');
+        Code.expect(state.username).to.equal('stimpy');
 
         done();
     });
@@ -129,7 +129,7 @@ lab.experiment('Admin Accounts User Reducer', () => {
             type: Constants.UNLINK_USER_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz'
+                id: 'abcxyz'
             }
         });
 
@@ -143,10 +143,10 @@ lab.experiment('Admin Accounts User Reducer', () => {
             type: Constants.UNLINK_USER_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz',
-                user: {
+                id: 'abcxyz',
+                User: {
                     id: '789123',
-                    name: 'stimpy'
+                    username: 'stimpy'
                 }
             }
         });
@@ -155,7 +155,7 @@ lab.experiment('Admin Accounts User Reducer', () => {
 
         Code.expect(state.loading).to.be.false();
         Code.expect(state.id).to.equal('789123');
-        Code.expect(state.name).to.equal('stimpy');
+        Code.expect(state.username).to.equal('stimpy');
 
         done();
     });

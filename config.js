@@ -11,7 +11,7 @@ const criteria = {
 
 
 const config = {
-    $meta: 'This file configures the plot device.',
+    $meta: 'This file configures the MacDaddy device.',
     projectName: 'Aqua',
     port: {
         web: {
@@ -36,34 +36,35 @@ const config = {
         production: process.env.COOKIE_SECRET,
         $default: '!k3yb04rdK4tz~4qu4~k3yb04rdd0gz!'
     },
-    hapiMongoModels: {
-        mongodb: {
-            uri: {
-                $filter: 'env',
-                production: process.env.MONGODB_URI,
-                test: 'mongodb://localhost:27017/aqua-test',
-                $default: 'mongodb://localhost:27017/aqua'
-            }
-        },
-        autoIndex: true
+    db : {
+        database: 'aqua',
+        username: 'aqua',
+        password: process.env.DB_PASSWORD
+
+    },
+    db_test : {
+        database: 'aqua_test',
+        username: 'aqua',
+        password: 'test'
+
     },
     nodemailer: {
         host: 'smtp.gmail.com',
         port: 465,
         secure: true,
         auth: {
-            user: 'jedireza@gmail.com',
+            user: 'jimlowrey@gmail.com',
             pass: process.env.SMTP_PASSWORD
         }
     },
     system: {
         fromAddress: {
-            name: 'Aqua',
-            address: 'jedireza@gmail.com'
+            name: 'E-Aqua',
+            address: 'jimlowrey@gmail.com'
         },
         toAddress: {
-            name: 'Aqua',
-            address: 'jedireza@gmail.com'
+            name: 'E-Aqua',
+            address: 'jimlowrey@gmail.com'
         }
     }
 };

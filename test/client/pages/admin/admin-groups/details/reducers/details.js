@@ -70,11 +70,7 @@ lab.experiment('Admin Groups Details Reducer', () => {
             type: Constants.SAVE_DETAILS,
             request: {
                 data: {
-                    name: {
-                        first: 'Ren',
-                        middle: '',
-                        last: 'Hoek'
-                    }
+                    name: 'Ren Hoek'
                 }
             }
         });
@@ -82,9 +78,7 @@ lab.experiment('Admin Groups Details Reducer', () => {
         const state = Store.getState().details;
 
         Code.expect(state.loading).to.be.true();
-        Code.expect(state.name.first).to.equal('Ren');
-        Code.expect(state.name.middle).to.equal('');
-        Code.expect(state.name.last).to.equal('Hoek');
+        Code.expect(state.name).to.equal('Ren Hoek');
 
         done();
     });
@@ -96,20 +90,14 @@ lab.experiment('Admin Groups Details Reducer', () => {
             type: Constants.SAVE_DETAILS_RESPONSE,
             err: null,
             response: {
-                name: {
-                    first: 'Ren',
-                    middle: '',
-                    last: 'Hoek'
-                }
+                name: 'Ren Hoek'
             }
         });
 
         const state = Store.getState().details;
 
         Code.expect(state.loading).to.be.false();
-        Code.expect(state.name.first).to.equal('Ren');
-        Code.expect(state.name.middle).to.equal('');
-        Code.expect(state.name.last).to.equal('Hoek');
+        Code.expect(state.name).to.equal('Ren Hoek');
 
         done();
     });

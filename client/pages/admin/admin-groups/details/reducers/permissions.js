@@ -11,7 +11,8 @@ const initialState = {
     hasError: {},
     help: {},
     adminGroupId: undefined,
-    permissions: {},
+    options: [],
+    permissionEntries: [],
     newPermission: ''
 };
 const reducer = function (state = initialState, action) {
@@ -19,11 +20,11 @@ const reducer = function (state = initialState, action) {
     if (action.type === Constants.GET_DETAILS_RESPONSE) {
         const stateUpdates = ObjectAssign({}, initialState);
 
-        stateUpdates.adminGroupId = action.response._id;
+        stateUpdates.adminGroupId = action.response.id;
         stateUpdates.options = state.options;
 
-        if (action.response.hasOwnProperty('permissions')) {
-            stateUpdates.permissions = action.response.permissions;
+        if (action.response.hasOwnProperty('AdminGroupPermissionEntries')) {
+            stateUpdates.permissionEntries = action.response.AdminGroupPermissionEntries;
         }
 
         return ObjectAssign({}, stateUpdates);
@@ -33,6 +34,16 @@ const reducer = function (state = initialState, action) {
         return ObjectAssign({}, state, {
             loading: true
         });
+    }
+
+    if ( action.type === Constants.GET_PERMISSIONS_RESPONSE) {
+        const stateUpdates = {};
+
+        if ( action.response.hasOwnProperty('data')) {
+            stateUpdates.options = action.response.data;
+        }
+
+        return ObjectAssign({}, state, stateUpdates);
     }
 
     if (action.type === Constants.SAVE_PERMISSIONS_RESPONSE) {
@@ -45,8 +56,8 @@ const reducer = function (state = initialState, action) {
             help: validation.help
         };
 
-        if (action.response.hasOwnProperty('permissions')) {
-            stateUpdates.permissions = action.response.permissions;
+        if (action.response.hasOwnProperty('permissionEntries')) {
+            stateUpdates.permissionEntries = action.response.permissionEntries;
         }
 
         return ObjectAssign({}, state, stateUpdates);

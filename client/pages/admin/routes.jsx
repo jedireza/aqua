@@ -12,6 +12,8 @@ const AdminGroupSearch = require('./admin-groups/search/index.jsx');
 const AdminGroupDetails = require('./admin-groups/details/index.jsx');
 const StatusSearch = require('./statuses/search/index.jsx');
 const StatusDetails = require('./statuses/details/index.jsx');
+const PermissionSearch = require('./permissions/search/index.jsx');
+const PermissionDetails = require('./permissions/details/index.jsx');
 const UserSearch = require('./users/search/index.jsx');
 const UserDetails = require('./users/details/index.jsx');
 
@@ -33,6 +35,8 @@ const Routes = (
             <Route path="admin-groups/:id" component={AdminGroupDetails} />
             <Route path="statuses" component={StatusSearch} />
             <Route path="statuses/:id" component={StatusDetails} />
+            <Route path="permissions" component={PermissionSearch} />
+            <Route path="permissions/:id" component={PermissionDetails} />
             <Route path="users" component={UserSearch} />
             <Route path="users/:id" component={UserDetails} />
             <Route path="*" component={NotFound} />

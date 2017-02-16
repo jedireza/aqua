@@ -18,6 +18,17 @@ class Actions {
         );
     }
 
+    static getPermissions() {
+
+        ApiActions.get(
+            '/api/permissions',
+            undefined,
+            Store,
+            Constants.GET_PERMISSIONS,
+            Constants.GET_PERMISSIONS_RESPONSE
+        );
+    }
+
     static saveDetails(id, data) {
 
         ApiActions.put(

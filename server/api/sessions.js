@@ -9,8 +9,6 @@ const internals = {};
 
 internals.applyRoutes = function (server, next) {
 
-    const Session = server.plugins['hapi-mongo-models'].Session;
-
 
     server.route({
         method: 'GET',
@@ -23,24 +21,36 @@ internals.applyRoutes = function (server, next) {
             validate: {
                 query: {
                     fields: Joi.string(),
-                    sort: Joi.string().default('_id'),
+                    sort: Joi.string().default('id'),
                     limit: Joi.number().default(20),
                     page: Joi.number().default(1)
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
+            const Session = request.getDb('aqua').getModel('Session');
             const query = {};
-            const fields = request.query.fields;
-            const sort = request.query.sort;
+            //const fields = request.query.fields;
+            let sort = request.query.sort;
+            let order = '';
+            if ( sort !== ''){
+
+                let dir = 'ASC';
+                if ( sort.indexOf('-') === 0 ) {
+                    dir = 'DESC';
+                    sort = sort.substring(1);
+                }
+                order = [[sort, dir]];
+
+            }
             const limit = request.query.limit;
             const page = request.query.page;
 
-            Session.pagedFind(query, fields, sort, limit, page, (err, results) => {
+            Session.pagedFind(query, page, limit, order, null, (err, results) => {
 
                 if (err) {
                     return reply(err);
@@ -48,6 +58,7 @@ internals.applyRoutes = function (server, next) {
 
                 reply(results);
             });
+
         }
     });
 
@@ -61,22 +72,29 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            Session.findById(request.params.id, (err, session) => {
-
-                if (err) {
-                    return reply(err);
+            const Session = request.getDb('aqua').getModel('Session');
+            Session.findOne(
+                {
+                    where: {
+                        id: request.params.id
+                    }
                 }
+            ).then( (session) => {
 
                 if (!session) {
                     return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply(session);
+
+            }, (err) => {
+
+                return reply(err);
             });
         }
     });
@@ -91,22 +109,26 @@ internals.applyRoutes = function (server, next) {
                 scope: 'admin'
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                AuthPlugin.preware.ensureAdminGroup('Root')
             ]
         },
         handler: function (request, reply) {
 
-            Session.findByIdAndDelete(request.params.id, (err, session) => {
-
-                if (err) {
-                    return reply(err);
+            const Session = request.getDb('aqua').getModel('Session');
+            Session.destroy(
+                {
+                    where: { id : request.params.id }
                 }
+            ).then((count) => {
 
-                if (!session) {
+                if (count === 0) {
                     return reply(Boom.notFound('Document not found.'));
                 }
 
                 reply({ message: 'Success.' });
+            }, (err) => {
+
+                reply(err);
             });
         }
     });
@@ -118,7 +140,7 @@ internals.applyRoutes = function (server, next) {
 
 exports.register = function (server, options, next) {
 
-    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
+    server.dependency(['auth', 'hapi-sequelize', 'dbconfig'], internals.applyRoutes);
 
     next();
 };

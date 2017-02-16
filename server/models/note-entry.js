@@ -1,19 +1,24 @@
 'use strict';
-const Joi = require('joi');
-const MongoModels = require('mongo-models');
 
+module.exports = function (sequelize, DataTypes){
 
-class NoteEntry extends MongoModels {}
+    const NoteEntry = sequelize.define('NoteEntry', {
+        id: {
+            primaryKey: true,
+            defaultValue: DataTypes.UUIDV1,
+            type: DataTypes.UUID
+        },
+        data: { type:DataTypes.STRING, allowNull: false, defaultValue: '' }
 
+    }, {
+        classMethods: {
+            associate: function (db){
 
-NoteEntry.schema = Joi.object().keys({
-    data: Joi.string().required(),
-    timeCreated: Joi.date().required(),
-    userCreated: Joi.object().keys({
-        id: Joi.string().required(),
-        name: Joi.string().lowercase().required()
-    }).required()
-});
+                NoteEntry.belongsTo(db.Account, { foreignKey: 'account_id' });
+                NoteEntry.belongsTo(db.User, { foreignKey: 'user_id' });
+            }
+        }
+    });
 
-
-module.exports = NoteEntry;
+    return NoteEntry;
+};

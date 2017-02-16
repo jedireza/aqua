@@ -16,30 +16,30 @@ lab.experiment('Admin Groups Permissions Reducer', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz'
+                id: 'abcxyz'
             }
         });
 
         let state = Store.getState().permissions;
 
         Code.expect(state.adminGroupId).to.equal('abcxyz');
-        Code.expect(state.permissions).to.have.length(0);
+        Code.expect(state.permissionEntries).to.have.length(0);
 
         Store.dispatch({
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz',
-                permissions: {
-                    FOO: true,
-                    BAR: false
-                }
+                id: 'abcxyz',
+                AdminGroupPermissionEntries : [
+                    { Id: 'abc',  Permission_Id: 'abc', Active: true },
+                    { Id: 'def',  Permission_Id: 'def', Active: false }
+                ]
             }
         });
 
         state = Store.getState().permissions;
 
-        Code.expect(state.permissions).to.have.length(2);
+        Code.expect(state.permissionEntries).to.have.length(2);
 
         done();
     });
@@ -51,10 +51,10 @@ lab.experiment('Admin Groups Permissions Reducer', () => {
             type: Constants.SAVE_PERMISSIONS,
             request: {
                 data: {
-                    permissions: {
-                        FOO: true,
-                        BAR: false
-                    }
+                    permissionEntries : [
+                        { Id: 'abc',  Permission_Id: 'abc', Active: true },
+                        { Id: 'def',  Permission_Id: 'def', Active: false }
+                    ]
                 }
             }
         });
@@ -62,8 +62,8 @@ lab.experiment('Admin Groups Permissions Reducer', () => {
         const state = Store.getState().permissions;
 
         Code.expect(state.loading).to.be.true();
-        Code.expect(state.permissions.FOO).to.be.true();
-        Code.expect(state.permissions.BAR).to.be.false();
+        Code.expect(state.permissionEntries[0].Active).to.be.true();
+        Code.expect(state.permissionEntries[1].Active).to.be.false();
 
         done();
     });
@@ -75,14 +75,14 @@ lab.experiment('Admin Groups Permissions Reducer', () => {
             type: Constants.SAVE_PERMISSIONS_RESPONSE,
             err: null,
             response: {
-                permissions: {}
+                permissionEntries: []
             }
         });
 
         let state = Store.getState().permissions;
 
         Code.expect(state.loading).to.be.false();
-        Code.expect(state.permissions).to.have.length(0);
+        Code.expect(state.permissionEntries).to.have.length(0);
 
         Store.dispatch({
             type: Constants.SAVE_PERMISSIONS_RESPONSE,

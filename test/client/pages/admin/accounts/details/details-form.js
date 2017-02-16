@@ -15,11 +15,9 @@ const Form = Proxyquire('../../../../../../client/pages/admin/accounts/details/d
     './actions': stub.Actions
 });
 const defaultProps = {
-    name: {
-        first: 'Stimpson',
-        middle: '',
-        last: 'Cat'
-    },
+    first: 'Stimpson',
+    middle: '',
+    last: 'Cat',
     hasError: {},
     help: {}
 };
@@ -48,11 +46,9 @@ lab.experiment('Admin Accounts Details Form', () => {
 
         // update props and render again
         const props = Object.assign({}, defaultProps, {
-            name: {
-                first: 'Ren',
-                middle: '',
-                last: 'Hoek'
-            }
+            first: 'Ren',
+            middle: '',
+            last: 'Hoek'
         });
         FormEl = React.createElement(Form, props);
         ReactDOM.render(FormEl, container);

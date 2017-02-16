@@ -12,7 +12,7 @@ const initialState = {
     help: {},
     adminId: undefined,
     options: [],
-    groups: {},
+    groups: [],
     newGroup: ''
 };
 const reducer = function (state = initialState, action) {
@@ -20,11 +20,11 @@ const reducer = function (state = initialState, action) {
     if (action.type === Constants.GET_DETAILS_RESPONSE) {
         const stateUpdates = ObjectAssign({}, initialState);
 
-        stateUpdates.adminId = action.response._id;
+        stateUpdates.adminId = action.response.id;
         stateUpdates.options = state.options;
 
-        if (action.response.hasOwnProperty('groups')) {
-            stateUpdates.groups = action.response.groups;
+        if (action.response.hasOwnProperty('AdminGroups')) {
+            stateUpdates.groups = action.response.AdminGroups;
         }
 
         return ObjectAssign({}, stateUpdates);
@@ -56,8 +56,8 @@ const reducer = function (state = initialState, action) {
             help: validation.help
         };
 
-        if (action.response.hasOwnProperty('groups')) {
-            stateUpdates.groups = action.response.groups;
+        if (action.response.hasOwnProperty('AdminGroups')) {
+            stateUpdates.groups = action.response.AdminGroups;
         }
 
         return ObjectAssign({}, state, stateUpdates);

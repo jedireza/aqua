@@ -33,7 +33,7 @@ const manifest = {
         }
     }],
     registrations: [
-        {
+        {   
             plugin: 'inert'
         },
         {
@@ -64,21 +64,8 @@ const manifest = {
             }
         },
         {
-            plugin: {
-                register: 'hapi-mongo-models',
-                options: {
-                    mongodb: Config.get('/hapiMongoModels/mongodb'),
-                    models: {
-                        Account: './server/models/account',
-                        AdminGroup: './server/models/admin-group',
-                        Admin: './server/models/admin',
-                        AuthAttempt: './server/models/auth-attempt',
-                        Session: './server/models/session',
-                        Status: './server/models/status',
-                        User: './server/models/user'
-                    },
-                    autoIndex: Config.get('/hapiMongoModels/autoIndex')
-                }
+            plugin :{
+                register : './dbsetup'
             }
         },
         {
@@ -149,6 +136,12 @@ const manifest = {
         },
         {
             plugin: './server/api/statuses',
+            options: {
+                routes: { prefix: '/api' }
+            }
+        },
+        {
+            plugin: './server/api/permissions',
             options: {
                 routes: { prefix: '/api' }
             }

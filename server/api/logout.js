@@ -7,9 +7,6 @@ const internals = {};
 
 internals.applyRoutes = function (server, next) {
 
-    const Session = server.plugins['hapi-mongo-models'].Session;
-
-
     server.route({
         method: 'DELETE',
         path: '/logout',
@@ -28,23 +25,26 @@ internals.applyRoutes = function (server, next) {
 
             const credentials = request.auth.credentials || { session: {} };
             const session = credentials.session || {};
+            const Session = request.getDb('aqua').getModel('Session');
 
-            Session.findByIdAndDelete(session._id, (err, sessionDoc) => {
-
-                if (err) {
-                    return reply(err);
+            Session.destroy({
+                where: {
+                    id : session.id
                 }
+            }).then((i) => {
 
-                if (!sessionDoc) {
+                if ( i === 0){
                     return reply(Boom.notFound('Document not found.'));
                 }
-
                 request.cookieAuth.clear();
                 reply({ message: 'Success.' });
+
+            }, (err) => {
+
+                reply(err);
             });
         }
     });
-
 
     next();
 };
@@ -52,7 +52,7 @@ internals.applyRoutes = function (server, next) {
 
 exports.register = function (server, options, next) {
 
-    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
+    server.dependency(['auth', 'hapi-sequelize', 'dbconfig'], internals.applyRoutes);
 
     next();
 };

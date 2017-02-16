@@ -15,18 +15,18 @@ class Results extends React.Component {
         const rows = this.props.data.map((record) => {
 
             return (
-                <tr key={record._id}>
+                <tr key={record.id}>
                     <td>
                         <Link
                             className="btn btn-default btn-sm"
-                            to={`/admin/accounts/${record._id}`}>
+                            to={`/admin/accounts/${record.id}`}>
 
                             Edit
                         </Link>
                     </td>
-                    <td>{record.name.first} {record.name.last}</td>
-                    <td>{record.user ? record.user.name : '---'}</td>
-                    <td>{record._id}</td>
+                    <td>{record.first} {record.last}</td>
+                    <td>{record.User ? record.User.username : '---'}</td>
+                    <td>{record.id}</td>
                 </tr>
             );
         });

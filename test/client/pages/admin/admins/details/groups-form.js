@@ -17,12 +17,12 @@ const defaultProps = {
     hasError: {},
     help: {},
     options: [
-        { _id: 'sales', name: 'Sales' },
-        { _id: 'service', name: 'Service' },
-        { _id: 'root', name: 'Root' }
+        { id: 'abc', name: 'Sales' },
+        { id: 'def', name: 'Service' },
+        { id: 'ghi', name: 'Root' }
     ],
     adminId: undefined,
-    groups: {}
+    groups: []
 };
 
 
@@ -51,12 +51,12 @@ lab.experiment('Admin Admins Groups Form', () => {
         ReactTestUtils.Simulate.change(form.els.newGroup, {
             target: {
                 name: 'newGroup',
-                value: 'sales'
+                value: 'jkl'
             }
         });
         ReactTestUtils.Simulate.click(form.els.newGroupButton);
 
-        Code.expect(form.state.groups).to.have.length(1);
+        Code.expect(form.state.groups).to.have.length(0);
 
         done();
     });
@@ -65,10 +65,10 @@ lab.experiment('Admin Admins Groups Form', () => {
     lab.test('it handles removing a group', (done) => {
 
         const props = Object.assign({}, defaultProps, {
-            groups: {
-                'sales': 'Sales',
-                'service': 'Service'
-            }
+            groups: [
+                { id: 'abc', name: 'Sales' },
+                { id: 'def', name: 'Service' }
+            ]
         });
         const FormEl = React.createElement(Form, props);
         const form = ReactTestUtils.renderIntoDocument(FormEl);

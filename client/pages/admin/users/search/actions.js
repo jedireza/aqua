@@ -17,6 +17,17 @@ class Actions {
             Constants.GET_RESULTS_RESPONSE
         );
     }
+    /*
+    static getSqlResults(data) {
+        ApiActions.get(
+            '/api/sqlusers',
+            data,
+            Store,
+            Constants.GET_SQL_RESULTS,
+            Constants.GET_SQL_RESULTS_RESPONSE
+        );
+    }*/
+
 
     static changeSearchQuery(data) {
 
@@ -55,7 +66,7 @@ class Actions {
                 if (!err) {
                     this.hideCreateNew();
 
-                    const path = `/admin/users/${response._id}`;
+                    const path = `/admin/users/${response.id}`;
 
                     ReactRouter.browserHistory.push(path);
 

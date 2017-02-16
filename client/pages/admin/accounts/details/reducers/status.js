@@ -20,13 +20,15 @@ const reducer = function (state = initialState, action) {
     if (action.type === Constants.GET_DETAILS_RESPONSE) {
         const stateUpdates = ObjectAssign({}, initialState);
 
-        stateUpdates.accountId = action.response._id;
+        stateUpdates.accountId = action.response.id;
         stateUpdates.options = state.options;
 
-        if (action.response.hasOwnProperty('status')) {
-            stateUpdates.current = action.response.status.current;
-            stateUpdates.log = action.response.status.log.reverse();
-            stateUpdates.newStatus = action.response.status.current.id;
+        if (action.response.hasOwnProperty('StatusEntries')) {
+            stateUpdates.log = action.response.StatusEntries.reverse();
+            if (stateUpdates.log.length > 0){
+                stateUpdates.current = stateUpdates.log.shift();// action.response.status.current;
+                stateUpdates.newStatus = stateUpdates.current.status_id;
+            }
         }
 
         return ObjectAssign({}, stateUpdates);
@@ -58,12 +60,20 @@ const reducer = function (state = initialState, action) {
             hasError: validation.hasError,
             help: validation.help
         };
-
+        /*
         if (action.response.hasOwnProperty('status')) {
             stateUpdates.current = action.response.status.current;
             stateUpdates.log = action.response.status.log.reverse();
             stateUpdates.newStatus = action.response.status.current.id;
+        }*/
+        if (action.response.hasOwnProperty('StatusEntries')) {
+            stateUpdates.log = action.response.StatusEntries.reverse();
+            if (stateUpdates.log.length > 0){
+                stateUpdates.current = stateUpdates.log.shift();// action.response.status.current;
+                stateUpdates.newStatus = stateUpdates.current.status_id;
+            }
         }
+
 
         return ObjectAssign({}, state, stateUpdates);
     }

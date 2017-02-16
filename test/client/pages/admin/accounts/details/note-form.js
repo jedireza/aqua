@@ -29,10 +29,10 @@ lab.experiment('Admin Accounts Note Form', () => {
         const props = Object.assign({}, defaultProps, {
             notes: [{
                 data: 'toasting bread',
-                userCreated: {
-                    name: 'stimpson'
+                User: {
+                    username: 'stimpson'
                 },
-                timeCreated: new Date()
+                createdAt: new Date()
             }]
         });
         const FormEl = React.createElement(Form, props);

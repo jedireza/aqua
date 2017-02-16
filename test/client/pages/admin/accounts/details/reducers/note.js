@@ -16,7 +16,7 @@ lab.experiment('Admin Accounts Note Reducer', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz'
+                id: 'abcxyz'
             }
         });
 
@@ -28,8 +28,8 @@ lab.experiment('Admin Accounts Note Reducer', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz',
-                notes: [{}]
+                id: 'abcxyz',
+                NoteEntries: [{}]
             }
         });
 
@@ -67,7 +67,7 @@ lab.experiment('Admin Accounts Note Reducer', () => {
             type: Constants.NEW_NOTE_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz'
+                id: 'abcxyz'
             }
         });
 
@@ -80,8 +80,8 @@ lab.experiment('Admin Accounts Note Reducer', () => {
             type: Constants.NEW_NOTE_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz',
-                notes: [{}]
+                id: 'abcxyz',
+                NoteEntries: [{}]
             }
         });
 

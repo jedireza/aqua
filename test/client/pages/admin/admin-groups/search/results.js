@@ -15,10 +15,10 @@ lab.experiment('Admin Groups Search Results', () => {
 
         const props = {
             data: [{
-                _id: 'sales',
+                id: 'sales',
                 name: 'Sales'
             }, {
-                _id: 'service',
+                id: 'service',
                 name: 'Service'
             }]
         };

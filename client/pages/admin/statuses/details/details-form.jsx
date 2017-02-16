@@ -10,7 +10,7 @@ const TextControl = require('../../../../components/form/text-control.jsx');
 
 
 const propTypes = {
-    _id: React.PropTypes.string,
+    id: React.PropTypes.string,
     error: React.PropTypes.string,
     hasError: React.PropTypes.object,
     help: React.PropTypes.object,
@@ -43,7 +43,7 @@ class DetailsForm extends React.Component {
         event.preventDefault();
         event.stopPropagation();
 
-        const id = this.props._id;
+        const id = this.props.id;
         const data = {
             name: this.state.name
         };

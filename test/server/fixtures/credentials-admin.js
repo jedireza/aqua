@@ -1,34 +1,27 @@
 'use strict';
-const Admin = require('../../../server/models/admin');
-const User = require('../../../server/models/user');
 
+module.exports = function (sequelize, userId, callback) {
 
-const user = new User({
-    _id: '535HOW35',
-    username: 'ren',
-    roles: {
-        admin: {
-            id: '953P150D35',
-            name: 'Ren Höek'
-        }
-    },
-    _roles: {
-        admin: new Admin({
-            _id: '953P150D35',
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                root: 'Root'
+    const User = sequelize.models.User;
+
+    User.findById(userId).then( (user) => {
+
+        user.hydrateRoles(sequelize, (err, roles) => {
+
+            if (err){
+                callback(err);
             }
-        })
-    }
-});
 
+            callback(null, {
+                user,
+                session: {},
+                roles: user.roles,
+                scope: Object.keys(user.roles)
+            });
+        });
+    }, (err) => {
 
-module.exports = {
-    user,
-    roles: user._roles,
-    scope: Object.keys(user.roles)
+        callback(err);
+    });
+
 };

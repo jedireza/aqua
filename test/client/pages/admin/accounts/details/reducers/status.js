@@ -16,7 +16,7 @@ lab.experiment('Admin Accounts Status Reducer', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz'
+                id: 'abcxyz'
             }
         });
 
@@ -28,23 +28,27 @@ lab.experiment('Admin Accounts Status Reducer', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz',
-                status: {
-                    current: {
-                        id: 'some-status'
+                id: 'abcxyz',
+                StatusEntries: [
+                    {
+                        id: 'abc',
+                        name: 'breakfast',
+                        status_id: 'def'
                     },
-                    log: [{
-                        id: 'some-status'
-                    }]
-                }
+                    {
+                        id: 'ghi',
+                        name: 'lunch',
+                        status_id: 'jkl'
+                    }
+                ]
             }
         });
 
         state = Store.getState().status;
 
-        Code.expect(state.current.id).to.equal('some-status');
+        Code.expect(state.current.id).to.equal('ghi');
         Code.expect(state.log).to.have.length(1);
-        Code.expect(state.newStatus).to.equal('some-status');
+        Code.expect(state.newStatus).to.equal('jkl');
 
         done();
     });
@@ -117,7 +121,7 @@ lab.experiment('Admin Accounts Status Reducer', () => {
             type: Constants.NEW_STATUS_RESPONSE,
             err: null,
             response: {
-                _id: 'abcxyz',
+                id: 'abcxyz',
                 status: {
                     current: {
                         id: 'some-status'

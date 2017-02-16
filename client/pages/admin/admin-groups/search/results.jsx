@@ -15,17 +15,17 @@ class Results extends React.Component {
         const rows = this.props.data.map((record) => {
 
             return (
-                <tr key={record._id}>
+                <tr key={record.id}>
                     <td>
                         <Link
                             className="btn btn-default btn-sm"
-                            to={`/admin/admin-groups/${record._id}`}>
+                            to={`/admin/admin-groups/${record.id}`}>
 
                             Edit
                         </Link>
                     </td>
                     <td>{record.name}</td>
-                    <td className="nowrap">{record._id}</td>
+                    <td className="nowrap">{record.id}</td>
                 </tr>
             );
         });

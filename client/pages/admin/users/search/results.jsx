@@ -14,12 +14,15 @@ class Results extends React.Component {
 
         const rows = this.props.data.map((record) => {
 
+            const id = record.id;
+            const link = '/admin/users/' + id;
+
             return (
-                <tr key={record._id}>
+                <tr key={id}>
                     <td>
                         <Link
                             className="btn btn-default btn-sm"
-                            to={`/admin/users/${record._id}`}>
+                            to={link}>
 
                             Edit
                         </Link>
@@ -27,7 +30,7 @@ class Results extends React.Component {
                     <td>{record.username}</td>
                     <td>{record.email}</td>
                     <td>{record.isActive}</td>
-                    <td className="nowrap">{record._id}</td>
+                    <td className="nowrap">{id}</td>
                 </tr>
             );
         });

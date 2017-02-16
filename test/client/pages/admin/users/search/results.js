@@ -15,12 +15,12 @@ lab.experiment('Admin Users Search Results', () => {
 
         const props = {
             data: [{
-                _id: 'abcxyz',
+                id: 'abcxyz',
                 username: 'ren',
                 email: 'ren@hoek',
                 isActive: true
             }, {
-                _id: 'xyzabc',
+                id: 'xyzabc',
                 username: 'stimpy',
                 email: 'stimpy@cat',
                 isActive: false

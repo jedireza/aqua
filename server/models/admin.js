@@ -1,144 +1,122 @@
 'use strict';
-const AdminGroup = require('./admin-group');
-const Async = require('async');
-const Joi = require('joi');
-const MongoModels = require('mongo-models');
 
+module.exports = function (sequelize, DataTypes){
 
-class Admin extends MongoModels {
-    static create(name, callback) {
+    const Admin = sequelize.define('Admin', {
+        id: {
+            primaryKey: true,
+            defaultValue: DataTypes.UUIDV1,
+            type: DataTypes.UUID
+        },
+        first: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: { min: 1 }
+        },
+        middle: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        last: {
+            type: DataTypes.STRING,
+            allowNull: false
+        }
+    }, {
+        instanceMethods: {
+            isMemberOf: function (models, group, callback){
 
-        const nameParts = name.trim().split(/\s/);
+                const self = this;
+                const AdminGroup = models.AdminGroup;
+                //const Admin = models.Admin;
+                AdminGroup.findOne(
+                    {
+                        where:{
+                            name : group
+                        },
+                        include : [{
+                            model : Admin,
+                            where : { id: self.id }
+                        }]
+                    }
+        ).then((adminGroup) => {
 
-        const document = {
-            name: {
-                first: nameParts.shift(),
-                middle: nameParts.length > 1 ? nameParts.shift() : undefined,
-                last: nameParts.join(' ')
+            if ( adminGroup ){
+                callback(null, true);
+            }
+            else {
+                callback(null, false);
+            }
+        }, (err) => {
+
+            callback(err);
+        });
+            }
+
+        },
+        classMethods: {
+            associate: function (db){
+
+                Admin.belongsTo(db.User, { foreignKey: 'user_id', allowNull: true });
+                Admin.belongsToMany(db.AdminGroup, { through: 'AdminAdminGroups' });
+                Admin.hasMany(db.AdminPermissionEntry, { foreignKey : 'admin_id' });
             },
-            timeCreated: new Date()
-        };
+            pagedFind: function (where, page, limit, order, include, callback){
 
-        this.insertOne(document, (err, docs) => {
+                const offset = (page - 1) * limit;
+                this.findAndCount(
+                    {
+                        where,
+                        offset,
+                        limit,
+                        order,
+                        include
+                    }
+        ).then((result) => {
 
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, docs[0]);
-        });
-    }
-
-    static findByUsername(username, callback) {
-
-        const query = { 'user.name': username.toLowerCase() };
-
-        this.findOne(query, callback);
-    }
-
-    constructor(attrs) {
-
-        super(attrs);
-
-        Object.defineProperty(this, '_groups', {
-            writable: true,
-            enumerable: false
-        });
-    }
-
-    isMemberOf(group) {
-
-        if (!this.groups) {
-            return false;
-        }
-
-        return this.groups.hasOwnProperty(group);
-    }
-
-    hydrateGroups(callback) {
-
-        if (!this.groups) {
-            this._groups = {};
-            return callback(null, this._groups);
-        }
-
-        if (this._groups) {
-            return callback(null, this._groups);
-        }
-
-        const tasks = {};
-
-        Object.keys(this.groups).forEach((group) => {
-
-            tasks[group] = function (done) {
-
-                AdminGroup.findById(group, done);
-            };
-        });
-
-        Async.auto(tasks, (err, results) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            this._groups = results;
-
-            callback(null, this._groups);
-        });
-    }
-
-    hasPermissionTo(permission, callback) {
-
-        if (this.permissions && this.permissions.hasOwnProperty(permission)) {
-            return callback(null, this.permissions[permission]);
-        }
-
-        this.hydrateGroups((err) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            let groupHasPermission = false;
-
-            Object.keys(this._groups).forEach((group) => {
-
-                if (this._groups[group].hasPermissionTo(permission)) {
-                    groupHasPermission = true;
+            const output = {
+                data: undefined,
+                pages: {
+                    current: page,
+                    prev: 0,
+                    hasPrev: false,
+                    next: 0,
+                    hasNext: false,
+                    total: 0
+                },
+                items: {
+                    limit,
+                    begin: ((page * limit) - limit) + 1,
+                    end: page * limit,
+                    total: 0
                 }
-            });
+            };
+            output.data = result.rows;
+            output.items.total = result.count;
 
-            callback(null, groupHasPermission);
+          // paging calculations
+            output.pages.total = Math.ceil(output.items.total / limit);
+            output.pages.next = output.pages.current + 1;
+            output.pages.hasNext = output.pages.next <= output.pages.total;
+            output.pages.prev = output.pages.current - 1;
+            output.pages.hasPrev = output.pages.prev !== 0;
+            if (output.items.begin > output.items.total) {
+                output.items.begin = output.items.total;
+            }
+            if (output.items.end > output.items.total) {
+                output.items.end = output.items.total;
+            }
+
+            callback(null, output);
+
+
+        }, (err) => {
+
+            return callback(err);
         });
-    }
-}
+            }
+        },
+        version: true
+    });
 
-
-Admin.collection = 'admins';
-
-
-Admin.schema = Joi.object().keys({
-    _id: Joi.object(),
-    user: Joi.object().keys({
-        id: Joi.string().required(),
-        name: Joi.string().lowercase().required()
-    }),
-    groups: Joi.object().description('{ groupId: name, ... }'),
-    permissions: Joi.object().description('{ permission: boolean, ... }'),
-    name: Joi.object().keys({
-        first: Joi.string().required(),
-        middle: Joi.string().allow(''),
-        last: Joi.string().required()
-    }),
-    timeCreated: Joi.date()
-});
-
-
-Admin.indexes = [
-    { key: { 'user.id': 1 } },
-    { key: { 'user.name': 1 } }
-];
-
-
-module.exports = Admin;
+    return Admin;
+};

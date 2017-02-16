@@ -13,7 +13,8 @@ const lab = exports.lab = Lab.script();
 const stub = {
     Actions: {
         getDetails: () => {},
-        getGroupOptions: () => {}
+        getGroupOptions: () => [],
+        getPermissions: () => []
     }
 };
 const Page = Proxyquire('../../../../../../client/pages/admin/admins/details/index.jsx', {
@@ -107,11 +108,9 @@ lab.experiment('Admin Admins Details Page', () => {
             type: Constants.GET_DETAILS_RESPONSE,
             err: null,
             response: {
-                name: {
-                    first: 'Stimpson',
-                    middle: '',
-                    last: 'Cat'
-                }
+                first: 'Stimpson',
+                middle: '',
+                last: 'Cat'
             }
         });
 

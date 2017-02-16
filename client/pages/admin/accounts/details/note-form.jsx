@@ -72,16 +72,16 @@ class NoteForm extends React.Component {
 
         const noteHistory = this.props.notes.map((note) => {
 
-            const moment = Moment(note.timeCreated);
+            const moment = Moment(note.createdAt);
 
             return (
-                <li key={note.timeCreated} className="list-group-item">
+                <li key={note.createdAt} className="list-group-item">
                     <div>{note.data}</div>
                     <span
                         title={moment.toString()}
                         className="badge">
 
-                        {note.userCreated.name} - {moment.fromNow()}
+                        {note.User.username} - {moment.fromNow()}
                     </span>
                     <div className="clearfix"></div>
                 </li>

@@ -12,18 +12,18 @@ const initialState = {
     help: {},
     adminId: undefined,
     id: undefined,
-    name: undefined
+    username: undefined
 };
 const reducer = function (state = initialState, action) {
 
     if (action.type === Constants.GET_DETAILS_RESPONSE) {
         const stateUpdates = ObjectAssign({}, initialState);
 
-        stateUpdates.adminId = action.response._id;
+        stateUpdates.adminId = action.response.id;
 
-        if (action.response.hasOwnProperty('user')) {
-            stateUpdates.id = action.response.user.id;
-            stateUpdates.name = action.response.user.name;
+        if (action.response.hasOwnProperty('User') && action.response.User !== null) {
+            stateUpdates.id = action.response.User.id;
+            stateUpdates.username = action.response.User.username;
         }
 
         return ObjectAssign({}, stateUpdates);
@@ -45,9 +45,9 @@ const reducer = function (state = initialState, action) {
             help: validation.help
         };
 
-        if (action.response.hasOwnProperty('user')) {
-            stateUpdates.id = action.response.user.id;
-            stateUpdates.name = action.response.user.name;
+        if (action.response.hasOwnProperty('User') && action.response.User !== null) {
+            stateUpdates.id = action.response.User.id;
+            stateUpdates.username = action.response.User.username;
         }
 
         return ObjectAssign({}, state, stateUpdates);
@@ -68,12 +68,12 @@ const reducer = function (state = initialState, action) {
             hasError: validation.hasError,
             help: validation.help,
             id: undefined,
-            name: undefined
+            username: undefined
         };
 
-        if (action.response.hasOwnProperty('user')) {
-            stateUpdates.id = action.response.user.id;
-            stateUpdates.name = action.response.user.name;
+        if (action.response.hasOwnProperty('User') && action.response.User !== null) {
+            stateUpdates.id = action.response.User.id;
+            stateUpdates.username = action.response.User.username;
         }
 
         return ObjectAssign({}, state, stateUpdates);

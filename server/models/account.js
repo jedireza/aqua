@@ -1,74 +1,103 @@
 'use strict';
-const Joi = require('joi');
-const MongoModels = require('mongo-models');
-const NoteEntry = require('./note-entry');
-const StatusEntry = require('./status-entry');
 
+module.exports = function (sequelize, DataTypes){
 
-class Account extends MongoModels {
-    static create(name, callback) {
+    const Account = sequelize.define('Account', {
+        id: {
+            primaryKey: true,
+            defaultValue: DataTypes.UUIDV1,
+            type: DataTypes.UUID
+        },
+        first: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: { min: 1 }
+        },
+        middle: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        last: {
+            type: DataTypes.STRING,
+            allowNull: false
+        }
+    }, {
+        classMethods: {
+            parseName: function (fullName){
 
-        const nameParts = name.trim().split(/\s/);
+                const nameParts = fullName.trim().split(/\s/);
+                const name = {
+                    first: nameParts.shift(),
+                    middle: nameParts.length > 1 ? nameParts.shift() : '',
+                    last: nameParts.join(' ')
+                };
+                return name;
 
-        const document = {
-            name: {
-                first: nameParts.shift(),
-                middle: nameParts.length > 1 ? nameParts.shift() : undefined,
-                last: nameParts.join(' ')
             },
-            timeCreated: new Date()
-        };
+            associate: function (db){
 
-        this.insertOne(document, (err, docs) => {
+                Account.belongsTo(db.User, { foreignKey: 'user_id' });
+                Account.hasMany(db.NoteEntry, { foreignKey: 'account_id' });
+                Account.hasMany(db.StatusEntry, { foreignKey: 'account_id' });
+            },
+            pagedFind: function (where, page, limit, order, include, callback){
 
-            if (err) {
-                return callback(err);
+                const offset = (page - 1) * limit;
+                this.findAndCount(
+                    {
+                        where,
+                        offset,
+                        limit,
+                        order,
+                        include
+                    }
+        ).then((result) => {
+
+            const output = {
+                data: undefined,
+                pages: {
+                    current: page,
+                    prev: 0,
+                    hasPrev: false,
+                    next: 0,
+                    hasNext: false,
+                    total: 0
+                },
+                items: {
+                    limit,
+                    begin: ((page * limit) - limit) + 1,
+                    end: page * limit,
+                    total: 0
+                }
+            };
+            output.data = result.rows;
+            output.items.total = result.count;
+
+          // paging calculations
+            output.pages.total = Math.ceil(output.items.total / limit);
+            output.pages.next = output.pages.current + 1;
+            output.pages.hasNext = output.pages.next <= output.pages.total;
+            output.pages.prev = output.pages.current - 1;
+            output.pages.hasPrev = output.pages.prev !== 0;
+            if (output.items.begin > output.items.total) {
+                output.items.begin = output.items.total;
+            }
+            if (output.items.end > output.items.total) {
+                output.items.end = output.items.total;
             }
 
-            callback(null, docs[0]);
+            callback(null, output);
+
+
+        }, (err) => {
+
+            return callback(err);
         });
-    }
 
-    static findByUsername(username, callback) {
+            }
+        },
+        version: true
+    });
 
-        const query = { 'user.name': username.toLowerCase() };
-
-        this.findOne(query, callback);
-    }
-}
-
-
-Account.collection = 'accounts';
-
-
-Account.schema = Joi.object().keys({
-    _id: Joi.object(),
-    user: Joi.object().keys({
-        id: Joi.string().required(),
-        name: Joi.string().lowercase().required()
-    }),
-    name: Joi.object().keys({
-        first: Joi.string().required(),
-        middle: Joi.string().allow(''),
-        last: Joi.string().required()
-    }),
-    status: Joi.object().keys({
-        current: StatusEntry.schema,
-        log: Joi.array().items(StatusEntry.schema)
-    }),
-    notes: Joi.array().items(NoteEntry.schema),
-    verification: Joi.object().keys({
-        complete: Joi.boolean(),
-        token: Joi.string()
-    }),
-    timeCreated: Joi.date()
-});
-
-
-Account.indexes = [
-    { key: { 'user.id': 1 } },
-    { key: { 'user.name': 1 } }
-];
-
-
-module.exports = Account;
+    return Account;
+};
