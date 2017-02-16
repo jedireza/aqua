@@ -33,7 +33,7 @@ const manifest = {
         }
     }],
     registrations: [
-        {   
+        {
             plugin: 'inert'
         },
         {
