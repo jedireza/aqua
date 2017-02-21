@@ -1,68 +1,114 @@
 'use strict';
-const Admin = require('../../server/models/admin');
 const AuthPlugin = require('../../server/auth');
+const Credentials = require('./fixtures/credentials');
 const Code = require('code');
 const Config = require('../../config');
 const CookieAdmin = require('./fixtures/cookie-admin');
+const CookieAccount = require('./fixtures/cookie-account');
 const Hapi = require('hapi');
 const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
-const MakeMockModel = require('./fixtures/make-mock-model');
-const Manifest = require('../../manifest');
-const Path = require('path');
+const Async = require('async');
+const PrepareData = require('../lab/prepare-data');
 const Proxyquire = require('proxyquire');
-const Session = require('../../server/models/session');
-const User = require('../../server/models/user');
+const stub = {
+    get: function (key){
 
+        if ( key === '/db' ){
+            key = '/db_test';
+        }
+        return Config.get(key);
+    }
+};
+
+const DBSetup = Proxyquire('../../dbsetup', { './config' : stub });
 
 const lab = exports.lab = Lab.script();
 let server;
-let stub;
-
+let db;
+let sessionFindByCredentials;
+let userFindById;
+let Session;
+let User;
+let accountCredentials;
+let adminCredentials;
+let notRootAdminCredentials;
 
 lab.beforeEach((done) => {
 
-    stub = {
-        Session: MakeMockModel(),
-        User: MakeMockModel()
-    };
+    Async.auto({
+        prepareData: function (cb){
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/session')] = stub.Session;
-    proxy[Path.join(process.cwd(), './server/models/user')] = stub.User;
+            PrepareData(cb);
+        },
+        runServer: ['prepareData', function (results, cb) {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            const plugins = [DBSetup, HapiAuth, AuthPlugin];
+            server = new Hapi.Server();
+            server.connection({ port: Config.get('/port/web') });
+            server.register(plugins, (err) => {
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+                if (err) {
+                    return cb(err);
+                }
 
-                return true;
-            }
+                db = server.plugins['hapi-sequelize'][Config.get('/db').database];
+                Session = db.models.Session;
+                User = db.models.User;
+                userFindById = User.findById;
+                sessionFindByCredentials = Session.findByCredentials;
 
-            return false;
-        })[0].plugin.options
-    };
+                server.initialize(cb);
+            });
+        }],
+        adminUser: ['runServer', function (results, cb){
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
+            Credentials( db, '00000000-0000-0000-0000-000000000000', ( err, iresults ) => {
 
-        if (err) {
-            return done(err);
+                if ( err ){
+                    return cb(err);
+                }
+                adminCredentials = iresults;
+                cb(null);
+            });
+        }],
+        accountUser: ['runServer', function (results, cb){
+
+            Credentials( db, '11111111-1111-1111-1111-111111111111', ( err, iresults ) => {
+
+                if ( err ){
+                    return cb(err);
+                }
+                accountCredentials = iresults;
+                cb(null);
+            });
+        }],
+        notRootAdminUser: ['runServer', function (results, cb){
+
+            Credentials( db, '33333333-3333-3333-3333-333333333333', ( err, iresults ) => {
+
+                if ( err ){
+                    return cb(err);
+                }
+                notRootAdminCredentials = iresults;
+                cb(null);
+            });
+        }]
+
+
+    }, (err, results ) => {
+
+        if ( err ){
+            done(err);
         }
-
-        server.initialize(done);
+        else {
+            done();
+        }
     });
 });
 
 
 lab.afterEach((done) => {
-
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
 
     done();
 });
@@ -72,14 +118,9 @@ lab.experiment('Auth Plugin', () => {
 
     lab.test('it returns authentication credentials', (done) => {
 
-        stub.Session.findByCredentials = function (username, key, callback) {
+        Session.findByCredentials = function (id, key, callback) {
 
-            callback(null, new Session({ _id: '2D', userId: '1D', key: 'baddog' }));
-        };
-
-        stub.User.findById = function (username, callback) {
-
-            callback(null, new User({ _id: '1D', username: 'ren' }));
+            Session.createNew(accountCredentials.user.id, callback);
         };
 
         server.route({
@@ -91,6 +132,7 @@ lab.experiment('Auth Plugin', () => {
 
                     Code.expect(err).to.not.exist();
                     Code.expect(credentials).to.be.an.object();
+                    Session.findByCredentials = sessionFindByCredentials;
 
                     reply('ok');
                 });
@@ -110,11 +152,10 @@ lab.experiment('Auth Plugin', () => {
             done();
         });
     });
-
 
     lab.test('it returns an error when the session is not found', (done) => {
 
-        stub.Session.findByCredentials = function (username, key, callback) {
+        Session.findByCredentials = function (id, key, callback) {
 
             callback();
         };
@@ -127,7 +168,7 @@ lab.experiment('Auth Plugin', () => {
                 server.auth.test('session', request, (err, credentials) => {
 
                     Code.expect(err).to.be.an.object();
-                    // Code.expect(credentials).to.not.exist();
+                    Session.findByCredentials = sessionFindByCredentials;
 
                     reply('ok');
                 });
@@ -148,17 +189,19 @@ lab.experiment('Auth Plugin', () => {
         });
     });
 
-
     lab.test('it returns an error when the user is not found', (done) => {
 
-        stub.Session.findByCredentials = function (username, key, callback) {
+        Session.findByCredentials = function (id, key, callback) {
 
-            callback(null, new Session({ username: 'ren', key: 'baddog' }));
+            Session.createNew(accountCredentials.user.id, callback);
         };
 
-        stub.User.findByUsername = function (username, callback) {
+        User.findById = function (username) {
 
-            callback();
+            return new Promise( (resolve, reject ) => {
+
+                resolve();
+            });
         };
 
         server.route({
@@ -169,6 +212,8 @@ lab.experiment('Auth Plugin', () => {
                 server.auth.test('session', request, (err, credentials) => {
 
                     Code.expect(err).to.be.an.object();
+                    Session.findByCredentials = sessionFindByCredentials;
+                    User.findById = userFindById;
                     reply('ok');
                 });
             }
@@ -191,7 +236,7 @@ lab.experiment('Auth Plugin', () => {
 
     lab.test('it returns an error when a model error occurs', (done) => {
 
-        stub.Session.findByCredentials = function (username, key, callback) {
+        Session.findByCredentials = function (username, key, callback) {
 
             callback(Error('session fail'));
         };
@@ -204,7 +249,7 @@ lab.experiment('Auth Plugin', () => {
                 server.auth.test('session', request, (err, credentials) => {
 
                     Code.expect(err).to.be.an.object();
-                    // Code.expect(credentials).to.not.exist();
+                    Session.findByCredentials = sessionFindByCredentials;
 
                     reply('ok');
                 });
@@ -228,16 +273,11 @@ lab.experiment('Auth Plugin', () => {
 
     lab.test('it takes over when the required role is missing', (done) => {
 
-        stub.Session.findByCredentials = function (username, key, callback) {
+        //todo put a row in the session table to match the cookie
+        Session.findByCredentials = function (id, key, callback) {
 
-            callback(null, new Session({ _id: '2D', userId: '1D', key: 'baddog' }));
+            Session.createNew(accountCredentials.user.id, callback);
         };
-
-        stub.User.findById = function (id, callback) {
-
-            callback(null, new User({ _id: '1D', username: 'ren' }));
-        };
-
         server.route({
             method: 'GET',
             path: '/',
@@ -250,6 +290,7 @@ lab.experiment('Auth Plugin', () => {
             handler: function (request, reply) {
 
                 Code.expect(request.auth.credentials).to.be.an.object();
+                Session.findByCredentials = sessionFindByCredentials;
 
                 reply('ok');
             }
@@ -259,7 +300,7 @@ lab.experiment('Auth Plugin', () => {
             method: 'GET',
             url: '/',
             headers: {
-                cookie: CookieAdmin
+                cookie: CookieAccount
             }
         };
 
@@ -271,37 +312,11 @@ lab.experiment('Auth Plugin', () => {
         });
     });
 
-
     lab.test('it continues through pre handler when role is present', (done) => {
 
-        stub.Session.findByCredentials = function (username, key, callback) {
+        Session.findByCredentials = function (id, key, callback) {
 
-            callback(null, new Session({ _id: '2D', userId: '1D', key: 'baddog' }));
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            const user = new User({
-                username: 'ren',
-                roles: {
-                    admin: {
-                        id: '953P150D35',
-                        name: 'Ren Höek'
-                    }
-                }
-            });
-
-            user._roles = {
-                admin: {
-                    _id: '953P150D35',
-                    name: {
-                        first: 'Ren',
-                        last: 'Höek'
-                    }
-                }
-            };
-
-            callback(null, user);
+            Session.createNew(accountCredentials.user.id, callback);
         };
 
         server.route({
@@ -316,6 +331,7 @@ lab.experiment('Auth Plugin', () => {
             handler: function (request, reply) {
 
                 Code.expect(request.auth.credentials).to.be.an.object();
+                Session.findByCredentials = sessionFindByCredentials;
 
                 reply('ok');
             }
@@ -340,34 +356,9 @@ lab.experiment('Auth Plugin', () => {
 
     lab.test('it takes over when the required group is missing', (done) => {
 
-        stub.Session.findByCredentials = function (username, key, callback) {
+        Session.findByCredentials = function (id, key, callback) {
 
-            callback(null, new Session({ _id: '2D', userId: '1D', key: 'baddog' }));
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            const user = new User({
-                username: 'ren',
-                roles: {
-                    admin: {
-                        id: '953P150D35',
-                        name: 'Ren Höek'
-                    }
-                }
-            });
-
-            user._roles = {
-                admin: new Admin({
-                    _id: '953P150D35',
-                    name: {
-                        first: 'Ren',
-                        last: 'Höek'
-                    }
-                })
-            };
-
-            callback(null, user);
+            Session.createNew(adminCredentials.user.id, callback);
         };
 
         server.route({
@@ -379,12 +370,13 @@ lab.experiment('Auth Plugin', () => {
                     scope: 'admin'
                 },
                 pre: [
-                    AuthPlugin.preware.ensureAdminGroup('root')
+                    AuthPlugin.preware.ensureAdminGroup('OtherRoot')
                 ]
             },
             handler: function (request, reply) {
 
                 Code.expect(request.auth.credentials).to.be.an.object();
+                Session.findByCredentials = sessionFindByCredentials;
 
                 reply('ok');
             }
@@ -409,37 +401,9 @@ lab.experiment('Auth Plugin', () => {
 
     lab.test('it continues through pre handler when group is present', (done) => {
 
-        stub.Session.findByCredentials = function (username, key, callback) {
+        Session.findByCredentials = function (id, key, callback) {
 
-            callback(null, new Session({ _id: '2D', userId: '1D', key: 'baddog' }));
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            const user = new User({
-                username: 'ren',
-                roles: {
-                    admin: {
-                        id: '953P150D35',
-                        name: 'Ren Höek'
-                    }
-                }
-            });
-
-            user._roles = {
-                admin: new Admin({
-                    _id: '953P150D35',
-                    name: {
-                        first: 'Ren',
-                        last: 'Höek'
-                    },
-                    groups: {
-                        root: 'Root'
-                    }
-                })
-            };
-
-            callback(null, user);
+            Session.createNew(adminCredentials.user.id, callback);
         };
 
         server.route({
@@ -451,12 +415,13 @@ lab.experiment('Auth Plugin', () => {
                     scope: 'admin'
                 },
                 pre: [
-                    AuthPlugin.preware.ensureAdminGroup(['sales', 'root'])
+                    AuthPlugin.preware.ensureAdminGroup(['sales', 'Root'])
                 ]
             },
             handler: function (request, reply) {
 
                 Code.expect(request.auth.credentials).to.be.an.object();
+                Session.findByCredentials = sessionFindByCredentials;
 
                 reply('ok');
             }
@@ -481,34 +446,9 @@ lab.experiment('Auth Plugin', () => {
 
     lab.test('it continues through pre handler when not acting the root user', (done) => {
 
-        stub.Session.findByCredentials = function (username, key, callback) {
+        Session.findByCredentials = function (id, key, callback) {
 
-            callback(null, new Session({ _id: '2D', userId: '1D', key: 'baddog' }));
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            const user = new User({
-                username: 'ren',
-                roles: {
-                    admin: {
-                        id: '953P150D35',
-                        name: 'Ren Höek'
-                    }
-                }
-            });
-
-            user._roles = {
-                admin: new Admin({
-                    _id: '953P150D35',
-                    name: {
-                        first: 'Ren',
-                        last: 'Höek'
-                    }
-                })
-            };
-
-            callback(null, user);
+            Session.createNew(notRootAdminCredentials.user.id, callback);
         };
 
         server.route({
@@ -526,6 +466,7 @@ lab.experiment('Auth Plugin', () => {
             handler: function (request, reply) {
 
                 Code.expect(request.auth.credentials).to.be.an.object();
+                Session.findByCredentials = sessionFindByCredentials;
 
                 reply('ok');
             }
@@ -535,7 +476,7 @@ lab.experiment('Auth Plugin', () => {
             method: 'GET',
             url: '/',
             headers: {
-                cookie: CookieAdmin
+                cookie: CookieAccount
             }
         };
 
@@ -550,34 +491,9 @@ lab.experiment('Auth Plugin', () => {
 
     lab.test('it takes over when acting as the root user', (done) => {
 
-        stub.Session.findByCredentials = function (username, key, callback) {
+        Session.findByCredentials = function (id, key, callback) {
 
-            callback(null, new Session({ _id: '2D', userId: '1D', key: 'baddog' }));
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            const user = new User({
-                username: 'root',
-                roles: {
-                    admin: {
-                        id: '953P150D35',
-                        name: 'Root Admin'
-                    }
-                }
-            });
-
-            user._roles = {
-                admin: new Admin({
-                    _id: '953P150D35',
-                    name: {
-                        first: 'Root',
-                        last: 'Admin'
-                    }
-                })
-            };
-
-            callback(null, user);
+            Session.createNew(adminCredentials.user.id, callback);
         };
 
         server.route({
@@ -595,6 +511,7 @@ lab.experiment('Auth Plugin', () => {
             handler: function (request, reply) {
 
                 Code.expect(request.auth.credentials).to.be.an.object();
+                Session.findByCredentials = sessionFindByCredentials;
 
                 reply('ok');
             }

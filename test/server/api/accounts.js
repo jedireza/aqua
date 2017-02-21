@@ -1,8 +1,7 @@
 'use strict';
 const AccountPlugin = require('../../../server/api/accounts');
 const AuthPlugin = require('../../../server/auth');
-const AuthenticatedAccount = require('../fixtures/credentials-account');
-const AuthenticatedAdmin = require('../fixtures/credentials-admin');
+const Credentials = require('../fixtures/credentials');
 const Code = require('code');
 const Config = require('../../../config');
 const Hapi = require('hapi');
@@ -10,8 +9,6 @@ const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
 const Async = require('async');
 const PrepareData = require('../../lab/prepare-data');
-
-const ConfigOriginal  = require('../../../config');
 const Proxyquire = require('proxyquire');
 const stub = {
     get: function (key){
@@ -21,7 +18,7 @@ const stub = {
         }
         //is there a way to access the origianl function?
         //without loading ConfigOriginal
-        return ConfigOriginal.get(key);
+        return Config.get(key);
     }
 };
 
@@ -46,6 +43,7 @@ let StatusEntry;
 let NoteEntry;
 let accountFindById;
 let accountFindOne;
+let accountPagedFind;
 let accountCreate;
 let accountUpdate;
 let accountDestroy;
@@ -93,7 +91,7 @@ lab.before((done) => {
         }],
         adminUser: ['runServer', function (results, cb){
 
-            AuthenticatedAdmin( db, '00000000-0000-0000-0000-000000000000', ( err, iresults ) => {
+            Credentials( db, '00000000-0000-0000-0000-000000000000', ( err, iresults ) => {
 
                 if ( err ){
                     cb(err);
@@ -104,7 +102,7 @@ lab.before((done) => {
         }],
         accountUser: ['runServer', function (results, cb){
 
-            AuthenticatedAccount( db, '11111111-1111-1111-1111-111111111111', ( err, iresults ) => {
+            Credentials( db, '11111111-1111-1111-1111-111111111111', ( err, iresults ) => {
 
                 if ( err ){
                     cb(err);
@@ -145,7 +143,6 @@ lab.experiment('Accounts Plugin Result List', () => {
 
     lab.test('it returns an error when paged find fails', (done) => {
 
-        const pagedFined = Account.pagedFind;
         Account.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
@@ -157,14 +154,13 @@ lab.experiment('Accounts Plugin Result List', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
-            Account.pagedFind = pagedFined;
+            Account.pagedFind = accountPagedFind;
             done();
         });
     });
 
     lab.test('it returns an array of documents successfully', (done) => {
 
-        const pagedFined = Account.pagedFind;
         Account.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
@@ -179,7 +175,7 @@ lab.experiment('Accounts Plugin Result List', () => {
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
             Code.expect(response.result.data[0]).to.be.an.object();
-            Account.pagedFind = pagedFined;
+            Account.pagedFind = accountPagedFind;
 
             done();
         });
@@ -187,7 +183,6 @@ lab.experiment('Accounts Plugin Result List', () => {
 
     lab.test('it returns an array of documents successfully (using filters)', (done) => {
 
-        const pagedFined = Account.pagedFind;
         Account.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
@@ -203,7 +198,7 @@ lab.experiment('Accounts Plugin Result List', () => {
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
             Code.expect(response.result.data[0]).to.be.an.object();
-            Account.pagedFind = pagedFined;
+            Account.pagedFind = accountPagedFind;
 
             done();
         });
@@ -870,7 +865,6 @@ lab.experiment('Accounts Plugin Link User', () => {
                             return new Promise( (inner_resolve, inner_reject ) => {
 
                                 inner_resolve();
-
                             });
                         },
                         setUser: () => {
@@ -879,9 +873,7 @@ lab.experiment('Accounts Plugin Link User', () => {
 
                                 inner_resolve({});
                             });
-
                         }
-
                     }
                 );
             });
@@ -1299,10 +1291,11 @@ lab.experiment('Accounts Plugin Delete', () => {
 
     lab.test('it deletes a document successfully', (done) => {
 
+        /*
         Account.findByIdAndDelete = function (id, callback) {
 
             callback(null, 1);
-        };
+        };*/
         Account.destroy = function (id, callback) {
 
             return new Promise( (resolve, reject ) => {

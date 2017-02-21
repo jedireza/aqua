@@ -82,13 +82,7 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const Status = request.getDb('aqua').getModel('Status');
-            Status.findOne(
-                {
-                    where: {
-                        id: request.params.id
-                    }
-                }
-            ).then( (status) => {
+            Status.findById(request.params.id).then( (status) => {
 
                 if (!status) {
                     return reply(Boom.notFound('Document not found.'));
@@ -175,13 +169,13 @@ internals.applyRoutes = function (server, next) {
                     where:{
                         id
                     }
-                }).then((status) => {
+                }).then((count) => {
 
-                    if (!status) {
+                    if ( count === 0 ) {
                         return reply(Boom.notFound('Document not found.'));
                     }
 
-                    reply(status);
+                    reply(count);//todo should this reply with the object instead?
 
                 }, (err) => {
 

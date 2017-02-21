@@ -76,13 +76,7 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const AuthAttempt = request.getDb('aqua').getModel('AuthAttempt');
-            AuthAttempt.findOne(
-                {
-                    where: {
-                        id: request.params.id
-                    }
-                }
-            ).then( (authAttempt) => {
+            AuthAttempt.findById(request.params.id).then( (authAttempt) => {
 
                 if (!authAttempt) {
                     return reply(Boom.notFound('Document not found.'));

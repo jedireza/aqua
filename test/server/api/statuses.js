@@ -1,65 +1,103 @@
 'use strict';
 const AuthPlugin = require('../../../server/auth');
-const AuthenticatedUser = require('../fixtures/credentials-admin');
+const Credentials = require('../fixtures/credentials');
 const Code = require('code');
 const Config = require('../../../config');
 const Hapi = require('hapi');
 const HapiAuth = require('hapi-auth-cookie');
-const Lab = require('lab');
-const MakeMockModel = require('../fixtures/make-mock-model');
-const Manifest = require('../../../manifest');
-const Path = require('path');
-const Proxyquire = require('proxyquire');
 const StatusesPlugin = require('../../../server/api/statuses');
+const Lab = require('lab');
+const Async = require('async');
+const PrepareData = require('../../lab/prepare-data');
+const Proxyquire = require('proxyquire');
+const stub = {
+    get: function (key){
 
+        if ( key === '/db' ){
+            key = '/db_test';
+        }
+        //is there a way to access the origianl function?
+        //without loading ConfigOriginal
+        return Config.get(key);
+    }
+};
 
+const DBSetup = Proxyquire('../../../dbsetup', { './config' : stub });
+
+/*
+todo: will need sql script with admin perms on the db to set up db name and user
+learned that hapi-sequelize registration was missing next in the correct spot
+probably can go through all api handlers and move the models out to the set up scope
+instead of the handler scope
+*/
 const lab = exports.lab = Lab.script();
 let request;
 let server;
-let stub;
+let adminCredentials;
+let db;
+let Status;
+let statusFindById;
+let statusCreate;
+let statusUpdate;
+let statusDestroy;
+let statusPagedFind;
 
 
 lab.before((done) => {
 
-    stub = {
-        Status: MakeMockModel()
-    };
+    Async.auto({
+        prepareData: function (cb){
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/status')] = stub.Status;
+            PrepareData(cb);
+        },
+        runServer: ['prepareData', function (results, cb) {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            const plugins = [DBSetup, HapiAuth, AuthPlugin, StatusesPlugin];
+            server = new Hapi.Server();
+            server.connection({ port: Config.get('/port/web') });
+            server.register(plugins, (err) => {
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+                if (err) {
+                    return cb(err);
+                }
 
-                return true;
-            }
+                db = server.plugins['hapi-sequelize'][Config.get('/db').database];
+                Status = db.models.Status;
+                statusCreate = Status.create;
+                statusFindById = Status.findById;
+                statusPagedFind = Status.pagedFind;
+                statusUpdate = Status.update;
+                statusDestroy = Status.destroy;
+                server.initialize(cb);
+            });
+        }],
+        adminUser: ['runServer', function (results, cb){
 
-            return false;
-        })[0].plugin.options
-    };
+            Credentials( db, '00000000-0000-0000-0000-000000000000', ( err, iresults ) => {
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, StatusesPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
+                if ( err ){
+                    cb(err);
+                }
+                adminCredentials = iresults;
+                cb(null);
+            });
+        }]
 
-        if (err) {
-            return done(err);
+    }, (err, results ) => {
+
+        if ( err ){
+            done(err);
         }
-
-        server.initialize(done);
+        else {
+            done();
+        }
     });
 });
 
 
+
 lab.after((done) => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
     done();
 });
 
@@ -71,7 +109,7 @@ lab.experiment('Statuses Plugin Result List', () => {
         request = {
             method: 'GET',
             url: '/statuses',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -80,7 +118,7 @@ lab.experiment('Statuses Plugin Result List', () => {
 
     lab.test('it returns an error when paged find fails', (done) => {
 
-        stub.Status.pagedFind = function () {
+        Status.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -91,6 +129,7 @@ lab.experiment('Statuses Plugin Result List', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Status.pagedFind = statusPagedFind;
             done();
         });
     });
@@ -98,7 +137,7 @@ lab.experiment('Statuses Plugin Result List', () => {
 
     lab.test('it returns an array of documents successfully', (done) => {
 
-        stub.Status.pagedFind = function () {
+        Status.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -111,6 +150,7 @@ lab.experiment('Statuses Plugin Result List', () => {
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
             Code.expect(response.result.data[0]).to.be.an.object();
+            Status.pagedFind = statusPagedFind;
 
             done();
         });
@@ -119,7 +159,7 @@ lab.experiment('Statuses Plugin Result List', () => {
 
     lab.test('it returns an array of documents successfully (using filters)', (done) => {
 
-        stub.Status.pagedFind = function () {
+        Status.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -134,6 +174,7 @@ lab.experiment('Statuses Plugin Result List', () => {
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
             Code.expect(response.result.data[0]).to.be.an.object();
+            Status.pagedFind = statusPagedFind;
 
             done();
         });
@@ -148,7 +189,7 @@ lab.experiment('Statuses Plugin Read', () => {
         request = {
             method: 'GET',
             url: '/statuses/93EP150D35',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -157,14 +198,18 @@ lab.experiment('Statuses Plugin Read', () => {
 
     lab.test('it returns an error when find by id fails', (done) => {
 
-        stub.Status.findById = function (id, callback) {
+        Status.findById = function (id) {
 
-            callback(Error('find by id failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('find by id failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Status.findById = statusFindById;
             done();
         });
     });
@@ -172,15 +217,19 @@ lab.experiment('Statuses Plugin Read', () => {
 
     lab.test('it returns a not found when find by id misses', (done) => {
 
-        stub.Status.findById = function (id, callback) {
+        Status.findById = function (id) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             Code.expect(response.result.message).to.match(/document not found/i);
+            Status.findById = statusFindById;
 
             done();
         });
@@ -189,15 +238,19 @@ lab.experiment('Statuses Plugin Read', () => {
 
     lab.test('it returns a document successfully', (done) => {
 
-        stub.Status.findById = function (id, callback) {
+        Status.findById = function (id) {
 
-            callback(null, { _id: '93EP150D35' });
+            return new Promise( (resolve, reject) => {
+
+                resolve( { id: '93EP150D35' });
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            Status.findById = statusFindById;
 
             done();
         });
@@ -216,7 +269,7 @@ lab.experiment('Statuses Plugin Create', () => {
                 pivot: 'Account',
                 name: 'Happy'
             },
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -225,14 +278,18 @@ lab.experiment('Statuses Plugin Create', () => {
 
     lab.test('it returns an error when create fails', (done) => {
 
-        stub.Status.create = function (pivot, name, callback) {
+        Status.create = function (pivot, name) {
 
-            callback(Error('create failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('create failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Status.create = statusCreate;
             done();
         });
     });
@@ -240,15 +297,19 @@ lab.experiment('Statuses Plugin Create', () => {
 
     lab.test('it creates a document successfully', (done) => {
 
-        stub.Status.create = function (pivot, name, callback) {
+        Status.create = function (pivot, name) {
 
-            callback(null, {});
+            return new Promise( (resolve, reject) => {
+
+                resolve({});
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            Status.create = statusCreate;
 
             done();
         });
@@ -266,7 +327,7 @@ lab.experiment('Statuses Plugin Update', () => {
             payload: {
                 name: 'Happy'
             },
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -275,14 +336,18 @@ lab.experiment('Statuses Plugin Update', () => {
 
     lab.test('it returns an error when update fails', (done) => {
 
-        stub.Status.findByIdAndUpdate = function (id, update, callback) {
+        Status.update = function (update, where) {
 
-            callback(Error('update failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('update failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Status.update = statusUpdate;
             done();
         });
     });
@@ -290,14 +355,18 @@ lab.experiment('Statuses Plugin Update', () => {
 
     lab.test('it returns not found when find by id misses', (done) => {
 
-        stub.Status.findByIdAndUpdate = function (id, update, callback) {
+        Status.update = function (update, where) {
 
-            callback(null, undefined);
+            return new Promise( (resolve, reject) => {
+
+                resolve(0);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
+            Status.update = statusUpdate;
             done();
         });
     });
@@ -305,15 +374,19 @@ lab.experiment('Statuses Plugin Update', () => {
 
     lab.test('it updates a document successfully', (done) => {
 
-        stub.Status.findByIdAndUpdate = function (id, update, callback) {
+        Status.update = function (update, where) {
 
-            callback(null, {});
+            return new Promise( (resolve, reject) => {
+
+                resolve({});
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            Status.update = statusUpdate;
 
             done();
         });
@@ -328,7 +401,7 @@ lab.experiment('Statuses Plugin Delete', () => {
         request = {
             method: 'DELETE',
             url: '/statuses/93EP150D35',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -337,14 +410,18 @@ lab.experiment('Statuses Plugin Delete', () => {
 
     lab.test('it returns an error when delete by id fails', (done) => {
 
-        stub.Status.findByIdAndDelete = function (id, callback) {
+        Status.destroy = function (id) {
 
-            callback(Error('delete by id failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('delete by id failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Status.destroy = statusDestroy;
             done();
         });
     });
@@ -352,15 +429,19 @@ lab.experiment('Statuses Plugin Delete', () => {
 
     lab.test('it returns a not found when delete by id misses', (done) => {
 
-        stub.Status.findByIdAndDelete = function (id, callback) {
+        Status.destroy = function (id) {
 
-            callback(null, undefined);
+            return new Promise( (resolve, reject) => {
+
+                resolve(0);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             Code.expect(response.result.message).to.match(/document not found/i);
+            Status.destroy = statusDestroy;
 
             done();
         });
@@ -369,15 +450,19 @@ lab.experiment('Statuses Plugin Delete', () => {
 
     lab.test('it deletes a document successfully', (done) => {
 
-        stub.Status.findByIdAndDelete = function (id, callback) {
+        Status.destroy = function (id) {
 
-            callback(null, 1);
+            return new Promise( (resolve, reject) => {
+
+                resolve(1);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.message).to.match(/success/i);
+            Status.destroy = statusDestroy;
 
             done();
         });

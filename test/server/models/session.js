@@ -124,7 +124,7 @@ lab.experiment('Session Class Methods', () => {
                 return done(err);
             }
 
-            const id = results.session._id.toString();
+            const id = results.session.id.toString();
             const key = results.session.key;
 
             Session.findByCredentials(id, key, (err, result) => {

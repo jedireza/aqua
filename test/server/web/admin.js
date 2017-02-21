@@ -1,62 +1,85 @@
 'use strict';
-//const AdminPlugin = require('../../../server/web/admin/index');
+const AdminPlugin = require('../../../server/web/admin/index');
 const AuthPlugin = require('../../../server/auth');
-const AuthenticatedAdmin = require('../fixtures/credentials-admin');
+const Credentials = require('../fixtures/credentials');
+const LoginPlugin = require('../../../server/web/login/index');
 const Code = require('code');
 const Config = require('../../../config');
 const Hapi = require('hapi');
 const HapiAuth = require('hapi-auth-cookie');
-const Lab = require('lab');
-//const Manifest = require('../../../manifest');
-const Path = require('path');
 const Vision = require('vision');
+const Lab = require('lab');
+const Path = require('path');
+const Async = require('async');
+const PrepareData = require('../../lab/prepare-data');
+const Proxyquire = require('proxyquire');
+const stub = {
+    get: function (key){
 
-
-const lab = exports.lab = Lab.script();
-const HapiModelsPlugin = {
-    register: require('hapi-sequelize'),
-    options: {
-        sequelize : require('../../misc/db'),
-        //todo not like dbsetup.js cause models are already registered in test/misc/db.js
-        sync: true
+        if ( key === '/db' ){
+            key = '/db_test';
+        }
+        return Config.get(key);
     }
 };
-/*
-const ModelsPlugin = {
-    register: require('hapi-mongo-models'),
-    options: Manifest.get('/registrations').filter((reg) => {
-        console.log('regs is ', reg);
 
-        return reg.plugin.register === 'hapi-mongo-models';
-    })[0].plugin.options
-};
-*/
+const DBSetup = Proxyquire('../../../dbsetup', { './config' : stub });
+
+const lab = exports.lab = Lab.script();
 let request;
 let server;
+let db;
+let adminCredentials;
 
+lab.before((done) => {
 
-lab.beforeEach((done) => {
+    Async.auto({
+        prepareData: function (cb){
 
-    //const plugins = [Vision, HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin];
-    const plugins = [Vision, HapiAuth, HapiModelsPlugin, AuthPlugin, AccountPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
+            PrepareData(cb);
+        },
+        runServer: ['prepareData', function (results, cb) {
 
-        if (err) {
-            return done(err);
+            const plugins = [Vision, DBSetup, HapiAuth, AuthPlugin, AdminPlugin, LoginPlugin];
+            server = new Hapi.Server();
+            server.connection({ port: Config.get('/port/web') });
+            server.register(plugins, (err) => {
+
+                if (err) {
+                    return cb(err);
+                }
+
+                server.views({
+                    engines: { jsx: require('hapi-react-views') },
+                    path: './server/web',
+                    relativeTo: Path.join(__dirname, '..', '..', '..')
+                });
+
+                db = server.plugins['hapi-sequelize'][Config.get('/db').database];
+                server.initialize(cb);
+            });
+        }],
+        adminUser: ['runServer', function (results, cb){
+
+            Credentials( db, '00000000-0000-0000-0000-000000000000', ( err, iresults ) => {
+
+                if ( err ){
+                    cb(err);
+                }
+                adminCredentials = iresults;
+                cb(null);
+            });
+        }]
+    }, (err, results ) => {
+
+        if ( err ){
+            done(err);
         }
-
-        server.views({
-            engines: { jsx: require('hapi-react-views') },
-            path: './server/web',
-            relativeTo: Path.join(__dirname, '..', '..', '..')
-        });
-
-        server.initialize(done);
+        else {
+            done();
+        }
     });
 });
-
 
 lab.experiment('Admin Page View', () => {
 
@@ -65,13 +88,11 @@ lab.experiment('Admin Page View', () => {
         request = {
             method: 'GET',
             url: '/admin',
-            credentials: AuthenticatedAdmin
+            credentials: adminCredentials
         };
 
         done();
     });
-
-
 
     lab.test('Admin page renders properly', (done) => {
 

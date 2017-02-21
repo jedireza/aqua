@@ -78,10 +78,7 @@ internals.applyRoutes = function (server, next) {
             const Permission = request.getDb('aqua').getModel('Permission');
             const User = request.getDb('aqua').getModel('User');
 
-            Admin.findOne({
-                where: {
-                    id: request.params.id
-                },
+            Admin.findById(request.params.id, {
                 include: [
                     //todo exlucde or include correctly
                     { model: User, attributes:{ exclude:['password_hash'] } },
@@ -355,24 +352,42 @@ internals.applyRoutes = function (server, next) {
                                     username: request.payload.username
                                 }
                             }
-                    ).then((user) => {
+                        ).then((user) => {
 
-                        if (!user) {
-                            return reply(Boom.notFound('User not found.'));
-                        }
-                        reply(user);
-                    });
+                            if (!user) {
+                                return reply(Boom.notFound('User not found.'));
+                            }
+                            reply(user);
+                        }, (err) => {
+
+                            reply(err);
+                        });
                     }
                 }, {
                     assign: 'userCheck',
                     method: function (request, reply) {
 
-                        request.pre.user.getAccount().then(
+                        request.pre.user.getAdmin().then(
 
                         (account) => {
 
                             if ( account ){
                                 return reply(Boom.conflict('User is already linked to another account. Unlink first.'));
+                            }
+                            reply();
+                        }
+                    );
+                    }
+                }, {
+                    assign: 'adminCheck',
+                    method: function (request, reply) {
+
+                        request.pre.admin.getUser().then(
+
+                        (account) => {
+
+                            if ( account ){
+                                return reply(Boom.conflict('Admin is already linked to another account. Unlink first.'));
                             }
                             reply();
                         }
@@ -386,7 +401,7 @@ internals.applyRoutes = function (server, next) {
 
                 (results) => {
 
-                    reply(results);
+                    return reply(results);
                 },
                 (err) => {
 
@@ -418,12 +433,11 @@ internals.applyRoutes = function (server, next) {
 
             const Admin = request.getDb('aqua').getModel('Admin');
 
-            Admin.find({
-                where: {
-                    id : request.params.id
-                }
-            }).then((admin) => {
+            Admin.findById(request.params.id).then((admin) => {
 
+                if ( !admin ){
+                    return reply(Boom.notFound('Admin not found'));
+                }
                 return admin.setUser(null);
             }).then( (result) => {
 
@@ -455,19 +469,13 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-
             const Admin = request.getDb('aqua').getModel('Admin');
+            Admin.destroy(request.params.id).then((count) => {
 
-            Admin.find({
-                where: {
-                    id : request.params.id
+                if ( count === 0 ){
+                    return reply(Boom.notFound('admin not found'));
                 }
-            }).then((admin) => {
-
-                return admin.setUser(null);
-            }).then( (result) => {
-
-                reply(result);
+                reply( { message: 'success' } );
             }, (err) => {
 
                 return reply(err);

@@ -106,7 +106,7 @@ lab.experiment('Admin Class Methods', () => {
                     }
                 };
 
-                Admin.findByIdAndUpdate(results.admin._id, fieldsToUpdate, cb);
+                Admin.findByIdAndUpdate(results.admin.id, fieldsToUpdate, cb);
             }]
         }, (err, results) => {
 

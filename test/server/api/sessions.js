@@ -1,65 +1,92 @@
 'use strict';
 const AuthPlugin = require('../../../server/auth');
-const AuthenticatedUser = require('../fixtures/credentials-admin');
+const Credentials = require('../fixtures/credentials');
 const Code = require('code');
 const Config = require('../../../config');
 const Hapi = require('hapi');
 const HapiAuth = require('hapi-auth-cookie');
-const Lab = require('lab');
-const MakeMockModel = require('../fixtures/make-mock-model');
-const Manifest = require('../../../manifest');
-const Path = require('path');
-const Proxyquire = require('proxyquire');
 const SessionPlugin = require('../../../server/api/sessions');
+const Lab = require('lab');
+const Async = require('async');
+const PrepareData = require('../../lab/prepare-data');
+const Proxyquire = require('proxyquire');
+const stub = {
+    get: function (key){
 
+        if ( key === '/db' ){
+            key = '/db_test';
+        }
+        //is there a way to access the origianl function?
+        //without loading ConfigOriginal
+        return Config.get(key);
+    }
+};
+
+const DBSetup = Proxyquire('../../../dbsetup', { './config' : stub });
 
 const lab = exports.lab = Lab.script();
 let request;
 let server;
-let stub;
+let adminCredentials;
+let db;
+let Session;
+let sessionFindById;
+let sessionPagedFind;
+let sessionDestroy;
 
 
 lab.before((done) => {
 
-    stub = {
-        Session: MakeMockModel()
-    };
+    Async.auto({
+        prepareData: function (cb){
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/session')] = stub.Session;
+            PrepareData(cb);
+        },
+        runServer: ['prepareData', function (results, cb) {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            const plugins = [DBSetup, HapiAuth, AuthPlugin, SessionPlugin];
+            server = new Hapi.Server();
+            server.connection({ port: Config.get('/port/web') });
+            server.register(plugins, (err) => {
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+                if (err) {
+                    return cb(err);
+                }
 
-                return true;
-            }
+                db = server.plugins['hapi-sequelize'][Config.get('/db').database];
+                Session = db.models.Session;
+                sessionFindById = Session.findById;
+                sessionDestroy = Session.destory;
+                sessionPagedFind = Session.pagedFind;
+                server.initialize(cb);
+            });
+        }],
+        adminUser: ['runServer', function (results, cb){
 
-            return false;
-        })[0].plugin.options
-    };
+            Credentials( db, '00000000-0000-0000-0000-000000000000', ( err, iresults ) => {
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, SessionPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
+                if ( err ){
+                    cb(err);
+                }
+                adminCredentials = iresults;
+                cb(null);
+            });
+        }]
 
-        if (err) {
-            return done(err);
+    }, (err, results ) => {
+
+        if ( err ){
+            done(err);
         }
-
-        server.initialize(done);
+        else {
+            done();
+        }
     });
 });
 
 
 lab.after((done) => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
     done();
 });
 
@@ -71,7 +98,7 @@ lab.experiment('Session Plugin Result List', () => {
         request = {
             method: 'GET',
             url: '/sessions',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -80,7 +107,7 @@ lab.experiment('Session Plugin Result List', () => {
 
     lab.test('it returns an error when paged find fails', (done) => {
 
-        stub.Session.pagedFind = function () {
+        Session.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -91,14 +118,14 @@ lab.experiment('Session Plugin Result List', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Session.pagedFind = sessionPagedFind;
             done();
         });
     });
 
-
     lab.test('it returns an array of documents successfully', (done) => {
 
-        stub.Session.pagedFind = function () {
+        Session.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -111,6 +138,7 @@ lab.experiment('Session Plugin Result List', () => {
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
             Code.expect(response.result.data[0]).to.be.an.object();
+            Session.pagedFind = sessionPagedFind;
 
             done();
         });
@@ -125,7 +153,7 @@ lab.experiment('Session Plugin Read', () => {
         request = {
             method: 'GET',
             url: '/sessions/93EP150D35',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -134,14 +162,18 @@ lab.experiment('Session Plugin Read', () => {
 
     lab.test('it returns an error when find by id fails', (done) => {
 
-        stub.Session.findById = function (id, callback) {
+        Session.findById = function (id) {
 
-            callback(Error('find by id failed'));
+            return new Promise( (resolve, reject ) => {
+
+                reject(Error('find by id failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Session.findById = sessionFindById;
             done();
         });
     });
@@ -149,15 +181,19 @@ lab.experiment('Session Plugin Read', () => {
 
     lab.test('it returns a not found when find by id misses', (done) => {
 
-        stub.Session.findById = function (id, callback) {
+        Session.findById = function (id) {
 
-            callback();
+            return new Promise( (resolve, reject ) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             Code.expect(response.result.message).to.match(/document not found/i);
+            Session.findById = sessionFindById;
 
             done();
         });
@@ -166,15 +202,19 @@ lab.experiment('Session Plugin Read', () => {
 
     lab.test('it returns a document successfully', (done) => {
 
-        stub.Session.findById = function (id, callback) {
+        Session.findById = function (id) {
 
-            callback(null, { _id: '93EP150D35' });
+            return new Promise( (resolve, reject ) => {
+
+                resolve({});
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            Session.findById = sessionFindById;
 
             done();
         });
@@ -189,7 +229,7 @@ lab.experiment('Session Plugin Delete', () => {
         request = {
             method: 'DELETE',
             url: '/sessions/93EP150D35',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -198,14 +238,18 @@ lab.experiment('Session Plugin Delete', () => {
 
     lab.test('it returns an error when delete by id fails', (done) => {
 
-        stub.Session.findByIdAndDelete = function (id, callback) {
+        Session.destroy = function (options) {
 
-            callback(Error('delete by id failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('delete by id failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Session.destroy = sessionDestroy;
             done();
         });
     });
@@ -213,15 +257,19 @@ lab.experiment('Session Plugin Delete', () => {
 
     lab.test('it returns a not found when delete by id misses', (done) => {
 
-        stub.Session.findByIdAndDelete = function (id, callback) {
+        Session.destroy = function (options) {
 
-            callback(null, undefined);
+            return new Promise( (resolve, reject) => {
+
+                resolve(0);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             Code.expect(response.result.message).to.match(/document not found/i);
+            Session.destroy = sessionDestroy;
 
             done();
         });
@@ -230,17 +278,22 @@ lab.experiment('Session Plugin Delete', () => {
 
     lab.test('it deletes a document successfully', (done) => {
 
-        stub.Session.findByIdAndDelete = function (id, callback) {
+        Session.destroy = function (options) {
 
-            callback(null, 1);
+            return new Promise( (resolve, reject) => {
+
+                resolve(1);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.message).to.match(/success/i);
+            Session.destroy = sessionDestroy;
 
             done();
         });
     });
+
 });

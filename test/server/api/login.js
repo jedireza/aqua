@@ -1,5 +1,4 @@
 'use strict';
-const AuthAttempt = require('../../../server/models/auth-attempt');
 const AuthPlugin = require('../../../server/auth');
 const Bcrypt = require('bcrypt');
 const Code = require('code');
@@ -9,68 +8,88 @@ const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
 const LoginPlugin = require('../../../server/api/login');
 const MailerPlugin = require('../../../server/mailer');
-const MakeMockModel = require('../fixtures/make-mock-model');
-const Manifest = require('../../../manifest');
-const Path = require('path');
+const Async = require('async');
+const PrepareData = require('../../lab/prepare-data');
 const Proxyquire = require('proxyquire');
-const Session = require('../../../server/models/session');
-const User = require('../../../server/models/user');
+const stub = {
+    get: function (key){
 
+        if ( key === '/db' ){
+            key = '/db_test';
+        }
+        //is there a way to access the origianl function?
+        //without loading ConfigOriginal
+        return Config.get(key);
+    }
+};
 
+const DBSetup = Proxyquire('../../../dbsetup', { './config' : stub });
+
+/*
+todo: will need sql script with admin perms on the db to set up db name and user
+learned that hapi-sequelize registration was missing next in the correct spot
+probably can go through all api handlers and move the models out to the set up scope
+instead of the handler scope
+*/
 const lab = exports.lab = Lab.script();
 let request;
 let server;
-let stub;
+let db;
+let AuthAttempt;
+let Session;
+let User;
+let authAttemptAbuseDetected;
+let authAttemptCreate;
+let userFindByCredentials;
+let userFindOne;
+let sessionCreateNew;
 
 
 lab.before((done) => {
 
-    stub = {
-        AuthAttempt: MakeMockModel(),
-        Session: MakeMockModel(),
-        User: MakeMockModel()
-    };
+    Async.auto({
+        prepareData: function (cb){
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/auth-attempt')] = stub.AuthAttempt;
-    proxy[Path.join(process.cwd(), './server/models/session')] = stub.Session;
-    proxy[Path.join(process.cwd(), './server/models/user')] = stub.User;
+            PrepareData(cb);
+        },
+        runServer: ['prepareData', function (results, cb) {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            const plugins = [DBSetup, HapiAuth, AuthPlugin, MailerPlugin, LoginPlugin];
+            server = new Hapi.Server();
+            server.connection({ port: Config.get('/port/web') });
+            server.register(plugins, (err) => {
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+                if (err) {
+                    return cb(err);
+                }
 
-                return true;
-            }
+                db = server.plugins['hapi-sequelize'][Config.get('/db').database];
+                AuthAttempt = db.models.AuthAttempt;
+                User = db.models.User;
+                Session = db.models.Session;
+                authAttemptAbuseDetected = AuthAttempt.abuseDetected;
+                authAttemptCreate = AuthAttempt.create;
+                userFindByCredentials = User.findByCredentials;
+                sessionCreateNew = Session.createNew;
+                userFindOne = User.findOne;
+                server.initialize(cb);
+            });
+        }]
+    }, (err, results ) => {
 
-            return false;
-        })[0].plugin.options
-    };
-
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, MailerPlugin, LoginPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
-
-        if (err) {
-            return done(err);
+        if ( err ){
+            done(err);
         }
-
-        server.initialize(done);
+        else {
+            done();
+        }
     });
 });
 
-
 lab.after((done) => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
     done();
 });
-
 
 lab.experiment('Login Plugin (Create Session)', () => {
 
@@ -80,8 +99,8 @@ lab.experiment('Login Plugin (Create Session)', () => {
             method: 'POST',
             url: '/login',
             payload: {
-                username: 'ren',
-                password: 'baddog'
+                username: 'accountuser',
+                password: 'test'
             }
         };
 
@@ -91,7 +110,7 @@ lab.experiment('Login Plugin (Create Session)', () => {
 
     lab.test('it returns an error when detecting abuse fails', (done) => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
+        AuthAttempt.abuseDetected = function (ip, username, callback) {
 
             callback(Error('abuse detection failed'));
         };
@@ -99,6 +118,7 @@ lab.experiment('Login Plugin (Create Session)', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            AuthAttempt.abuseDetected = authAttemptAbuseDetected;
             done();
         });
     });
@@ -106,7 +126,7 @@ lab.experiment('Login Plugin (Create Session)', () => {
 
     lab.test('it returns early when abuse is detected', (done) => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
+        AuthAttempt.abuseDetected = function (ip, username, callback) {
 
             callback(null, true);
         };
@@ -115,6 +135,7 @@ lab.experiment('Login Plugin (Create Session)', () => {
 
             Code.expect(response.statusCode).to.equal(400);
             Code.expect(response.result.message).to.match(/maximum number of auth attempts reached/i);
+            AuthAttempt.abuseDetected = authAttemptAbuseDetected;
 
             done();
         });
@@ -123,12 +144,12 @@ lab.experiment('Login Plugin (Create Session)', () => {
 
     lab.test('it returns an error when find by credentials fails', (done) => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
+        AuthAttempt.abuseDetected = function (ip, username, callback) {
 
             callback(null, false);
         };
 
-        stub.User.findByCredentials = function (username, password, callback) {
+        User.findByCredentials = function (username, password, callback) {
 
             callback(Error('find by credentials failed'));
         };
@@ -136,6 +157,8 @@ lab.experiment('Login Plugin (Create Session)', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            AuthAttempt.abuseDetected = authAttemptAbuseDetected;
+            User.findByCredentials = userFindByCredentials;
             done();
         });
     });
@@ -143,17 +166,20 @@ lab.experiment('Login Plugin (Create Session)', () => {
 
     lab.test('it returns an error when creating a new auth attempt fails', (done) => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
+        AuthAttempt.abuseDetected = function (ip, username, callback) {
 
             callback(null, false);
         };
 
-        stub.AuthAttempt.create = function (ip, username, callback) {
+        AuthAttempt.create = function (ip, username) {
 
-            callback(Error('create auth attempt failed'));
+            return new Promise( (resolve, reject ) => {
+
+                reject(Error('create auth attempt failed'));
+            });
         };
 
-        stub.User.findByCredentials = function (username, password, callback) {
+        User.findByCredentials = function (username, password, callback) {
 
             callback();
         };
@@ -161,6 +187,9 @@ lab.experiment('Login Plugin (Create Session)', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            AuthAttempt.abuseDetected = authAttemptAbuseDetected;
+            AuthAttempt.create = authAttemptCreate;
+            User.findByCredentials = userFindByCredentials;
             done();
         });
     });
@@ -168,49 +197,51 @@ lab.experiment('Login Plugin (Create Session)', () => {
 
     lab.test('it returns early after creating a new auth attempt', (done) => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
+        AuthAttempt.abuseDetected = function (ip, username, callback) {
 
             callback(null, false);
         };
 
-        stub.AuthAttempt.create = function (ip, username, callback) {
+        AuthAttempt.create = function (ip, username) {
 
-            callback(null, new AuthAttempt({}));
+            return new Promise( (resolve, reject ) => {
+
+                resolve({});
+            });
         };
 
-        stub.User.findByCredentials = function (username, password, callback) {
+        User.findByCredentials = function (username, password, callback) {
 
             callback();
         };
-
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(400);
             Code.expect(response.result.message).to.match(/username and password combination not found/i);
+            AuthAttempt.abuseDetected = authAttemptAbuseDetected;
+            AuthAttempt.create = authAttemptCreate;
+            User.findByCredentials = userFindByCredentials;
 
             done();
         });
     });
 
-
     lab.test('it returns an error when creating a new session fails', (done) => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
+        AuthAttempt.abuseDetected = function (ip, username, callback) {
 
             callback(null, false);
         };
 
-        stub.AuthAttempt.create = function (ip, username, callback) {
+        AuthAttempt.create = function (ip, username, callback) {
 
-            callback(null, new AuthAttempt({}));
+            return new Promise( ( resolve, reject ) => {
+
+                resolve({});
+            });
         };
 
-        stub.User.findByCredentials = function (username, password, callback) {
-
-            callback(null, new User({ _id: '1D', username: 'ren' }));
-        };
-
-        stub.Session.create = function (username, callback) {
+        Session.createNew = function (username, callback) {
 
             callback(Error('create session failed'));
         };
@@ -218,43 +249,50 @@ lab.experiment('Login Plugin (Create Session)', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            AuthAttempt.abuseDetected = authAttemptAbuseDetected;
+            AuthAttempt.create = authAttemptCreate;
+            User.findByCredentials = userFindByCredentials;
+            Session.createNew = sessionCreateNew;
             done();
         });
     });
 
-
     lab.test('it returns a session successfully', (done) => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
+        AuthAttempt.abuseDetected = function (ip, username, callback) {
 
             callback(null, false);
         };
 
-        stub.AuthAttempt.create = function (ip, username, callback) {
+        AuthAttempt.create = function (ip, username, callback) {
 
-            callback(null, new AuthAttempt({}));
+            return new Promise( ( resolve, reject ) => {
+
+                resolve({});
+            });
         };
 
-        stub.User.findByCredentials = function (username, password, callback) {
+        Session.createNew = function (username, callback) {
 
-            callback(null, new User({ _id: '1D', username: 'ren' }));
-        };
-
-        stub.Session.create = function (username, callback) {
-
-            callback(null, new Session({ _id: '2D', userId: '1D' }));
+            callback(null, {
+                id: 'abc',
+                key: 'def'
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            AuthAttempt.abuseDetected = authAttemptAbuseDetected;
+            AuthAttempt.create = authAttemptCreate;
+            User.findByCredentials = userFindByCredentials;
+            Session.createNew = sessionCreateNew;
 
             done();
         });
     });
 });
-
 
 lab.experiment('Login Plugin Forgot Password', () => {
 
@@ -274,14 +312,18 @@ lab.experiment('Login Plugin Forgot Password', () => {
 
     lab.test('it returns an error when find one fails', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions, callback) {
 
-            callback(Error('find one failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('find one failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -289,38 +331,44 @@ lab.experiment('Login Plugin Forgot Password', () => {
 
     lab.test('it returns early when find one misses', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions, callback) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
+            User.findOne = userFindOne;
             done();
         });
     });
 
-
     lab.test('it returns an error if any critical step fails', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions, callback) {
 
-            const user = {
-                _id: 'BL4M0'
-            };
+            return new Promise( (resolve, reject) => {
 
-            callback(null, user);
-        };
+                resolve({
+                    update: function (options){
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
+                        return new Promise( (inner_resolve, inner_reject ) => {
 
-            callback(Error('update failed'));
+                            inner_reject(Error('update failed'));
+                        });
+                    }
+                });
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -328,18 +376,22 @@ lab.experiment('Login Plugin Forgot Password', () => {
 
     lab.test('it succussfully sends a reset password request', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions, callback) {
 
-            const user = {
-                _id: 'BL4M0'
-            };
+            return new Promise( (resolve, reject) => {
 
-            callback(null, user);
-        };
+                resolve({
+                    update: function (options){
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
+                        return new Promise( (inner_resolve, inner_reject ) => {
 
-            callback(null, {});
+                            inner_resolve({
+                                email: 'test@test.com'
+                            });
+                        });
+                    }
+                });
+            });
         };
 
         const realSendEmail = server.plugins.mailer.sendEmail;
@@ -351,14 +403,13 @@ lab.experiment('Login Plugin Forgot Password', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
-
             server.plugins.mailer.sendEmail = realSendEmail;
+            User.findOne = userFindOne;
 
             done();
         });
     });
 });
-
 
 lab.experiment('Login Plugin Reset Password', () => {
 
@@ -380,14 +431,18 @@ lab.experiment('Login Plugin Reset Password', () => {
 
     lab.test('it returns an error when find one fails', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions, callback) {
 
-            callback(Error('find one failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('find one failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -395,14 +450,18 @@ lab.experiment('Login Plugin Reset Password', () => {
 
     lab.test('it returns a bad request when find one misses', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions, callback) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(400);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -410,16 +469,23 @@ lab.experiment('Login Plugin Reset Password', () => {
 
     lab.test('it returns an error if any critical step fails', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions, callback) {
 
-            const user = {
-                _id: 'BL4M0',
-                resetPassword: {
-                    token: 'O0HL4L4'
-                }
-            };
+            return new Promise( (resolve, reject) => {
 
-            callback(null, user);
+                resolve({
+                    id: 'abc',
+                    email: 'test@test.com',
+                    reset_token: 'O0HL4L4',
+                    update: function (options){
+
+                        return new Promise( (inner_resolve, inner_reject ) => {
+
+                            inner_resolve({});
+                        });
+                    }
+                });
+            });
         };
 
         const realBcryptCompare = Bcrypt.compare;
@@ -431,26 +497,34 @@ lab.experiment('Login Plugin Reset Password', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
-
             Bcrypt.compare = realBcryptCompare;
+            User.findOne = userFindOne;
 
             done();
         });
     });
 
 
+
     lab.test('it returns a bad request if the key does not match', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions, callback) {
 
-            const user = {
-                _id: 'BL4M0',
-                resetPassword: {
-                    token: 'O0HL4L4'
-                }
-            };
+            return new Promise( (resolve, reject) => {
 
-            callback(null, user);
+                resolve({
+                    id: 'abc',
+                    email: 'test@test.com',
+                    reset_token: 'O0HL4L4',
+                    update: function (options){
+
+                        return new Promise( (inner_resolve, inner_reject ) => {
+
+                            inner_resolve({});
+                        });
+                    }
+                });
+            });
         };
 
         const realBcryptCompare = Bcrypt.compare;
@@ -462,8 +536,8 @@ lab.experiment('Login Plugin Reset Password', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(400);
-
             Bcrypt.compare = realBcryptCompare;
+            User.findOne = userFindOne;
 
             done();
         });
@@ -472,16 +546,23 @@ lab.experiment('Login Plugin Reset Password', () => {
 
     lab.test('it succussfully sets a password', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions, callback) {
 
-            const user = {
-                _id: 'BL4M0',
-                resetPassword: {
-                    token: 'O0HL4L4'
-                }
-            };
+            return new Promise( (resolve, reject) => {
 
-            callback(null, user);
+                resolve({
+                    id: 'abc',
+                    email: 'test@test.com',
+                    reset_token: 'O0HL4L4',
+                    update: function (options){
+
+                        return new Promise( (inner_resolve, inner_reject ) => {
+
+                            inner_resolve({});
+                        });
+                    }
+                });
+            });
         };
 
         const realBcryptCompare = Bcrypt.compare;
@@ -490,16 +571,11 @@ lab.experiment('Login Plugin Reset Password', () => {
             callback(null, true);
         };
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
-
             Bcrypt.compare = realBcryptCompare;
+            User.findOne = userFindOne;
 
             done();
         });

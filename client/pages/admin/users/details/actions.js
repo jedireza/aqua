@@ -10,7 +10,7 @@ class Actions {
     static getDetails(id) {
 
         ApiActions.get(
-            `/api/sqlusers/${id}`,
+            `/api/users/${id}`,
             undefined,
             Store,
             Constants.GET_DETAILS,
@@ -21,7 +21,7 @@ class Actions {
     static saveDetails(id, data) {
 
         ApiActions.put(
-            `/api/sqlusers/${id}`,
+            `/api/users/${id}`,
             data,
             Store,
             Constants.SAVE_DETAILS,
@@ -51,7 +51,7 @@ class Actions {
         delete data.passwordConfirm;
 
         ApiActions.put(
-            `/api/sqlusers/${id}/password`,
+            `/api/users/${id}/password`,
             data,
             Store,
             Constants.SAVE_PASSWORD,
@@ -69,7 +69,7 @@ class Actions {
     static delete(id) {
 
         ApiActions.delete(
-            `/api/sqlusers/${id}`,
+            `/api/users/${id}`,
             undefined,
             Store,
             Constants.DELETE,
@@ -77,7 +77,7 @@ class Actions {
             (err, response) => {
 
                 if (!err) {
-                    ReactRouter.browserHistory.push('/admin/sqlusers');
+                    ReactRouter.browserHistory.push('/admin/users');
 
                     window.scrollTo(0, 0);
                 }

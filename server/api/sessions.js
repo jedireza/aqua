@@ -78,13 +78,7 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const Session = request.getDb('aqua').getModel('Session');
-            Session.findOne(
-                {
-                    where: {
-                        id: request.params.id
-                    }
-                }
-            ).then( (session) => {
+            Session.findById(request.params.id).then( (session) => {
 
                 if (!session) {
                     return reply(Boom.notFound('Document not found.'));

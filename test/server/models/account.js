@@ -98,7 +98,7 @@ lab.experiment('Account Class Methods', () => {
                     }
                 };
 
-                Account.findByIdAndUpdate(results.account._id, fieldsToUpdate, cb);
+                Account.findByIdAndUpdate(results.account.id, fieldsToUpdate, cb);
             }]
         }, (err, results) => {
 

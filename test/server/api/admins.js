@@ -1,67 +1,113 @@
 'use strict';
 const AdminPlugin = require('../../../server/api/admins');
 const AuthPlugin = require('../../../server/auth');
-const AuthenticatedUser = require('../fixtures/credentials-admin');
+const Credentials = require('../fixtures/credentials');
 const Code = require('code');
 const Config = require('../../../config');
 const Hapi = require('hapi');
 const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
-const MakeMockModel = require('../fixtures/make-mock-model');
-const Manifest = require('../../../manifest');
-const Path = require('path');
+const Async = require('async');
+const PrepareData = require('../../lab/prepare-data');
 const Proxyquire = require('proxyquire');
+const stub = {
+    get: function (key){
 
+        if ( key === '/db' ){
+            key = '/db_test';
+        }
+        //is there a way to access the origianl function?
+        //without loading ConfigOriginal
+        return Config.get(key);
+    }
+};
 
+const DBSetup = Proxyquire('../../../dbsetup', { './config' : stub });
+
+/*
+todo: will need sql script with admin perms on the db to set up db name and user
+learned that hapi-sequelize registration was missing next in the correct spot
+probably can go through all api handlers and move the models out to the set up scope
+instead of the handler scope
+*/
 const lab = exports.lab = Lab.script();
 let request;
 let server;
-let stub;
+let adminCredentials;
+let db;
+let Admin;
+let User;
+let AdminPermissionEntry;
+let adminFindById;
+let adminSetUser;
+let adminPagedFind;
+let userFindOne;
+let adminCreate;
+let adminUpdate;
+let adminDestroy;
+let adminPermissionEntryDestroy;
+let adminPermissionEntryFindAll;
+let adminPermissionEntryUpsert;
 
 
 lab.before((done) => {
 
-    stub = {
-        Admin: MakeMockModel(),
-        User: MakeMockModel()
-    };
+    Async.auto({
+        prepareData: function (cb){
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/admin')] = stub.Admin;
-    proxy[Path.join(process.cwd(), './server/models/user')] = stub.User;
+            PrepareData(cb);
+        },
+        runServer: ['prepareData', function (results, cb) {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            const plugins = [DBSetup, HapiAuth, AuthPlugin, AdminPlugin];
+            server = new Hapi.Server();
+            server.connection({ port: Config.get('/port/web') });
+            server.register(plugins, (err) => {
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+                if (err) {
+                    return cb(err);
+                }
 
-                return true;
-            }
+                db = server.plugins['hapi-sequelize'][Config.get('/db').database];
+                Admin = db.models.Admin;
+                AdminPermissionEntry = db.models.AdminPermissionEntry;
+                User = db.models.User;
+                adminFindById = Admin.findById;
+                adminCreate = Admin.findCreate;
+                adminUpdate = Admin.update;
+                adminDestroy = Admin.destroy;
+                adminSetUser = Admin.setUser;
+                adminPermissionEntryFindAll = AdminPermissionEntry.findAll;
+                adminPermissionEntryUpsert = AdminPermissionEntry.upsert;
+                adminPermissionEntryDestroy = AdminPermissionEntry.destroy;
+                userFindOne = User.findOne;
+                server.initialize(cb);
+            });
+        }],
+        adminUser: ['runServer', function (results, cb){
 
-            return false;
-        })[0].plugin.options
-    };
+            Credentials( db, '00000000-0000-0000-0000-000000000000', ( err, iresults ) => {
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
+                if ( err ){
+                    cb(err);
+                }
+                adminCredentials = iresults;
+                cb(null);
+            });
+        }]
+    }, (err, results ) => {
 
-        if (err) {
-            return done(err);
+        if ( err ){
+            done(err);
         }
-
-        server.initialize(done);
+        else {
+            done();
+        }
     });
 });
 
-
 lab.after((done) => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
     done();
 });
 
@@ -73,7 +119,7 @@ lab.experiment('Admins Plugin Result List', () => {
         request = {
             method: 'GET',
             url: '/admins',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -82,7 +128,7 @@ lab.experiment('Admins Plugin Result List', () => {
 
     lab.test('it returns an error when paged find fails', (done) => {
 
-        stub.Admin.pagedFind = function () {
+        Admin.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -93,6 +139,7 @@ lab.experiment('Admins Plugin Result List', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.pagedFind = adminPagedFind;
             done();
         });
     });
@@ -100,7 +147,7 @@ lab.experiment('Admins Plugin Result List', () => {
 
     lab.test('it returns an array of documents successfully', (done) => {
 
-        stub.Admin.pagedFind = function () {
+        Admin.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -113,6 +160,7 @@ lab.experiment('Admins Plugin Result List', () => {
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
             Code.expect(response.result.data[0]).to.be.an.object();
+            Admin.pagedFind = adminPagedFind;
 
             done();
         });
@@ -121,7 +169,7 @@ lab.experiment('Admins Plugin Result List', () => {
 
     lab.test('it returns an array of documents successfully (using filters)', (done) => {
 
-        stub.Admin.pagedFind = function () {
+        Admin.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -136,6 +184,7 @@ lab.experiment('Admins Plugin Result List', () => {
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
             Code.expect(response.result.data[0]).to.be.an.object();
+            Admin.pagedFind = adminPagedFind;
 
             done();
         });
@@ -150,7 +199,7 @@ lab.experiment('Admins Plugin Read', () => {
         request = {
             method: 'GET',
             url: '/admins/93EP150D35',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -159,14 +208,18 @@ lab.experiment('Admins Plugin Read', () => {
 
     lab.test('it returns an error when find by id fails', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (id, callback) {
 
-            callback(Error('find by id failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('find by id failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.findById = adminFindById;
             done();
         });
     });
@@ -174,15 +227,18 @@ lab.experiment('Admins Plugin Read', () => {
 
     lab.test('it returns a not found when find by id misses', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (id, callback) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
+            Code.expect(response.result.message).to.match(/admin not found/i);
 
             done();
         });
@@ -191,15 +247,19 @@ lab.experiment('Admins Plugin Read', () => {
 
     lab.test('it returns a document successfully', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (id, callback) {
 
-            callback(null, { _id: '93EP150D35' });
+            return new Promise( (resolve, reject) => {
+
+                resolve( { id: '93EP150D35' });
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            Admin.findById = adminFindById;
 
             done();
         });
@@ -217,7 +277,7 @@ lab.experiment('Admins Plugin Create', () => {
             payload: {
                 name: 'Toast Man'
             },
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -226,14 +286,18 @@ lab.experiment('Admins Plugin Create', () => {
 
     lab.test('it returns an error when create fails', (done) => {
 
-        stub.Admin.create = function (name, callback) {
+        Admin.create = function (name, callback) {
 
-            callback(Error('create failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('create failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.create = adminCreate;
             done();
         });
     });
@@ -241,15 +305,19 @@ lab.experiment('Admins Plugin Create', () => {
 
     lab.test('it creates a document successfully', (done) => {
 
-        stub.Admin.create = function (name, callback) {
+        Admin.create = function (name, callback) {
 
-            callback(null, {});
+            return new Promise( (resolve, reject) => {
+
+                resolve({});
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            Admin.create = adminCreate;
 
             done();
         });
@@ -265,13 +333,11 @@ lab.experiment('Admins Plugin Update', () => {
             method: 'PUT',
             url: '/admins/93EP150D35',
             payload: {
-                name: {
-                    first: 'Ren',
-                    middle: '',
-                    last: 'Höek'
-                }
+                first: 'Ren',
+                middle: '',
+                last: 'Höek'
             },
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -280,14 +346,18 @@ lab.experiment('Admins Plugin Update', () => {
 
     lab.test('it returns an error when update fails', (done) => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+        Admin.update = function (id, update, callback) {
 
-            callback(Error('update failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('update failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.update = adminUpdate;
             done();
         });
     });
@@ -295,14 +365,18 @@ lab.experiment('Admins Plugin Update', () => {
 
     lab.test('it returns not found when find by id misses', (done) => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+        Admin.update = function (id, update, callback) {
 
-            callback(null, undefined);
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
+            Admin.update = adminUpdate;
             done();
         });
     });
@@ -310,15 +384,19 @@ lab.experiment('Admins Plugin Update', () => {
 
     lab.test('it updates a document successfully', (done) => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+        Admin.update = function (id, update, callback) {
 
-            callback(null, {});
+            return new Promise( (resolve, reject) => {
+
+                resolve({});
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            Admin.update = adminUpdate;
 
             done();
         });
@@ -333,10 +411,19 @@ lab.experiment('Admins Plugin Update Permissions', () => {
         request = {
             method: 'PUT',
             url: '/admins/93EP150D35/permissions',
-            payload: {
-                permissions: { SPACE_RACE: true }
+            payload:{
+                permissionEntries: [
+                    {
+                        active: true,
+                        permission_id: 'abc'
+                    },
+                    {
+                        active: true,
+                        permission_id: 'def'
+                    }
+                ]
             },
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -345,14 +432,19 @@ lab.experiment('Admins Plugin Update Permissions', () => {
 
     lab.test('it returns an error when update fails', (done) => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+        AdminPermissionEntry.destroy = function (options) {
 
-            callback(Error('update failed'));
+            return new Promise( (resolve, reject ) => {
+
+                reject(Error('update failed'));
+            });
         };
+
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            AdminPermissionEntry.destroy = adminPermissionEntryDestroy;
             done();
         });
     });
@@ -360,15 +452,35 @@ lab.experiment('Admins Plugin Update Permissions', () => {
 
     lab.test('it updates a document successfully', (done) => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+        AdminPermissionEntry.destroy = function (options) {
 
-            callback(null, {});
+            return new Promise( (resolve, reject ) => {
+
+                resolve(2);
+            });
+        };
+        AdminPermissionEntry.upsert = function (options) {
+
+            return new Promise( (resolve, reject ) => {
+
+                resolve({});
+            });
+        };
+        AdminPermissionEntry.findAll = function (options) {
+
+            return new Promise( (resolve, reject ) => {
+
+                resolve([{}]);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            AdminPermissionEntry.destroy = adminPermissionEntryDestroy;
+            AdminPermissionEntry.upsert = adminPermissionEntryUpsert;
+            AdminPermissionEntry.findAll = adminPermissionEntryFindAll;
 
             done();
         });
@@ -384,9 +496,9 @@ lab.experiment('Admins Plugin Update Groups', () => {
             method: 'PUT',
             url: '/admins/93EP150D35/groups',
             payload: {
-                groups: { sales: 'Sales' }
+                groups: ['abc', 'def']
             },
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -395,14 +507,18 @@ lab.experiment('Admins Plugin Update Groups', () => {
 
     lab.test('it returns an error when update fails', (done) => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+        Admin.update = function (id, update, callback) {
 
-            callback(Error('update failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('update failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.update = adminUpdate;
             done();
         });
     });
@@ -410,15 +526,28 @@ lab.experiment('Admins Plugin Update Groups', () => {
 
     lab.test('it updates a document successfully', (done) => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+        Admin.findById = function (id) {
 
-            callback(null, {});
+            return new Promise( ( resolve, reject ) => {
+
+                resolve({
+                    setAdminGroups: function (groups) {
+
+                        return new Promise( (inner_resolve, inner_reject) => {
+
+                            inner_resolve([]);
+                        });
+                    }
+                });
+
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
+            Code.expect(response.result).to.be.an.array();
+            Admin.findById = adminFindById;
 
             done();
         });
@@ -436,7 +565,7 @@ lab.experiment('Admins Plugin Link User', () => {
             payload: {
                 username: 'ren'
             },
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -445,49 +574,76 @@ lab.experiment('Admins Plugin Link User', () => {
 
     lab.test('it returns an error when (Admin) find by id fails', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (id, callback) {
 
-            callback(Error('find by id failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('find by id failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.findById = adminFindById;
+
             done();
         });
     });
 
-
     lab.test('it returns not found when (Admin) find by id misses', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (id, callback) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
+            Admin.findById = adminFindById;
             done();
         });
     });
 
-
     lab.test('it returns an error when (User) find by username fails', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (options) {
 
-            callback(null, {});
+            return new Promise( (resolve, reject) => {
+
+                resolve(
+                    {
+                        getUser: () => {
+
+                            return new Promise( (inner_resolve, inner_reject ) => {
+
+                                inner_resolve();
+
+                            });
+                        }
+                    }
+                );
+            });
         };
 
-        stub.User.findByUsername = function (id, callback) {
+        User.findOne = function (options) {
 
-            callback(Error('find by username failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('find by username failed'));
+            });
         };
+
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.findById = adminFindById;
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -495,19 +651,39 @@ lab.experiment('Admins Plugin Link User', () => {
 
     lab.test('it returns not found when (User) find by username misses', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (options) {
 
-            callback(null, {});
+            return new Promise( (resolve, reject) => {
+
+                resolve(
+                    {
+                        getUser: () => {
+
+                            return new Promise( (inner_resolve, inner_reject ) => {
+
+                                inner_resolve();
+
+                            });
+                        }
+                    }
+                );
+
+            });
         };
 
-        stub.User.findByUsername = function (id, callback) {
+        User.findOne = function (options) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
+            Admin.findById = adminFindById;
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -515,109 +691,163 @@ lab.experiment('Admins Plugin Link User', () => {
 
     lab.test('it returns conflict when an admin role already exists', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (options) {
 
-            callback(null, {});
-        };
+            return new Promise( (resolve, reject) => {
 
-        stub.User.findByUsername = function (id, callback) {
+                resolve(
+                    {
+                        getUser: () => {
 
-            const user = {
-                roles: {
-                    admin: {
-                        id: '535H0W35',
-                        name: 'Stimpson J Cat'
+                            return new Promise( (inner_resolve, inner_reject ) => {
+
+                                inner_resolve();
+
+                            });
+                        }
                     }
-                }
-            };
+                );
 
-            callback(null, user);
+            });
         };
+
+        User.findOne = function (options) {
+
+            return new Promise( (resolve, reject) => {
+
+                resolve(
+                    {
+                        getAdmin: () => {
+
+                            return new Promise( (inner_resolve, inner_reject ) => {
+
+                                inner_resolve({});
+
+                            });
+                        }
+                    }
+                );
+            });
+        };
+
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
+            Admin.findById = adminFindById;
+            User.findOne = userFindOne;
             done();
         });
     });
-
 
     lab.test('it returns conflict when the admin is linked to another user', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (options) {
 
-            const admin = {
-                _id: 'DUD3N0T1T',
-                user: {
-                    id: '535H0W35',
-                    name: 'ren'
-                }
-            };
+            return new Promise( (resolve, reject) => {
 
-            callback(null, admin);
+                resolve(
+                    {
+                        getUser: () => {
+
+                            return new Promise( (inner_resolve, inner_reject ) => {
+
+                                inner_resolve({});
+
+                            });
+                        }
+                    }
+                );
+            });
         };
 
-        stub.User.findByUsername = function (id, callback) {
+        User.findOne = function (options) {
 
-            const user = {
-                _id: 'N0T1TDUD3',
-                roles: {
-                    admin: {
-                        id: '93EP150D35',
-                        name: 'Ren Höek'
+            return new Promise( (resolve, reject) => {
+
+                resolve(
+                    {
+                        getAdmin: () => {
+
+                            return new Promise( (inner_resolve, inner_reject ) => {
+
+                                inner_resolve();
+
+                            });
+                        }
                     }
-                }
-            };
-
-            callback(null, user);
+                );
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
+            Admin.findById = adminFindById;
+            User.findOne = userFindOne;
             done();
         });
     });
 
-
     lab.test('it returns an error when find by id and update fails', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (id, callback) {
 
-            const admin = {
-                _id: '93EP150D35',
-                name: {
-                    first: 'Ren',
-                    last: 'Höek'
-                }
-            };
+            return new Promise( (resolve, reject) => {
 
-            callback(null, admin);
+                resolve(
+                    {
+                        id: '93EP150D35',
+                        first: 'Ren',
+                        last: 'Höek',
+                        getUser: () => {
+
+                            return new Promise( (inner_resolve, inner_reject ) => {
+
+                                inner_resolve();
+
+                            });
+                        },
+                        setUser: () => {
+
+                            return new Promise( (inner_resolve, inner_reject) => {
+
+                                inner_reject(Error('find by id and update failed'));
+                            });
+
+                        }
+
+                    }
+                );
+            });
         };
 
-        stub.User.findByUsername = function (id, callback) {
+        User.findOne = function (id, callback) {
 
-            const user = {
-                _id: '535H0W35',
-                username: 'ren'
-            };
+            return new Promise( (resolve, reject) => {
 
-            callback(null, user);
-        };
+                resolve(
+                    {
+                        id: '535H0W35',
+                        username: 'ren',
+                        getAdmin: () => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+                            return new Promise( (inner_resolve, inner_reject ) => {
 
-            callback(Error('find by id and update failed'));
-        };
+                                inner_resolve();
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
+                            });
+                        }
+                    }
+                );
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.findById = adminFindById;
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -625,42 +855,59 @@ lab.experiment('Admins Plugin Link User', () => {
 
     lab.test('it successfuly links an admin and user', (done) => {
 
-        const admin = {
-            _id: '93EP150D35',
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            }
-        };
-        const user = {
-            _id: '535H0W35',
-            username: 'ren',
-            roles: {}
-        };
+        Admin.findById = function (id, callback) {
 
-        stub.Admin.findById = function (id, callback) {
+            return new Promise( (resolve, reject) => {
 
-            callback(null, admin);
-        };
+                resolve(
+                    {
+                        id: '93EP150D35',
+                        first: 'Ren',
+                        last: 'Höek',
+                        getUser: () => {
 
-        stub.User.findByUsername = function (id, callback) {
+                            return new Promise( (inner_resolve, inner_reject ) => {
 
-            callback(null, user);
-        };
+                                inner_resolve();
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+                            });
+                        },
+                        setUser: () => {
 
-            callback(null, admin);
-        };
+                            return new Promise( (inner_resolve, inner_reject) => {
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, user);
+                                inner_resolve({});
+                            });
+                        }
+                    }
+                );
+            });
         };
 
+        User.findOne = function (id, callback) {
+
+            return new Promise( (resolve, reject) => {
+
+                resolve(
+                    {
+                        id: '535H0W35',
+                        username: 'ren',
+                        getAdmin: () => {
+
+                            return new Promise( (inner_resolve, inner_reject ) => {
+
+                                inner_resolve();
+                            });
+                        }
+                    }
+                );
+            });
+        };
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
+            Admin.findById = adminFindById;
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -674,7 +921,7 @@ lab.experiment('Admins Plugin Unlink User', () => {
         request = {
             method: 'DELETE',
             url: '/admins/93EP150D35/user',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -683,14 +930,18 @@ lab.experiment('Admins Plugin Unlink User', () => {
 
     lab.test('it returns an error when (Admin) find by id fails', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (id, options) {
 
-            callback(Error('find by id failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('find by id failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.findById = adminFindById;
             done();
         });
     });
@@ -698,14 +949,18 @@ lab.experiment('Admins Plugin Unlink User', () => {
 
     lab.test('it returns not found when (Admin) find by id misses', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (id) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
+            Admin.findById = adminFindById;
             done();
         });
     });
@@ -713,83 +968,34 @@ lab.experiment('Admins Plugin Unlink User', () => {
 
     lab.test('it returns early admin is void of a user', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (id, callback) {
 
-            callback(null, {});
+            return new Promise( (resolve, reject) => {
+
+                resolve({
+                    setUser: function (user){
+
+                        return new Promise( (inner_resolve, inner_reject) => {
+
+                            inner_resolve({});
+                        });
+                    },
+                    getUser: function () {
+
+                        return new Promise( (inner_resolve, inner_reject) => {
+
+                            inner_resolve();
+                        });
+                    }
+                });
+            });
         };
+
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
-    });
-
-
-    lab.test('it returns early admin is void of a user.id', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback(null, { user: {} });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when (User) find by id fails', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            const admin = {
-                user: {
-                    id: '93EP150D35',
-                    name: 'ren'
-                }
-            };
-
-            callback(null, admin);
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns not found when (User) find by username misses', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            const admin = {
-                user: {
-                    id: '93EP150D35',
-                    name: 'ren'
-                }
-            };
-
-            callback(null, admin);
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
+            Admin.findById = adminFindById;
             done();
         });
     });
@@ -797,47 +1003,56 @@ lab.experiment('Admins Plugin Unlink User', () => {
 
     lab.test('it returns an error when find by id and update fails', (done) => {
 
-        stub.Admin.findById = function (id, callback) {
+        Admin.findById = function (options) {
 
-            const admin = {
-                _id: '93EP150D35',
-                user: {
-                    id: '535H0W35',
-                    name: 'ren'
-                }
-            };
+            return new Promise( (resolve, reject) => {
 
-            callback(null, admin);
-        };
+                resolve(
+                    {
+                        getUser: () => {
 
-        stub.User.findById = function (id, callback) {
+                            return new Promise( (inner_resolve, inner_reject ) => {
 
-            const user = {
-                _id: '535H0W35',
-                roles: {
-                    admin: {
-                        id: '93EP150D35',
-                        name: 'Ren Höek'
+                                inner_resolve();
+
+                            });
+                        }
                     }
-                }
-            };
+                );
 
-            callback(null, user);
+            });
         };
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+        User.findOne = function (options) {
 
-            callback(Error('find by id and update failed'));
+            return new Promise( (resolve, reject) => {
+
+                resolve({
+                    getAdmin: function () {
+
+                        return new Promise( (inner_resolve, inner_reject) => {
+
+                            inner_resolve();
+                        });
+                    }
+                });
+            });
         };
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
+        Admin.setUser = function (user) {
 
-            callback(Error('find by id and update failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('find by id and update failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.findById = adminFindById;
+            User.findOne = userFindOne;
+            Admin.setUser = adminSetUser;
             done();
         });
     });
@@ -845,46 +1060,34 @@ lab.experiment('Admins Plugin Unlink User', () => {
 
     lab.test('it successfully unlinks an admin from a user', (done) => {
 
-        const user = {
-            _id: '535H0W35',
-            roles: {
-                admin: {
-                    id: '93EP150D35',
-                    name: 'Ren Höek'
-                }
-            }
-        };
-        const admin = {
-            _id: '93EP150D35',
-            user: {
-                id: '535H0W35',
-                name: 'ren'
-            }
-        };
+        Admin.findById = function (id, callback) {
 
-        stub.Admin.findById = function (id, callback) {
+            return new Promise( (resolve, reject) => {
 
-            callback(null, admin);
-        };
+                resolve({
+                    setUser: function (user){
 
-        stub.User.findById = function (id, callback) {
+                        return new Promise( (inner_resolve, inner_reject) => {
 
-            callback(null, user);
+                            inner_resolve();
+                        });
+                    },
+                    getUser: function () {
+
+                        return new Promise( (inner_resolve, inner_reject) => {
+
+                            inner_resolve({});
+                        });
+                    }
+                });
+            });
         };
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, admin);
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, user);
-        };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
+            Admin.findById = adminFindById;
             done();
         });
     });
@@ -898,7 +1101,7 @@ lab.experiment('Admins Plugin Delete', () => {
         request = {
             method: 'DELETE',
             url: '/admins/93EP150D35',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -907,14 +1110,19 @@ lab.experiment('Admins Plugin Delete', () => {
 
     lab.test('it returns an error when delete by id fails', (done) => {
 
-        stub.Admin.findByIdAndDelete = function (id, callback) {
+        Admin.destroy = function (id, callback) {
 
-            callback(Error('delete by id failed'));
+            return new Promise( (resolve, reject ) => {
+
+                reject(Error('delete by id failed'));
+            });
+
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Admin.destroy = adminDestroy;
             done();
         });
     });
@@ -922,15 +1130,19 @@ lab.experiment('Admins Plugin Delete', () => {
 
     lab.test('it returns a not found when delete by id misses', (done) => {
 
-        stub.Admin.findByIdAndDelete = function (id, callback) {
+        Admin.destroy = function (id, callback) {
 
-            callback(null, undefined);
+            return new Promise( (resolve, reject ) => {
+
+                resolve(0);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
+            Code.expect(response.result.message).to.match(/admin not found/i);
+            Admin.destroy = adminDestroy;
 
             done();
         });
@@ -939,15 +1151,19 @@ lab.experiment('Admins Plugin Delete', () => {
 
     lab.test('it deletes a document successfully', (done) => {
 
-        stub.Admin.findByIdAndDelete = function (id, callback) {
+        Admin.destroy = function (id, callback) {
 
-            callback(null, 1);
+            return new Promise( (resolve, reject ) => {
+
+                resolve(1);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.message).to.match(/success/i);
+            Admin.destroy = adminDestroy;
 
             done();
         });

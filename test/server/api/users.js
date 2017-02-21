@@ -1,65 +1,114 @@
 'use strict';
 const AuthPlugin = require('../../../server/auth');
-const AuthenticatedUser = require('../fixtures/credentials-admin');
+const Credentials = require('../fixtures/credentials');
 const Code = require('code');
 const Config = require('../../../config');
 const Hapi = require('hapi');
 const HapiAuth = require('hapi-auth-cookie');
-const Lab = require('lab');
-const MakeMockModel = require('../fixtures/make-mock-model');
-const Manifest = require('../../../manifest');
-const Path = require('path');
-const Proxyquire = require('proxyquire');
 const UserPlugin = require('../../../server/api/users');
+const Lab = require('lab');
+const Async = require('async');
+const PrepareData = require('../../lab/prepare-data');
+const Proxyquire = require('proxyquire');
+const stub = {
+    get: function (key){
 
+        if ( key === '/db' ){
+            key = '/db_test';
+        }
+        //is there a way to access the origianl function?
+        //without loading ConfigOriginal
+        return Config.get(key);
+    }
+};
 
+const DBSetup = Proxyquire('../../../dbsetup', { './config' : stub });
+
+/*
+todo: will need sql script with admin perms on the db to set up db name and user
+learned that hapi-sequelize registration was missing next in the correct spot
+probably can go through all api handlers and move the models out to the set up scope
+instead of the handler scope
+*/
 const lab = exports.lab = Lab.script();
 let request;
 let server;
-let stub;
+let adminCredentials;
+let accountCredentials;
+let db;
+let User;
+let userPagedFind;
+let userFindById;
+let userFindOne;
+let userUpdate;
+let userDestroy;
+let userCreate;
 
 
 lab.before((done) => {
 
-    stub = {
-        User: MakeMockModel()
-    };
+    Async.auto({
+        prepareData: function (cb){
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/user')] = stub.User;
+            PrepareData(cb);
+        },
+        runServer: ['prepareData', function (results, cb) {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            const plugins = [DBSetup, HapiAuth, AuthPlugin, UserPlugin];
+            server = new Hapi.Server();
+            server.connection({ port: Config.get('/port/web') });
+            server.register(plugins, (err) => {
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+                if (err) {
+                    return cb(err);
+                }
 
-                return true;
-            }
+                db = server.plugins['hapi-sequelize'][Config.get('/db').database];
+                User = db.models.User;
+                userFindOne = User.findOne;
+                userFindById = User.findById;
+                userPagedFind = User.pagedFind;
+                userUpdate = User.update;
+                userDestroy = User.destroy;
+                userCreate = User.create;
+                server.initialize(cb);
+            });
+        }],
+        adminUser: ['runServer', function (results, cb){
 
-            return false;
-        })[0].plugin.options
-    };
+            Credentials( db, '00000000-0000-0000-0000-000000000000', ( err, iresults ) => {
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, UserPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
+                if ( err ){
+                    cb(err);
+                }
+                adminCredentials = iresults;
+                cb(null);
+            });
+        }],
+        accountUser: ['runServer', function (results, cb){
 
-        if (err) {
-            return done(err);
+            Credentials( db, '11111111-1111-1111-1111-111111111111', ( err, iresults ) => {
+
+                if ( err ){
+                    cb(err);
+                }
+                accountCredentials = iresults;
+                cb(null);
+            });
+        }]
+    }, (err, results ) => {
+
+        if ( err ){
+            done(err);
         }
-
-        server.initialize(done);
+        else {
+            done();
+        }
     });
 });
 
-
 lab.after((done) => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
     done();
 });
 
@@ -71,7 +120,7 @@ lab.experiment('User Plugin Result List', () => {
         request = {
             method: 'GET',
             url: '/users',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -80,7 +129,7 @@ lab.experiment('User Plugin Result List', () => {
 
     lab.test('it returns an error when paged find fails', (done) => {
 
-        stub.User.pagedFind = function () {
+        User.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -91,6 +140,7 @@ lab.experiment('User Plugin Result List', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.pagedFind = userPagedFind;
             done();
         });
     });
@@ -98,7 +148,7 @@ lab.experiment('User Plugin Result List', () => {
 
     lab.test('it returns an array of documents successfully', (done) => {
 
-        stub.User.pagedFind = function () {
+        User.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -111,6 +161,7 @@ lab.experiment('User Plugin Result List', () => {
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
             Code.expect(response.result.data[0]).to.be.an.object();
+            User.pagedFind = userPagedFind;
 
             done();
         });
@@ -119,7 +170,7 @@ lab.experiment('User Plugin Result List', () => {
 
     lab.test('it returns an array of documents successfully using filters', (done) => {
 
-        stub.User.pagedFind = function () {
+        User.pagedFind = function () {
 
             const args = Array.prototype.slice.call(arguments);
             const callback = args.pop();
@@ -134,6 +185,7 @@ lab.experiment('User Plugin Result List', () => {
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.data).to.be.an.array();
             Code.expect(response.result.data[0]).to.be.an.object();
+            User.pagedFind = userPagedFind;
 
             done();
         });
@@ -148,7 +200,7 @@ lab.experiment('Users Plugin Read', () => {
         request = {
             method: 'GET',
             url: '/users/93EP150D35',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -157,14 +209,18 @@ lab.experiment('Users Plugin Read', () => {
 
     lab.test('it returns an error when find by id fails', (done) => {
 
-        stub.User.findById = function (id, callback) {
+        User.findById = function (id) {
 
-            callback(Error('find by id failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('find by id failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findById = userFindById;
             done();
         });
     });
@@ -172,15 +228,19 @@ lab.experiment('Users Plugin Read', () => {
 
     lab.test('it returns a not found when find by id misses', (done) => {
 
-        stub.User.findById = function (id, callback) {
+        User.findById = function (id) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
+            Code.expect(response.result.message).to.match(/user not found/i);
+            User.findById = userFindById;
 
             done();
         });
@@ -189,15 +249,20 @@ lab.experiment('Users Plugin Read', () => {
 
     lab.test('it returns a document successfully', (done) => {
 
-        stub.User.findById = function (id, callback) {
+        User.findById = function (id) {
 
-            callback(null, { _id: '93EP150D35' });
+            return new Promise( (resolve, reject) => {
+
+                resolve({ id: '93EP150D35' });
+            });
         };
+
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            User.findById = userFindById;
 
             done();
         });
@@ -212,7 +277,7 @@ lab.experiment('Users Plugin (My) Read', () => {
         request = {
             method: 'GET',
             url: '/users/my',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -221,17 +286,18 @@ lab.experiment('Users Plugin (My) Read', () => {
 
     lab.test('it returns an error when find by id fails', (done) => {
 
-        stub.User.findById = function () {
+        User.findById = function (id) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject) => {
 
-            callback(Error('find by id failed'));
+                reject(Error('find by id failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findById = userFindById;
             done();
         });
     });
@@ -239,18 +305,19 @@ lab.experiment('Users Plugin (My) Read', () => {
 
     lab.test('it returns a not found when find by id misses', (done) => {
 
-        stub.User.findById = function () {
+        User.findById = function (id) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject) => {
 
-            callback();
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
+            Code.expect(response.result.message).to.match(/User not found/i);
+            User.findById = userFindById;
 
             done();
         });
@@ -259,18 +326,20 @@ lab.experiment('Users Plugin (My) Read', () => {
 
     lab.test('it returns a document successfully', (done) => {
 
-        stub.User.findById = function () {
+        User.findById = function (id) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject) => {
 
-            callback(null, { _id: '93EP150D35' });
+                resolve( { id: '93EP150D35' } );
+            });
         };
+
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            User.findById = userFindById;
 
             done();
         });
@@ -290,7 +359,7 @@ lab.experiment('Users Plugin Create', () => {
                 password: 'dirtandwater',
                 email: 'mrmud@mudmail.mud'
             },
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -299,19 +368,23 @@ lab.experiment('Users Plugin Create', () => {
 
     lab.test('it returns an error when find one fails for username check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.username) {
-                callback(Error('find one failed'));
-            }
-            else {
-                callback();
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.username) {
+                    reject(Error('find one failed'));
+                }
+                else {
+                    resolve();
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -319,19 +392,23 @@ lab.experiment('Users Plugin Create', () => {
 
     lab.test('it returns a conflict when find one hits for username check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.username) {
-                callback(null, {});
-            }
-            else {
-                callback(Error('find one failed'));
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.username) {
+                    resolve({});
+                }
+                else {
+                    reject(Error('find one failed'));
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -339,19 +416,23 @@ lab.experiment('Users Plugin Create', () => {
 
     lab.test('it returns an error when find one fails for email check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.email) {
-                callback(Error('find one failed'));
-            }
-            else {
-                callback();
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.email) {
+                    reject(Error('find one failed'));
+                }
+                else {
+                    resolve();
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -359,19 +440,23 @@ lab.experiment('Users Plugin Create', () => {
 
     lab.test('it returns a conflict when find one hits for email check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.email) {
-                callback(null, {});
-            }
-            else {
-                callback();
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.email) {
+                    resolve({});
+                }
+                else {
+                    resolve();
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -379,19 +464,27 @@ lab.experiment('Users Plugin Create', () => {
 
     lab.test('it returns an error when create fails', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
-        stub.User.create = function (username, password, email, callback) {
+        User.create = function (username, password, email, callback) {
 
-            callback(Error('create failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('create failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
+            User.create = userCreate;
             done();
         });
     });
@@ -399,20 +492,28 @@ lab.experiment('Users Plugin Create', () => {
 
     lab.test('it creates a document successfully', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
-        stub.User.create = function (username, password, email, callback) {
+        User.create = function (username, password, email, callback) {
 
-            callback(null, {});
+            return new Promise( (resolve, reject) => {
+
+                resolve({});
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            User.findOne = userFindOne;
+            User.create = userCreate;
 
             done();
         });
@@ -432,7 +533,7 @@ lab.experiment('Users Plugin Update', () => {
                 username: 'muddy',
                 email: 'mrmud@mudmail.mud'
             },
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -441,19 +542,23 @@ lab.experiment('Users Plugin Update', () => {
 
     lab.test('it returns an error when find one fails for username check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.username) {
-                callback(Error('find one failed'));
-            }
-            else {
-                callback();
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.username) {
+                    reject(Error('find one failed'));
+                }
+                else {
+                    resolve();
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -461,19 +566,23 @@ lab.experiment('Users Plugin Update', () => {
 
     lab.test('it returns a conflict when find one hits for username check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.username) {
-                callback(null, {});
-            }
-            else {
-                callback(Error('find one failed'));
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.username) {
+                    resolve({});
+                }
+                else {
+                    reject(Error('find one failed'));
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -481,19 +590,23 @@ lab.experiment('Users Plugin Update', () => {
 
     lab.test('it returns an error when find one fails for email check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.email) {
-                callback(Error('find one failed'));
-            }
-            else {
-                callback();
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.email) {
+                    reject(Error('find one failed'));
+                }
+                else {
+                    resolve();
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -501,19 +614,23 @@ lab.experiment('Users Plugin Update', () => {
 
     lab.test('it returns a conflict when find one hits for email check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.email) {
-                callback(null, {});
-            }
-            else {
-                callback();
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.email) {
+                    resolve({});
+                }
+                else {
+                    resolve();
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
+            User.findOne = userFindOne;
             done();
         });
     });
@@ -521,19 +638,27 @@ lab.experiment('Users Plugin Update', () => {
 
     lab.test('it returns an error when update fails', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
+        User.update = function (options) {
 
-            callback(Error('update failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('update failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
+            User.update = userUpdate;
             done();
         });
     });
@@ -541,19 +666,27 @@ lab.experiment('Users Plugin Update', () => {
 
     lab.test('it returns not found when find by id misses', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
+        User.update = function (options) {
 
-            callback(null, undefined);
+            return new Promise( (resolve, reject) => {
+
+                resolve(0);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
+            User.findOne = userFindOne;
+            User.update = userUpdate;
             done();
         });
     });
@@ -561,20 +694,28 @@ lab.experiment('Users Plugin Update', () => {
 
     lab.test('it updates a document successfully', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
+        User.update = function (options) {
 
-            callback(null, {});
+            return new Promise( (resolve, reject) => {
+
+                resolve(1);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
+            Code.expect(response.result).to.be.a.number();
+            User.findOne = userFindOne;
+            User.update = userUpdate;
 
             done();
         });
@@ -593,7 +734,7 @@ lab.experiment('Users Plugin (My) Update', () => {
                 username: 'muddy',
                 email: 'mrmud@mudmail.mud'
             },
-            credentials: AuthenticatedUser
+            credentials: accountCredentials
         };
 
         done();
@@ -602,19 +743,23 @@ lab.experiment('Users Plugin (My) Update', () => {
 
     lab.test('it returns an error when find one fails for username check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.username) {
-                callback(Error('find one failed'));
-            }
-            else {
-                callback();
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.username) {
+                    reject(Error('find one failed'));
+                }
+                else {
+                    resolve();
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
 
             done();
         });
@@ -623,19 +768,23 @@ lab.experiment('Users Plugin (My) Update', () => {
 
     lab.test('it returns a conflict when find one hits for username check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.username) {
-                callback(null, {});
-            }
-            else {
-                callback(Error('find one failed'));
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.username) {
+                    resolve({});
+                }
+                else {
+                    reject(Error('find one failed'));
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
+            User.findOne = userFindOne;
 
             done();
         });
@@ -644,19 +793,23 @@ lab.experiment('Users Plugin (My) Update', () => {
 
     lab.test('it returns an error when find one fails for email check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.email) {
-                callback(Error('find one failed'));
-            }
-            else {
-                callback();
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.username) {
+                    reject(Error('find one failed'));
+                }
+                else {
+                    resolve();
+                }
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
 
             done();
         });
@@ -665,19 +818,24 @@ lab.experiment('Users Plugin (My) Update', () => {
 
     lab.test('it returns a conflict when find one hits for email check', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            if (conditions.email) {
-                callback(null, {});
-            }
-            else {
-                callback();
-            }
+            return new Promise( (resolve, reject) => {
+
+                if (conditions.where.email) {
+                    resolve({});
+                }
+                else {
+                    resolve();
+                }
+            });
         };
+
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(409);
+            User.findOne = userFindOne;
 
             done();
         });
@@ -686,22 +844,27 @@ lab.experiment('Users Plugin (My) Update', () => {
 
     lab.test('it returns an error when update fails', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
-        stub.User.findByIdAndUpdate = function () {
+        User.update = function (options) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject) => {
 
-            callback(Error('update failed'));
+                reject(Error('update failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.findOne = userFindOne;
+            User.update = userUpdate;
 
             done();
         });
@@ -710,23 +873,27 @@ lab.experiment('Users Plugin (My) Update', () => {
 
     lab.test('it updates a document successfully', (done) => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = function (conditions) {
 
-            callback();
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
-        stub.User.findByIdAndUpdate = function () {
+        User.update = function (options) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject) => {
 
-            callback(null, { _id: '1D', username: 'muddy' });
+                resolve({ id: '1D', username: 'muddy' });
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result).to.be.an.object();
+            User.findOne = userFindOne;
 
             done();
         });
@@ -744,43 +911,27 @@ lab.experiment('Users Plugin Set Password', () => {
             payload: {
                 password: 'fromdirt'
             },
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
     });
 
 
-    lab.test('it returns an error when generate password hash fails', (done) => {
-
-        stub.User.generatePasswordHash = function (password, callback) {
-
-            callback(Error('generate password hash failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
     lab.test('it returns an error when update fails', (done) => {
 
-        stub.User.generatePasswordHash = function (password, callback) {
+        User.update = function (options, where) {
 
-            callback(null, { password: '', hash: '' });
-        };
+            return new Promise( (resolve, reject) => {
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('update failed'));
+                reject(Error('update failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.update = userUpdate;
             done();
         });
     });
@@ -788,19 +939,18 @@ lab.experiment('Users Plugin Set Password', () => {
 
     lab.test('it sets the password successfully', (done) => {
 
-        stub.User.generatePasswordHash = function (password, callback) {
+        User.update = function (options, where) {
 
-            callback(null, { password: '', hash: '' });
-        };
+            return new Promise( (resolve, reject) => {
 
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
+                resolve(1);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
+            User.update = userUpdate;
             done();
         });
     });
@@ -817,46 +967,27 @@ lab.experiment('Users Plugin (My) Set Password', () => {
             payload: {
                 password: 'fromdirt'
             },
-            credentials: AuthenticatedUser
+            credentials: accountCredentials
         };
 
         done();
     });
 
 
-    lab.test('it returns an error when generate password hash fails', (done) => {
-
-        stub.User.generatePasswordHash = function (password, callback) {
-
-            callback(Error('generate password hash failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
     lab.test('it returns an error when update fails', (done) => {
 
-        stub.User.generatePasswordHash = function (password, callback) {
+        User.update = function (options, where) {
 
-            callback(null, { password: '', hash: '' });
-        };
+            return new Promise( (resolve, reject) => {
 
-        stub.User.findByIdAndUpdate = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('update failed'));
+                reject(Error('update failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.update = userUpdate;
             done();
         });
     });
@@ -864,22 +995,18 @@ lab.experiment('Users Plugin (My) Set Password', () => {
 
     lab.test('it sets the password successfully', (done) => {
 
-        stub.User.generatePasswordHash = function (password, callback) {
+        User.update = function (options, where) {
 
-            callback(null, { password: '', hash: '' });
-        };
+            return new Promise( (resolve, reject) => {
 
-        stub.User.findByIdAndUpdate = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, {});
+                resolve(1);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
+            User.update = userUpdate;
             done();
         });
     });
@@ -893,7 +1020,7 @@ lab.experiment('Users Plugin Delete', () => {
         request = {
             method: 'DELETE',
             url: '/users/93EP150D35',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -902,14 +1029,18 @@ lab.experiment('Users Plugin Delete', () => {
 
     lab.test('it returns an error when delete by id fails', (done) => {
 
-        stub.User.findByIdAndDelete = function (id, callback) {
+        User.destroy = function (options) {
 
-            callback(Error('delete by id failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('delete by id failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            User.destroy = userDestroy;
             done();
         });
     });
@@ -917,15 +1048,19 @@ lab.experiment('Users Plugin Delete', () => {
 
     lab.test('it returns a not found when delete by id misses', (done) => {
 
-        stub.User.findByIdAndDelete = function (id, callback) {
+        User.destroy = function (options) {
 
-            callback(null, undefined);
+            return new Promise( (resolve, reject) => {
+
+                resolve();
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(404);
             Code.expect(response.result.message).to.match(/document not found/i);
+            User.destroy = userDestroy;
 
             done();
         });
@@ -934,15 +1069,19 @@ lab.experiment('Users Plugin Delete', () => {
 
     lab.test('it deletes a document successfully', (done) => {
 
-        stub.User.findByIdAndDelete = function (id, callback) {
+        User.destroy = function (options) {
 
-            callback(null, 1);
+            return new Promise( (resolve, reject) => {
+
+                resolve(1);
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
             Code.expect(response.result.message).to.match(/success/i);
+            User.destroy = userDestroy;
 
             done();
         });

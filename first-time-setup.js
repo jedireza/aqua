@@ -201,8 +201,8 @@ Async.auto({
                     id : '00000000-0000-0000-0000-000000000000',
                     username : 'root',
                     isActive: true,
-                    password : 'test',
-                    email : 'test@test.com'
+                    password : results.rootPassword,
+                    email : results.rootEmail
                 }).then((user) => {
 
                     done(null, user);

@@ -65,7 +65,7 @@ class DetailsPage extends React.Component {
             );
         }
 
-        const id = this.state.details._id;
+        const id = this.state.details.id;
         const username = this.state.details.username;
 
         return (

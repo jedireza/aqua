@@ -6,7 +6,6 @@ module.exports = function (sequelize, DataTypes){
 
 /*
   function _hashPassword(user){
-    console.log("hash password hash");
     if (!user.getDataValue('password')) {
         return Promise.reject();
     }
@@ -15,12 +14,10 @@ module.exports = function (sequelize, DataTypes){
             return Bcrypt.hash(user.getDataValue('password'), salt);
         })
         .then(function(hash) {
-           console.log("set password hash");
             user.setDataValue('password_hash', hash);
             return user;
         });
   };
-/*
   */
 
     const _hashPassword = function (user, options, cb){
@@ -116,7 +113,6 @@ module.exports = function (sequelize, DataTypes){
             findByCredentials: function (username, password, callback){
 
                 const self = this;
-
                 Async.auto({
                     user: function (done) {
 

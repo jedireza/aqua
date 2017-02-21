@@ -74,11 +74,8 @@ internals.applyRoutes = function (server, next) {
             const Admin = request.getDb('aqua').getModel('Admin');
             const AdminGroupPermissionEntry = request.getDb('aqua').getModel('AdminGroupPermissionEntry');
             const Permission = request.getDb('aqua').getModel('Permission');
-            AdminGroup.findOne(
+            AdminGroup.findById(request.params.id,
                 {
-                    where: {
-                        id: request.params.id
-                    },
                     include: [{ model : Admin },
                                { model: AdminGroupPermissionEntry, include: [{ model: Permission }] }
                     ]
@@ -86,7 +83,7 @@ internals.applyRoutes = function (server, next) {
             ).then((adminGroup) => {
 
                 if (!adminGroup) {
-                    return reply(Boom.notFound('Admin Group not found.'));
+                    return reply(Boom.notFound('Admin group not found.'));
                 }
 
                 reply(adminGroup);

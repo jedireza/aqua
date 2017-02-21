@@ -191,12 +191,11 @@ internals.applyRoutes = function (server, next) {
                         }
                     ).then( (user) => {
 
-                        done(null);
+                        done(user);
                     }, ( err ) => {
 
                         done(err);
                     });
-                    //User.findByIdAndUpdate(id, update, done);
                 }],
                 email: ['user', function (results, done) {
 
@@ -211,7 +210,6 @@ internals.applyRoutes = function (server, next) {
                         key: results.keyHash.key
                     };
 
-                    //console.log("key ", results.keyHash.key);
                     //done();
                     mailer.sendEmail(emailOptions, template, context, done);
                 }]

@@ -1,63 +1,86 @@
 'use strict';
-const AccountPlugin = require('../../../server/web/account/index');
 const AuthPlugin = require('../../../server/auth');
-const AuthenticatedAccount = require('../fixtures/credentials-account');
+const AccountPlugin = require('../../../server/web/account/index');
+const Credentials = require('../fixtures/credentials');
 const Code = require('code');
 const Config = require('../../../config');
 const Hapi = require('hapi');
 const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
-//const Manifest = require('../../../manifest');
+const LoginPlugin = require('../../../server/web/login/index');
 const Path = require('path');
 const Vision = require('vision');
+const Async = require('async');
+const PrepareData = require('../../lab/prepare-data');
+const Proxyquire = require('proxyquire');
+const stub = {
+    get: function (key){
 
-
-const lab = exports.lab = Lab.script();
-
-const HapiModelsPlugin = {
-    register: require('hapi-sequelize'),
-    options: {
-        sequelize : require('../../misc/db'),
-        //todo not like dbsetup.js cause models are already registered in test/misc/db.js
-        sync: true
+        if ( key === '/db' ){
+            key = '/db_test';
+        }
+        return Config.get(key);
     }
 };
-/*
-const ModelsPlugin = {
-    register: require('hapi-mongo-models'),
-    options: Manifest.get('/registrations').filter((reg) => {
-        console.log('regs is ', reg);
 
-        return reg.plugin.register === 'hapi-mongo-models';
-    })[0].plugin.options
-};
-*/
+const DBSetup = Proxyquire('../../../dbsetup', { './config' : stub });
+
+const lab = exports.lab = Lab.script();
 let request;
 let server;
-
+let db;
+let accountCredentials;
 
 lab.before((done) => {
 
-    //const plugins = [Vision, HapiAuth, ModelsPlugin, AuthPlugin, AccountPlugin];
-    const plugins = [Vision, HapiAuth, HapiModelsPlugin, AuthPlugin, AccountPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
+    Async.auto({
+        prepareData: function (cb){
 
-        if (err) {
-            return done(err);
+            PrepareData(cb);
+        },
+        runServer: ['prepareData', function (results, cb) {
+
+            const plugins = [Vision, DBSetup, HapiAuth, AuthPlugin, AccountPlugin, LoginPlugin];
+            server = new Hapi.Server();
+            server.connection({ port: Config.get('/port/web') });
+            server.register(plugins, (err) => {
+
+                if (err) {
+                    return cb(err);
+                }
+
+                server.views({
+                    engines: { jsx: require('hapi-react-views') },
+                    path: './server/web',
+                    relativeTo: Path.join(__dirname, '..', '..', '..')
+                });
+
+                db = server.plugins['hapi-sequelize'][Config.get('/db').database];
+                server.initialize(cb);
+            });
+        }],
+        accountUser: ['runServer', function (results, cb){
+
+            Credentials( db, '11111111-1111-1111-1111-111111111111', ( err, iresults ) => {
+
+                if ( err ){
+                    cb(err);
+                }
+                accountCredentials = iresults;
+                cb(null);
+            });
+        }]
+
+    }, (err, results ) => {
+
+        if ( err ){
+            done(err);
         }
-
-        server.views({
-            engines: { jsx: require('hapi-react-views') },
-            path: './server/web',
-            relativeTo: Path.join(__dirname, '..', '..', '..')
-        });
-
-        server.initialize(done);
+        else {
+            done();
+        }
     });
 });
-
 
 lab.experiment('Account Page View', () => {
 
@@ -66,7 +89,7 @@ lab.experiment('Account Page View', () => {
         request = {
             method: 'GET',
             url: '/account',
-            credentials: AuthenticatedAccount
+            credentials: accountCredentials
         };
 
         done();

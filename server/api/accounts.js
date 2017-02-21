@@ -573,7 +573,6 @@ internals.applyRoutes = function (server, next) {
                 }
             ).then((count) => {
 
-                console.log('account ', count);
                 if (count === 0) {
                     return reply(Boom.notFound('Document not found.'));
                 }

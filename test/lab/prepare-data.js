@@ -33,7 +33,6 @@ Object.keys(sequelize.models).forEach((key) => {
         model.associate(sequelize.models);
     }
 });
-
 const Admin = sequelize.models.Admin;
 const AdminGroup = sequelize.models.AdminGroup;
 const Account = sequelize.models.Account;
@@ -101,6 +100,23 @@ module.exports = (callback) => {
                 });
 
         }],
+        createNotRootAdmin: ['createAdmin', function (iresults, done){
+
+            Admin.create(
+                {
+                    id : '22222222-2222-2222-2222-222222222222',
+                    first: 'Not',
+                    middle: 'Root',
+                    last: 'Admin'
+                }).then((admin) => {
+
+                    done(null, admin);
+                }, (err) => {
+
+                    done(err);
+                });
+
+        }],
         createAdminGroup: ['clean', function (iresults, done){
 
             AdminGroup.create(
@@ -130,9 +146,38 @@ module.exports = (callback) => {
                 done(err);
             });
         }],
+        createNotRootAdminUser : ['clean',function (iresults, done){
+
+            User.create({
+                id : '33333333-3333-3333-3333-333333333333',
+                username : 'notrootadmin',
+                isActive: true,
+                password : 'test',
+                email : 'notrootadmin@test.com'
+            }).then((user) => {
+
+                done(null, user);
+            }, (err) => {
+
+                done(err);
+            });
+        }],
         linkUser : ['createUser', 'createAdmin', function (iresults, done){
 
             iresults.createAdmin.setUser(iresults.createUser).then(
+
+                () => {
+
+                    done(null);
+                }, (err) => {
+
+                done(err);
+            }
+            );
+        }],
+        linkNotRootAdmin : ['createNotRootAdminUser', 'createNotRootAdmin', function (iresults, done){
+
+            iresults.createNotRootAdmin.setUser(iresults.createNotRootAdminUser).then(
 
                 () => {
 
@@ -200,6 +245,35 @@ module.exports = (callback) => {
 
                 done(err);
             });
+        }],
+        createNoRolesUser : ['linkAccountAndUser',function (iresults, done){
+
+            User.create({
+                id : '22222222-2222-2222-2222-222222222222',
+                username : 'noroles',
+                isActive: true,
+                password : 'test',
+                email : 'noroles@test.com'
+            }).then((user) => {
+
+                done(null, user);
+            }, (err) => {
+
+                done(err);
+            });
+        }],
+        createOtherAdminGroup: ['createNoRolesUser', function (iresults, done){
+
+            AdminGroup.create(
+                {
+                    name: 'OtherRoot'
+                }).then((adminGroup) => {
+
+                    done(null, adminGroup);
+                }, (err) => {
+
+                    done(err);
+                });
         }]
     }, (err, dbResults) => {
 
@@ -207,7 +281,8 @@ module.exports = (callback) => {
 
             cb(err);
         });
-        init = state.complete;
+        callbacks.length = 0;
+        init = state.after;
 
     });
 };

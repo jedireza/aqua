@@ -1,6 +1,6 @@
 'use strict';
 const AuthPlugin = require('../../../server/auth');
-const AuthenticatedUser = require('../fixtures/credentials-admin');
+const Credentials = require('../fixtures/credentials');
 const Code = require('code');
 const Config = require('../../../config');
 const Hapi = require('hapi');
@@ -8,59 +8,81 @@ const HapiAuth = require('hapi-auth-cookie');
 const Hoek = require('hoek');
 const Lab = require('lab');
 const LogoutPlugin = require('../../../server/api/logout');
-const MakeMockModel = require('../fixtures/make-mock-model');
-const Manifest = require('../../../manifest');
-const Path = require('path');
+const Async = require('async');
+const PrepareData = require('../../lab/prepare-data');
 const Proxyquire = require('proxyquire');
+const stub = {
+    get: function (key){
 
+        if ( key === '/db' ){
+            key = '/db_test';
+        }
+        //is there a way to access the origianl function?
+        //without loading ConfigOriginal
+        return Config.get(key);
+    }
+};
+
+const DBSetup = Proxyquire('../../../dbsetup', { './config' : stub });
 
 const lab = exports.lab = Lab.script();
 let request;
 let server;
-let stub;
+let adminCredentials;
+let db;
+let Session;
+let sessionDestroy;
 
 
 lab.before((done) => {
 
-    stub = {
-        Session: MakeMockModel()
-    };
+    Async.auto({
+        prepareData: function (cb){
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/session')] = stub.Session;
+            PrepareData(cb);
+        },
+        runServer: ['prepareData', function (results, cb) {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            const plugins = [DBSetup, HapiAuth, AuthPlugin, LogoutPlugin];
+            server = new Hapi.Server();
+            server.connection({ port: Config.get('/port/web') });
+            server.register(plugins, (err) => {
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+                if (err) {
+                    return cb(err);
+                }
 
-                return true;
-            }
+                db = server.plugins['hapi-sequelize'][Config.get('/db').database];
+                Session = db.models.Session;
+                sessionDestroy = Session.destroy;
+                server.initialize(cb);
+            });
+        }],
+        adminUser: ['runServer', function (results, cb){
 
-            return false;
-        })[0].plugin.options
-    };
+            Credentials( db, '00000000-0000-0000-0000-000000000000', ( err, iresults ) => {
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, LogoutPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
+                if ( err ){
+                    cb(err);
+                }
+                adminCredentials = iresults;
+                cb(null);
+            });
+        }]
 
-        if (err) {
-            return done(err);
+    }, (err, results ) => {
+
+        if ( err ){
+            done(err);
         }
-
-        server.initialize(done);
+        else {
+            done();
+        }
     });
 });
 
-
 lab.after((done) => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
     done();
 });
 
@@ -72,7 +94,7 @@ lab.experiment('Logout Plugin (Delete Session)', () => {
         request = {
             method: 'DELETE',
             url: '/logout',
-            credentials: AuthenticatedUser
+            credentials: adminCredentials
         };
 
         done();
@@ -81,17 +103,18 @@ lab.experiment('Logout Plugin (Delete Session)', () => {
 
     lab.test('it returns an error when delete fails', (done) => {
 
-        stub.Session.findByIdAndDelete = function () {
+        Session.destroy = function (option) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject ) => {
 
-            callback(Error('delete failed'));
+                reject(Error('delete failed'));
+            });
         };
 
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(500);
+            Session.destroy = sessionDestroy;
             done();
         });
     });
@@ -99,12 +122,12 @@ lab.experiment('Logout Plugin (Delete Session)', () => {
 
     lab.test('it returns a not found when delete misses (no credentials)', (done) => {
 
-        stub.Session.findByIdAndDelete = function () {
+        Session.destroy = function (option) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject ) => {
 
-            callback(null, 0);
+                resolve(0);
+            });
         };
 
         delete request.credentials;
@@ -113,6 +136,7 @@ lab.experiment('Logout Plugin (Delete Session)', () => {
 
             Code.expect(response.statusCode).to.equal(404);
             Code.expect(response.result.message).to.match(/document not found/i);
+            Session.destroy = sessionDestroy;
 
             done();
         });
@@ -121,15 +145,15 @@ lab.experiment('Logout Plugin (Delete Session)', () => {
 
     lab.test('it returns a not found when delete misses (missing user from credentials)', (done) => {
 
-        stub.Session.deleteOne = function () {
+        Session.destroy = function (option) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject ) => {
 
-            callback(null, 0);
+                resolve(0);
+            });
         };
 
-        const CorruptedAuthenticatedUser = Hoek.clone(AuthenticatedUser);
+        const CorruptedAuthenticatedUser = Hoek.clone(adminCredentials);
         CorruptedAuthenticatedUser.user = undefined;
         request.credentials = CorruptedAuthenticatedUser;
 
@@ -137,6 +161,7 @@ lab.experiment('Logout Plugin (Delete Session)', () => {
 
             Code.expect(response.statusCode).to.equal(404);
             Code.expect(response.result.message).to.match(/document not found/i);
+            Session.destroy = sessionDestroy;
 
             done();
         });
@@ -145,12 +170,12 @@ lab.experiment('Logout Plugin (Delete Session)', () => {
 
     lab.test('it deletes the authenticated user session successfully', (done) => {
 
-        stub.Session.findByIdAndDelete = function () {
+        Session.destroy = function (option) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject ) => {
 
-            callback(null, 1);
+                resolve(1);
+            });
         };
 
         server.inject(request, (response) => {

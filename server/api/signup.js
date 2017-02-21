@@ -87,11 +87,11 @@ internals.applyRoutes = function (server, next) {
             Async.auto({
                 user: function (done) {
 
-                    const username = request.payload.username;
-                    const password = request.payload.password;
-                    const email = request.payload.email;
+                    //const username = request.payload.username;
+                    //const password = request.payload.password;
+                    //const email = request.payload.email;
 
-                    User.create(username, password, email, done);
+                    //User.create(username, password, email, done);
                     User.create({
                         username : request.payload.username,
                         isActive: true,
@@ -127,7 +127,7 @@ internals.applyRoutes = function (server, next) {
                     account.setUser(results.user).then(
                         (accountUpdated) => {
 
-                            done(null, accountUpdated);
+                            return done(null, accountUpdated);
                         },
                         (err) => {
 
@@ -145,15 +145,13 @@ internals.applyRoutes = function (server, next) {
                         }
                     };
                     const template = 'welcome';
-
                     mailer.sendEmail(emailOptions, template, request.payload, (err) => {
 
                         if (err) {
                             console.warn('sending welcome email failed:', err.stack);
                         }
+                        done();
                     });
-
-                    done();
                 }],
                 session: ['linkUser', function (results, done) {
 
@@ -170,7 +168,6 @@ internals.applyRoutes = function (server, next) {
                 if (err) {
                     return reply(err);
                 }
-
                 const user = results.linkUser;
                 const credentials = user.username + ':' + results.session.key;
                 const authHeader = 'Basic ' + new Buffer(credentials).toString('base64');

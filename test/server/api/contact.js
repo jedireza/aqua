@@ -5,7 +5,8 @@ const ContactPlugin = require('../../../server/api/contact');
 const Hapi = require('hapi');
 const Lab = require('lab');
 const MailerPlugin = require('../../../server/mailer');
-
+const Async = require('async');
+const PrepareData = require('../../lab/prepare-data');
 
 const lab = exports.lab = Lab.script();
 let request;
@@ -14,19 +15,36 @@ let server;
 
 lab.beforeEach((done) => {
 
-    const plugins = [MailerPlugin, ContactPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
+    Async.auto({
+        prepareData: function (cb){
 
-        if (err) {
-            return done(err);
+            PrepareData(cb);
+        },
+        runServer: ['prepareData', function (results, cb) {
+
+            const plugins = [MailerPlugin, ContactPlugin];
+            server = new Hapi.Server();
+            server.connection({ port: Config.get('/port/web') });
+            server.register(plugins, (err) => {
+
+                if (err) {
+                    return cb(err);
+                }
+
+                server.initialize(cb);
+            });
+        }]
+
+    }, (err, results ) => {
+
+        if ( err ){
+            done(err);
         }
-
-        server.initialize(done);
+        else {
+            done();
+        }
     });
 });
-
 
 lab.experiment('Contact Plugin', () => {
 
