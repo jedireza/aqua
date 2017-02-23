@@ -1,5 +1,5 @@
 {
-  "name": "aqua",
+  "name": "aqua-sql",
   "version": "5.0.5",
   "description": "A website and user system for Node.js",
   "main": "index.js",
