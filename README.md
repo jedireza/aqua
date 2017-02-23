@@ -4,16 +4,15 @@ A website and user system starter based on the fabulous [Aqua](https://jedireza.
 
 The code has been modified to persist data to an SQL datasource via [Sequelize](http://docs.sequelizejs.com/)
 
-This is work in progress intended to help me learn Node, React, Sequelize, ES6 and the ecosystems that go 
-along with them. It is also my best interpretation of what the document schema from the original
-[Aqua](https://jedireza.github.io/aqua/) would look like if it were converted to SQL.
+This is work in progress.
 
 There will be mistakes.  There will be Promises mixed with callbacks.  There will be common
 Node conventions that I missed.
 
+All feedback is welcome.
+
 As they say, "it works on my machine".  Now I want to make it work on yours.
 
-All feedback is welcome.
 
 Finally a huge thank you to [Reza Akhava](https://twitter.com/jedireza) for  [Aqua](https://jedireza.github.io/aqua/).
 
