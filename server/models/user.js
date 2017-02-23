@@ -20,6 +20,7 @@ module.exports = function (sequelize, DataTypes){
   };
   */
 
+    //todo make this testable
     const _hashPassword = function (user, options, cb){
 
         Bcrypt.genSalt(10, (err, salt) => {
@@ -68,10 +69,20 @@ module.exports = function (sequelize, DataTypes){
 
                 Bcrypt.compare(password, this.password_hash, cb);
             },
+            canPlayRole: function (role) {
+                //must run hydrate first for this to work
+                //should this check that?
+                if (!this.roles) {
+                    return false;
+                }
+
+                return this.roles.hasOwnProperty(role);
+            },
+            //todo remove the db dependency
             hydrateRoles: function (db, callback) {
 
-                const Admin = db.getModel('Admin');
-                const Account = db.getModel('Account');
+                const Admin = sequelize.models.Admin;// db.getModel('Admin');
+                const Account = sequelize.models.Account;// db.getModel('Account');
 
                 const self = this;
                 const roles = {};

@@ -6,9 +6,9 @@
   "scripts": {
     "start": "gulp",
     "first-time-setup": "node first-time-setup.js",
-    "test": "lab -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/lab/client-before.js ./test/client/ ./test/lab/client-after.js ./test/server/ ./test/lab/server-after.js ./test/misc/",
-    "test-client": "lab -v -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/lab/client-before.js $TEST_TARGET ./test/lab/client-after.js || true",
-    "test-server": "lab -v -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' $TEST_TARGET ./test/lab/server-after.js || true",
+    "test": "lab -t 96 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/lab/client-before.js ./test/client/ ./test/lab/client-after.js ./test/server/ ./test/lab/server-after.js ./test/misc/",
+    "test-client": "lab -v -t 95 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/lab/client-before.js $TEST_TARGET ./test/lab/client-after.js || true",
+    "test-server": "lab -v -t 95 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' $TEST_TARGET ./test/lab/server-after.js || true",
     "postinstall": "gulp build"
   },
   "author": "Reza Akhavan <jedireza@gmail.com> (http://reza.akhavan.me/)",

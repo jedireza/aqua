@@ -1,122 +1,144 @@
 'use strict';
-const AdminGroup = require('../../../server/models/admin-group');
+const Async = require('async');
 const Code = require('code');
-const Config = require('../../../config');
 const Lab = require('lab');
+const PrepareData = require('../../lab/prepare-data');
 
 
 const lab = exports.lab = Lab.script();
-const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
-const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
+let sequelize;
+let AdminGroup;
+let Permission;
+let AdminGroupPermissionEntry;
+let permissionSpaceMadness;
+let permissionUntamedWorld;
+let sales;
+const permissionNames = ['SPACE_MADNESS', 'UNTAMED_WORLD'];
 
 
 lab.experiment('AdminGroup Class Methods', () => {
 
     lab.before((done) => {
 
-        AdminGroup.connect(mongoUri, mongoOptions, (err, db) => {
+        PrepareData( (err, db ) => {
 
+            if ( !err ){
+                sequelize = db;
+                AdminGroup = sequelize.models.AdminGroup;
+                Permission = sequelize.models.Permission;
+                AdminGroupPermissionEntry = sequelize.models.AdminGroupPermissionEntry;
+            }
             done(err);
         });
     });
-
-
-    lab.after((done) => {
-
-        AdminGroup.deleteMany({}, (err, count) => {
-
-            AdminGroup.disconnect();
-
-            done(err);
-        });
-    });
-
 
     lab.test('it returns a new instance when create succeeds', (done) => {
 
-        AdminGroup.create('Sales', (err, result) => {
+        AdminGroup.create({ name: 'Sales' }).then( (adminGroup) => {
 
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.instanceOf(AdminGroup);
-
+            sales = adminGroup;
+            Code.expect(sales).to.be.an.instanceOf(AdminGroup.Instance);
             done();
+        }, ( err ) => {
+
+            done(err);
         });
     });
 
-
-    lab.test('it returns an error when create fails', (done) => {
-
-        const realInsertOne = AdminGroup.insertOne;
-        AdminGroup.insertOne = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('insert failed'));
-        };
-
-        AdminGroup.create('Support', (err, result) => {
-
-            Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            AdminGroup.insertOne = realInsertOne;
-
-            done();
-        });
-    });
 });
 
 
 lab.experiment('AdminGroup Instance Methods', () => {
 
-    lab.before((done) => {
-
-        AdminGroup.connect(mongoUri, mongoOptions, (err, db) => {
-
-            done(err);
-        });
-    });
-
-
-    lab.after((done) => {
-
-        AdminGroup.deleteMany({}, (err, result) => {
-
-            AdminGroup.disconnect();
-
-            done(err);
-        });
-    });
-
-
     lab.test('it returns false when permissions are not found', (done) => {
 
-        AdminGroup.create('Sales', (err, adminGroup) => {
+        Async.auto({
+            permissionSpaceMadness: function (cb) {
 
-            Code.expect(err).to.not.exist();
-            Code.expect(adminGroup).to.be.an.instanceOf(AdminGroup);
-            Code.expect(adminGroup.hasPermissionTo('SPACE_MADNESS')).to.equal(false);
+                Permission.create({
+                    name: permissionNames[0]
+                }).then( ( permission ) => {
 
-            done();
-        });
-    });
+                    permissionSpaceMadness = permission;
+                    cb(null, permission);
+                }, ( err ) => {
 
+                    cb(err);
+                });
+            },
+            permissionUntamedWorld: function (cb) {
 
-    lab.test('it returns boolean values for set permissions', (done) => {
+                Permission.create({
+                    name: permissionNames[1]
+                }).then( ( permission ) => {
 
-        AdminGroup.create('Support', (err, adminGroup) => {
+                    permissionUntamedWorld = permission;
+                    cb(null, permission);
+                }, ( err ) => {
 
-            Code.expect(err).to.not.exist();
-            Code.expect(adminGroup).to.be.an.instanceOf(AdminGroup);
+                    cb(err);
+                });
+            },
+            addPermissions : ['permissionSpaceMadness', 'permissionUntamedWorld', function (results, cb) {
 
-            adminGroup.permissions = {
-                SPACE_MADNESS: true,
-                UNTAMED_WORLD: false
-            };
+                const permissions = [
+                    {
+                        admin_group_id: sales.id,
+                        permission_id: permissionSpaceMadness.id,
+                        active: false
+                    },
+                    {
+                        admin_group_id: sales.id,
+                        permission_id: permissionUntamedWorld.id,
+                        active: true
+                    }
+                ];
+                Promise.all(
+                    [AdminGroupPermissionEntry.upsert(permissions[0]), AdminGroupPermissionEntry.upsert(permissions[1])]
+                ).then( (iresults) => {
 
-            Code.expect(adminGroup.hasPermissionTo('SPACE_MADNESS')).to.equal(true);
-            Code.expect(adminGroup.hasPermissionTo('UNTAMED_WORLD')).to.equal(false);
+                    cb(null, iresults);
+                }, (err ) => {
+
+                    cb(err);
+                });
+            }],
+            permissionEntries: ['addPermissions', function (results, cb) {
+
+                sales.getAdminGroupPermissionEntries(
+                    {
+                        include: { model: Permission }
+                    }
+                ).then( ( iresults ) => {
+
+                    cb(null, iresults);
+                }, (err) => {
+
+                    cb(err);
+                });
+            }]
+        }, ( err, results ) => {
+
+            if ( err ) {
+
+                return done(err);
+            }
+
+            Code.expect(sales).to.be.an.instanceOf(AdminGroup.Instance);
+
+            const spacePermissionEntry = results.permissionEntries.find( ( elem ) => {
+
+                return elem.Permission.name === permissionNames[0];
+            });
+            const untamedPermissionEntry = results.permissionEntries.find( (elem ) => {
+
+                return elem.Permission.name === permissionNames[1];
+            });
+
+            Code.expect(spacePermissionEntry).to.be.an.instanceOf(AdminGroupPermissionEntry.Instance);
+            Code.expect(untamedPermissionEntry).to.be.an.instanceOf(AdminGroupPermissionEntry.Instance);
+            Code.expect(spacePermissionEntry.active).to.equal(false);
+            Code.expect(untamedPermissionEntry.active).to.equal(true);
 
             done();
         });

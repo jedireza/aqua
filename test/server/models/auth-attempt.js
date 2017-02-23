@@ -1,68 +1,39 @@
 'use strict';
 const Async = require('async');
-const AuthAttempt = require('../../../server/models/auth-attempt');
 const Code = require('code');
-const Config = require('../../../config');
 const Lab = require('lab');
+const Config = require('../../../config');
+const PrepareData = require('../../lab/prepare-data');
 
 
 const lab = exports.lab = Lab.script();
-const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
-const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
-
+let sequelize;
+let AuthAttempt;
 
 lab.experiment('AuthAttempt Class Methods', () => {
 
     lab.before((done) => {
 
-        AuthAttempt.connect(mongoUri, mongoOptions, (err, db) => {
+        PrepareData( (err, db ) => {
 
+            if ( !err ){
+                sequelize = db;
+                AuthAttempt = sequelize.models.AuthAttempt;
+            }
             done(err);
         });
     });
-
-
-    lab.after((done) => {
-
-        AuthAttempt.deleteMany({}, (err, count) => {
-
-            AuthAttempt.disconnect();
-
-            done(err);
-        });
-    });
-
 
     lab.test('it returns a new instance when create succeeds', (done) => {
 
-        AuthAttempt.create('127.0.0.1', 'ren', (err, result) => {
+        AuthAttempt.create( { ip: '127.0.0.1', username: 'ren' } ).then(( result ) => {
+
+            Code.expect(result).to.be.an.instanceOf(AuthAttempt.Instance);
+            done();
+
+        }, (err) => {
 
             Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.instanceOf(AuthAttempt);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when create fails', (done) => {
-
-        const realInsertOne = AuthAttempt.insertOne;
-        AuthAttempt.insertOne = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('insert failed'));
-        };
-
-        AuthAttempt.create('127.0.0.1', 'ren', (err, result) => {
-
-            Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            AuthAttempt.insertOne = realInsertOne;
-
             done();
         });
     });
@@ -79,18 +50,19 @@ lab.experiment('AuthAttempt Class Methods', () => {
         });
     });
 
-
     lab.test('it returns true when abuse is detected for user + ip combo', (done) => {
 
         const authAttemptsConfig = Config.get('/authAttempts');
         const authSpam = [];
         const authRequest = function (cb) {
 
-            AuthAttempt.create('127.0.0.1', 'stimpy', (err, result) => {
+            AuthAttempt.create({ ip: '127.0.0.1', username: 'stimpy' }).then( (result) => {
+
+                Code.expect(result).to.be.an.object();
+                cb();
+            }, (err) => {
 
                 Code.expect(err).to.not.exist();
-                Code.expect(result).to.be.an.object();
-
                 cb();
             });
         };
@@ -111,7 +83,6 @@ lab.experiment('AuthAttempt Class Methods', () => {
         });
     });
 
-
     lab.test('it returns true when abuse is detected for an ip and multiple users', (done) => {
 
         const authAttemptsConfig = Config.get('/authAttempts');
@@ -119,11 +90,13 @@ lab.experiment('AuthAttempt Class Methods', () => {
         const authRequest = function (i, cb) {
 
             const randomUsername = 'mudskipper' + i;
-            AuthAttempt.create('127.0.0.2', randomUsername, (err, result) => {
+            AuthAttempt.create({ ip: '127.0.0.2', username: randomUsername }).then( (result) => {
+
+                Code.expect(result).to.be.an.object();
+                cb();
+            }, (err) => {
 
                 Code.expect(err).to.not.exist();
-                Code.expect(result).to.be.an.object();
-
                 cb();
             });
         };
@@ -144,16 +117,15 @@ lab.experiment('AuthAttempt Class Methods', () => {
         });
     });
 
-
     lab.test('it returns an error when count fails', (done) => {
 
         const realCount = AuthAttempt.count;
         AuthAttempt.count = function () {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject) => {
 
-            callback(Error('count failed'));
+                reject(Error('count failed'));
+            });
         };
 
         AuthAttempt.abuseDetected('127.0.0.1', 'toastman', (err, result) => {

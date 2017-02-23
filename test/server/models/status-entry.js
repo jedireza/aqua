@@ -1,20 +1,35 @@
 'use strict';
 const Code = require('code');
 const Lab = require('lab');
-const StatusEntry = require('../../../server/models/status-entry');
-
+const Sequelize = require('sequelize');
+const PrepareData = require('../../lab/prepare-data');
 
 const lab = exports.lab = Lab.script();
+let StatusEntry;
 
+const StatusEntryConstructor = require('../../../server/models/status-entry');
 
 lab.experiment('Status Entry Class', () => {
 
+    lab.before((done) => {
+
+        PrepareData( (err, db ) => {
+
+            if ( !err ){
+                StatusEntry = StatusEntryConstructor(db, Sequelize.DataTypes);
+            }
+            done(err);
+        });
+    });
     lab.test('it instantiates an instance', (done) => {
 
-        const statusEntry = new StatusEntry({});
+        StatusEntry.create({ name: 'status the entry' }).then( (result) => {
 
-        Code.expect(statusEntry).to.be.an.instanceOf(StatusEntry);
+            Code.expect(result).to.be.an.instanceOf(StatusEntry.Instance);
+            done();
+        }, (err) => {
 
-        done();
+            done(err);
+        });
     });
 });

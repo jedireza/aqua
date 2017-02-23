@@ -1,89 +1,64 @@
 'use strict';
 const Async = require('async');
 const Code = require('code');
-const Config = require('../../../config');
 const Lab = require('lab');
-const Proxyquire = require('proxyquire');
+const PrepareData = require('../../lab/prepare-data');
 
 
 const lab = exports.lab = Lab.script();
-const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
-const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
-const stub = {
-    AdminGroup: {}
-};
-const Admin = Proxyquire('../../../server/models/admin', {
-    './admin-group': stub.AdminGroup
-});
-const AdminGroup = require('../../../server/models/admin-group');
-
-
+let sequelize;
+let AdminGroup;
+let Admin;
+let Account;
+let adminId;
+let admin;
+const groupNames = ['sales', 'support'];
 lab.experiment('Admin Class Methods', () => {
 
     lab.before((done) => {
 
-        Admin.connect(mongoUri, mongoOptions, (err, db) => {
+        PrepareData( (err, db ) => {
 
+            if ( !err ){
+                sequelize = db;
+                AdminGroup = sequelize.models.AdminGroup;
+                Admin = sequelize.models.Admin;
+                Account = sequelize.models.Account;
+            }
             done(err);
         });
     });
-
-
-    lab.after((done) => {
-
-        Admin.deleteMany({}, (err, count) => {
-
-            Admin.disconnect();
-
-            done(err);
-        });
-    });
-
 
     lab.test('it returns a new instance when create succeeds', (done) => {
 
-        Admin.create('Ren Höek', (err, result) => {
+        Admin.create({ first: 'Ren', middle: '', last: 'Höek' }).then( (result) => {
 
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.instanceOf(Admin);
-
+            admin = result;
+            Code.expect(admin).to.be.an.instanceOf(Admin.Instance);
+            adminId = admin.id;
             done();
+
+        }, ( err ) => {
+
+            done(err);
         });
     });
-
 
     lab.test('it correctly sets the middle name when create is called', (done) => {
 
-        Admin.create('Stimpson J Cat', (err, admin) => {
+        const name = Account.parseName('Stimpson J Cat');//todo put parseName in a helper
+        Admin.create(name).then( (account) => {
 
-            Code.expect(err).to.not.exist();
-            Code.expect(admin).to.be.an.instanceOf(Admin);
-            Code.expect(admin.name.middle).to.equal('J');
-
+            Code.expect(account.first).to.equal('Stimpson');
+            Code.expect(account.middle).to.equal('J');
+            Code.expect(account.last).to.equal('Cat');
+            Code.expect(account).to.be.an.instanceOf(Admin.Instance);
             done();
-        });
-    });
 
+        }, ( err ) => {
 
-    lab.test('it returns an error when create fails', (done) => {
+            done(err);
 
-        const realInsertOne = Admin.insertOne;
-        Admin.insertOne = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('insert failed'));
-        };
-
-        Admin.create('Stimpy Cat', (err, result) => {
-
-            Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            Admin.insertOne = realInsertOne;
-
-            done();
         });
     });
 
@@ -93,20 +68,25 @@ lab.experiment('Admin Class Methods', () => {
         Async.auto({
             admin: function (cb) {
 
-                Admin.create('Ren Höek', cb);
+                Admin.findById(adminId).then( (result) => {
+
+                    cb(null, result);
+                }, ( err ) => {
+
+                    cb(err);
+                });
             },
             adminUpdated: ['admin', function (results, cb) {
 
-                const fieldsToUpdate = {
-                    $set: {
-                        user: {
-                            id: '95EP150D35',
-                            name: 'ren'
-                        }
-                    }
-                };
+                results.admin.update({
+                    first: 'stimpy'
+                }).then( ( result ) => {
 
-                Admin.findByIdAndUpdate(results.admin.id, fieldsToUpdate, cb);
+                    cb(null, result);
+                }, ( err ) => {
+
+                    cb(err);
+                });
             }]
         }, (err, results) => {
 
@@ -114,12 +94,13 @@ lab.experiment('Admin Class Methods', () => {
                 return done(err);
             }
 
-            Admin.findByUsername('ren', (err, admin) => {
+            Admin.findOne( { where : { first: 'stimpy' } } ). then( ( result ) => {
 
-                Code.expect(err).to.not.exist();
-                Code.expect(admin).to.be.an.instanceOf(Admin);
-
+                Code.expect(result).to.be.an.instanceOf(Admin.Instance);
                 done();
+            }, ( err ) => {
+
+                done(err);
             });
         });
     });
@@ -128,60 +109,75 @@ lab.experiment('Admin Class Methods', () => {
 
 lab.experiment('Admin Instance Methods', () => {
 
-    lab.before((done) => {
-
-        Admin.connect(mongoUri, mongoOptions, (err, db) => {
-
-            done(err);
-        });
-    });
-
-
-    lab.after((done) => {
-
-        Admin.deleteMany({}, (err, result) => {
-
-            Admin.disconnect();
-
-            done(err);
-        });
-    });
-
-
     lab.test('it returns false when groups are not found', (done) => {
 
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
+        admin.isMemberOf(sequelize.models, groupNames[0], ( err, isMember ) => {
+
+            if ( err ){
+                return done(err);
             }
+            Code.expect(isMember).to.equal(false);
+            done();
         });
-
-        Code.expect(admin.isMemberOf('sales')).to.equal(false);
-
-        done();
     });
 
 
     lab.test('it returns boolean values for set group memberships', (done) => {
 
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
+        Async.auto({
+
+            sales: function (cb){
+
+                AdminGroup.create( { name: groupNames[0] } ).then( (group) => {
+
+                    cb(null, group);
+                }, ( err ) => {
+
+                    cb(err);
+                });
             },
-            groups: {
-                sales: 'Sales',
-                support: 'Support'
+            support: function (cb) {
+
+                AdminGroup.create( { name: groupNames[1] } ).then( (group) => {
+
+                    cb(null, group);
+                }, ( err ) => {
+
+                    cb(err);
+                });
+            },
+            add: ['sales', 'support', function (results, cb) {
+
+                admin.setAdminGroups( [results.sales, results. support] ).then( (groups) => {
+
+                    cb(null, groups);
+                }, (err) => {
+
+                    cb(err);
+                });
+            }],
+            checkSales: ['add', function (results, cb ){
+
+                admin.isMemberOf(sequelize.models, groupNames[0], cb);
+            }],
+            checkSupport: ['add', function (results, cb ){
+
+                admin.isMemberOf(sequelize.models, groupNames[1], cb);
+            }]
+
+        }, (err, results ) => {
+
+            if ( err ) {
+                return done(err);
             }
+            Code.expect(results.checkSales).to.equal(true);
+            Code.expect(results.checkSupport).to.equal(true);
+            done();
         });
-
-        Code.expect(admin.isMemberOf('sales')).to.equal(true);
-        Code.expect(admin.isMemberOf('support')).to.equal(true);
-
-        done();
     });
 
+/* todo doesn't apply I think.  We don't have the functionality of hydrating permissions
+ * we just do the sql call.
 
     lab.test('it exits early when hydrating groups where groups are missing', (done) => {
 
@@ -298,7 +294,6 @@ lab.experiment('Admin Instance Methods', () => {
         });
     });
 
-
     lab.test('it exits early when the permission exists on the admin', (done) => {
 
         const admin = new Admin({
@@ -401,4 +396,5 @@ lab.experiment('Admin Instance Methods', () => {
             done(err);
         });
     });
+    */
 });

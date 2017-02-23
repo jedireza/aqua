@@ -44,7 +44,7 @@ const callbacks = [];
 module.exports = (callback) => {
 
     if ( init === state.after ){
-        return callback(null);
+        return callback(null, sequelize);
     }
     callbacks.push(callback);
     if ( init === state.during ){
@@ -279,7 +279,7 @@ module.exports = (callback) => {
 
         callbacks.forEach( (cb) => {
 
-            cb(err);
+            cb(err, sequelize);
         });
         callbacks.length = 0;
         init = state.after;

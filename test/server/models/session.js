@@ -1,37 +1,30 @@
 'use strict';
 const Async = require('async');
 const Code = require('code');
-const Config = require('../../../config');
 const Lab = require('lab');
 const Proxyquire = require('proxyquire');
-
+const Sequelize = require('sequelize');
+const PrepareData = require('../../lab/prepare-data');
 
 const lab = exports.lab = Lab.script();
-const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
-const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
+let Session;
+
 const stub = {
     bcrypt: {}
 };
-const Session = Proxyquire('../../../server/models/session', { bcrypt: stub.bcrypt });
+const SessionConstructor = Proxyquire('../../../server/models/session', { bcrypt: stub.bcrypt });
 
 
 lab.experiment('Session Class Methods', () => {
 
     lab.before((done) => {
 
-        Session.connect(mongoUri, mongoOptions, (err, db) => {
+        PrepareData( (err, db ) => {
 
-            done(err);
-        });
-    });
-
-
-    lab.after((done) => {
-
-        Session.deleteMany({}, (err, count) => {
-
-            Session.disconnect();
-
+            if ( !err ){
+                //Session = sequelize.models.Session;
+                Session = SessionConstructor(db, Sequelize.DataTypes);
+            }
             done(err);
         });
     });
@@ -49,7 +42,6 @@ lab.experiment('Session Class Methods', () => {
             done();
         });
     });
-
 
     lab.test('it returns an error when key hash fails', (done) => {
 
@@ -70,13 +62,12 @@ lab.experiment('Session Class Methods', () => {
         });
     });
 
-
     lab.test('it returns a new instance when create succeeds', (done) => {
 
-        Session.create('ren', (err, result) => {
+        Session.createNew('11111111-1111-1111-1111-111111111111', (err, result) => {
 
             Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.instanceOf(Session);
+            Code.expect(result).to.be.an.instanceOf(Session.Instance);
 
             done();
         });
@@ -84,21 +75,21 @@ lab.experiment('Session Class Methods', () => {
 
     lab.test('it returns an error when create fails', (done) => {
 
-        const realInsertOne = Session.insertOne;
-        Session.insertOne = function () {
+        const realCreate = Session.create;
+        Session.create = function () {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject) => {
 
-            callback(Error('insert failed'));
+                reject(Error('insert failed'));
+            });
         };
 
-        Session.create('ren', (err, result) => {
+        Session.createNew('ren', (err, result) => {
 
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
 
-            Session.insertOne = realInsertOne;
+            Session.create = realCreate;
 
             done();
         });
@@ -110,11 +101,10 @@ lab.experiment('Session Class Methods', () => {
         Async.auto({
             session: function (cb) {
 
-                Session.create('1D', (err, result) => {
+                Session.createNew('11111111-0000-1111-1111-111111111111', (err, result) => {
 
                     Code.expect(err).to.not.exist();
-                    Code.expect(result).to.be.an.instanceOf(Session);
-
+                    Code.expect(result).to.be.an.instanceOf(Session.Instance);
                     cb(null, result);
                 });
             }
@@ -124,29 +114,32 @@ lab.experiment('Session Class Methods', () => {
                 return done(err);
             }
 
-            const id = results.session.id.toString();
+            const id = results.session.id;
             const key = results.session.key;
 
-            Session.findByCredentials(id, key, (err, result) => {
+            Session.findByCredentials( id, key, (err, result) => {
 
                 Code.expect(err).to.not.exist();
-                Code.expect(result).to.be.an.instanceOf(Session);
+                Code.expect(result).to.be.an.instanceOf(Session.Instance);
 
                 done();
             });
         });
     });
 
-
     lab.test('it returns nothing for find by credentials when key match fails', (done) => {
 
         const realFindById = Session.findById;
         Session.findById = function () {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject ) => {
 
-            callback(null, { _id: '2D', userId: '1D', key: 'letmein' });
+                resolve({
+                    id: '2D',
+                    userId: '1D',
+                    key: 'letmein'
+                });
+            });
         };
 
         const realCompare = stub.bcrypt.compare;
@@ -173,10 +166,10 @@ lab.experiment('Session Class Methods', () => {
         const realFindById = Session.findById;
         Session.findById = function () {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject) => {
 
-            callback(Error('find by id failed'));
+                reject(Error('find by id failed'));
+            });
         };
 
         Session.findByCredentials('2D', 'dog', (err, result) => {
@@ -196,10 +189,10 @@ lab.experiment('Session Class Methods', () => {
         const realFindById = Session.findById;
         Session.findById = function () {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject) => {
 
-            callback();
+                resolve();
+            });
         };
 
         Session.findByCredentials('2D', 'dog', (err, result) => {

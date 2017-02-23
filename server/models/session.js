@@ -111,6 +111,7 @@ module.exports = function (sequelize, DataTypes){
                             key: results.keyHash.hash
                         }).then((session) => {
 
+                            console.log('session is ', session.key);
                             done(null,session);
                         }, (err) => {
 
@@ -138,7 +139,9 @@ module.exports = function (sequelize, DataTypes){
                         return callback(err);
                     }
 
+                    console.log('new session', results.newSession.key);
                     results.newSession.key = results.keyHash.key;
+                    console.log('new session', results.newSession.key);
 
                     callback(null, results.newSession);
                 });
@@ -164,7 +167,7 @@ module.exports = function (sequelize, DataTypes){
                             return done(null, false);
                         }
 
-                        const source = results.session.get('key');
+                        const source = results.session.key;
                         Bcrypt.compare(key, source, done);
                     }]
                 }, (err, results) => {

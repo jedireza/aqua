@@ -1,50 +1,54 @@
 'use strict';
 const Async = require('async');
 const Code = require('code');
-const Config = require('../../../config');
 const Lab = require('lab');
 const Proxyquire = require('proxyquire');
-
+const Sequelize = require('sequelize');
+const PrepareData = require('../../lab/prepare-data');
 
 const lab = exports.lab = Lab.script();
-const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
-const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
+let Admin;
+let User;
+let Account;
+let sequelize;
+let userCreate;
+let adminFindOne;
+let accountFindOne;
+
 const stub = {
-    Account: {},
-    Admin: {},
     bcrypt: {}
 };
-const User = Proxyquire('../../../server/models/user', {
-    './account': stub.Account,
-    './admin': stub.Admin,
-    bcrypt: stub.bcrypt
-});
-const Admin = require('../../../server/models/admin');
-const Account = require('../../../server/models/account');
+const UserConstructor = Proxyquire('../../../server/models/user', { bcrypt: stub.bcrypt });
+const AdminConstructor = Proxyquire('../../../server/models/admin', { bcrypt: stub.bcrypt });
+const AccountConstructor = Proxyquire('../../../server/models/account', { bcrypt: stub.bcrypt });
 
+const user = {
+    username: 'ren',
+    password: 'bighouseblues',
+    email: 'ren@stimpy.show',
+    isActive: true
+};
 
 lab.experiment('User Class Methods', () => {
 
     lab.before((done) => {
 
-        User.connect(mongoUri, mongoOptions, (err, db) => {
+        PrepareData( (err, db ) => {
 
+            if ( !err ){
+                sequelize = db;
+                User = UserConstructor(db, Sequelize.DataTypes);
+                Account = AccountConstructor(db, Sequelize.DataTypes);
+                Admin = AdminConstructor(db, Sequelize.DataTypes);
+                userCreate = User.create;
+                adminFindOne = Admin.findOne;
+                accountFindOne = Account.findOne;
+            }
             done(err);
         });
     });
 
-
-    lab.after((done) => {
-
-        User.deleteMany({}, (err, count) => {
-
-            User.disconnect();
-
-            done(err);
-        });
-    });
-
-
+    /* make this testable by exposing _hashPassword in user.js
     lab.test('it creates a password hash combination', (done) => {
 
         User.generatePasswordHash('bighouseblues', (err, result) => {
@@ -76,39 +80,41 @@ lab.experiment('User Class Methods', () => {
 
             done();
         });
-    });
-
+    });*/
 
     lab.test('it returns a new instance when create succeeds', (done) => {
 
-        User.create('ren', 'bighouseblues', 'ren@stimpy.show', (err, result) => {
+        User.create(user).then((result) => {
 
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.instanceOf(User);
+            Code.expect(result).to.be.an.instanceOf(User.Instance);
 
             done();
+        }, ( err ) => {
+
+            Code.expect(err).to.not.exist();
+            done(err);
         });
     });
 
-
     lab.test('it returns an error when create fails', (done) => {
 
-        const realInsertOne = User.insertOne;
-        User.insertOne = function () {
+        User.create = function (options) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject ) => {
 
-            callback(Error('insert failed'));
+                reject(Error('insert failed'));
+            });
         };
 
-        User.create('ren', 'bighouseblues', 'ren@stimpy.show', (err, result) => {
+        User.create(user).then((result) => {
+
+            Code.expect(result).to.not.exist();
+            User.create = userCreate;
+            done();
+        }, (err) => {
 
             Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            User.insertOne = realInsertOne;
-
+            User.create = userCreate;
             done();
         });
     });
@@ -117,40 +123,25 @@ lab.experiment('User Class Methods', () => {
     lab.test('it returns a result when finding by login', (done) => {
 
         Async.auto({
-            user: function (cb) {
+            username: function (cb) {
 
-                User.create('stimpy', 'thebigshot', 'stimpy@ren.show', cb);
+                User.findByCredentials(user.username, user.password, cb);
             },
-            username: ['user', function (results, cb) {
+            email: function (cb) {
 
-                User.findByCredentials(results.user.username, results.user.password, cb);
-            }],
-            email: ['user', function (results, cb) {
-
-                User.findByCredentials(results.user.email, results.user.password, cb);
-            }]
+                User.findByCredentials(user.email, user.password, cb);
+            }
         }, (err, results) => {
 
             Code.expect(err).to.not.exist();
-            Code.expect(results.user).to.be.an.instanceOf(User);
-            Code.expect(results.username).to.be.an.instanceOf(User);
-            Code.expect(results.email).to.be.an.instanceOf(User);
+            Code.expect(results.username).to.be.an.instanceOf(User.Instance);
+            Code.expect(results.email).to.be.an.instanceOf(User.Instance);
 
             done();
         });
     });
 
-
     lab.test('it returns nothing for find by credentials when password match fails', (done) => {
-
-        const realFindOne = User.findOne;
-        User.findOne = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { username: 'toastman', password: 'letmein' });
-        };
 
         const realCompare = stub.bcrypt.compare;
         stub.bcrypt.compare = function (key, source, callback) {
@@ -158,51 +149,37 @@ lab.experiment('User Class Methods', () => {
             callback(null, false);
         };
 
-        User.findByCredentials('toastman', 'doorislocked', (err, result) => {
+        User.findByCredentials(user.username, user.password, (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.not.exist();
 
-            User.findOne = realFindOne;
             stub.bcrypt.compare = realCompare;
 
             done();
         });
     });
 
-
     lab.test('it returns early when finding by login misses', (done) => {
-
-        const realFindOne = User.findOne;
-        User.findOne = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback();
-        };
 
         User.findByCredentials('stimpy', 'dog', (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.not.exist();
 
-            User.findOne = realFindOne;
-
             done();
         });
     });
 
-
     lab.test('it returns an error when finding by login fails', (done) => {
 
         const realFindOne = User.findOne;
-        User.findOne = function () {
+        User.findOne = function (options) {
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+            return new Promise( (resolve, reject ) => {
 
-            callback(Error('find one failed'));
+                reject(Error('find one failed'));
+            });
         };
 
         User.findByCredentials('stimpy', 'dog', (err, result) => {
@@ -216,47 +193,29 @@ lab.experiment('User Class Methods', () => {
         });
     });
 
-
-    lab.test('it returns a result when finding by username', (done) => {
-
-        Async.auto({
-            user: function (cb) {
-
-                User.create('horseman', 'eathay', 'horse@man.show', (err, result) => {
-
-                    Code.expect(err).to.not.exist();
-                    Code.expect(result).to.be.an.instanceOf(User);
-
-                    cb(null, result);
-                });
-            }
-        }, (err, results) => {
-
-            if (err) {
-                return done(err);
-            }
-
-            const username = results.user.username;
-
-            User.findByUsername(username, (err, result) => {
-
-                Code.expect(err).to.not.exist();
-                Code.expect(result).to.be.an.instanceOf(User);
-
-                done();
-            });
-        });
-    });
 });
-
 
 lab.experiment('User Instance Methods', () => {
 
+    let stmpyUser;
+    lab.before((done) => {
+
+        User.create( { username: 'stmpy', email: 'stmpy@ren.com', password: 'simple' }).then(
+            ( result ) => {
+
+                stmpyUser = result;
+                done();
+            },
+            (err) => {
+
+                done(err);
+            }
+        );
+    });
+
     lab.test('it returns false when roles are missing', (done) => {
 
-        const user = new User({ username: 'ren' });
-
-        Code.expect(user.canPlayRole('admin')).to.equal(false);
+        Code.expect(stmpyUser.canPlayRole('admin')).to.equal(false);
 
         done();
     });
@@ -264,15 +223,12 @@ lab.experiment('User Instance Methods', () => {
 
     lab.test('it returns correctly for the specified role', (done) => {
 
-        const user = new User({
-            username: 'ren',
-            roles: {
-                account: { _id: '953P150D35' }
-            }
-        });
+        stmpyUser.roles = { account: { id: '953P150D35' } };
 
-        Code.expect(user.canPlayRole('admin')).to.equal(false);
-        Code.expect(user.canPlayRole('account')).to.equal(true);
+        Code.expect(stmpyUser.canPlayRole('admin')).to.equal(false);
+        Code.expect(stmpyUser.canPlayRole('account')).to.equal(true);
+
+        delete user.roles;
 
         done();
     });
@@ -280,68 +236,29 @@ lab.experiment('User Instance Methods', () => {
 
     lab.test('it exits early when hydrating roles where roles are missing', (done) => {
 
-        const user = new User({ username: 'ren' });
-
-        user.hydrateRoles((err) => {
+        stmpyUser.hydrateRoles(sequelize, (err, roles) => {
 
             Code.expect(err).to.not.exist();
 
             done();
         });
     });
-
-
-    lab.test('it exits early when hydrating roles where hydrated roles exist', (done) => {
-
-        const user = new User({
-            username: 'ren',
-            roles: {
-                admin: {
-                    id: '953P150D35',
-                    name: 'Ren Höek'
-                }
-            }
-        });
-
-        user._roles = {
-            admin: {
-                _id: '953P150D35',
-                name: 'Ren Höek'
-            }
-        };
-
-        user.hydrateRoles((err) => {
-
-            Code.expect(err).to.not.exist();
-
-            done();
-        });
-    });
-
 
     lab.test('it returns an error when hydrating roles and find by id fails', (done) => {
 
-        const realFindById = stub.Admin.findById;
-        stub.Admin.findById = function (id, callback) {
+        Admin.findOne = function (options) {
 
-            callback(Error('find by id failed'));
+            return new Promise( (resolve, reject) => {
+
+                reject(Error('find by id failed'));
+            });
         };
 
-        const user = new User({
-            username: 'ren',
-            roles: {
-                admin: {
-                    id: '953P150D35',
-                    name: 'Ren Höek'
-                }
-            }
-        });
-
-        user.hydrateRoles((err) => {
+        stmpyUser.hydrateRoles(sequelize, (err) => {
 
             Code.expect(err).to.be.an.object();
 
-            stub.Admin.findById = realFindById;
+            Admin.findOne = adminFindOne;
 
             done();
         });
@@ -350,51 +267,27 @@ lab.experiment('User Instance Methods', () => {
 
     lab.test('it returns successful when hydrating roles', (done) => {
 
-        const realAccountFindById = stub.Account.findById;
-        stub.Admin.findById = function (id, callback) {
+        Admin.findOne = function (options) {
 
-            callback(null, new Admin({
-                _id: '953P150D35',
-                name: {
-                    first: 'Ren',
-                    last: 'Höek'
-                }
-            }));
+            return new Promise( (resolve, reject) => {
+
+                resolve({ id: '953P150D35', first: 'Ren', last: 'Höek' });
+            });
+        };
+        Account.findOne = function (options) {
+
+            return new Promise( (resolve, reject) => {
+
+                resolve({ id: '5250W35', first: 'Stimpson', middle: 'J', last: 'Cat' });
+            });
         };
 
-        const realAdminFindById = stub.Admin.findById;
-        stub.Account.findById = function (id, callback) {
-
-            callback(null, new Account({
-                _id: '5250W35',
-                name: {
-                    first: 'Stimpson',
-                    middle: 'J',
-                    last: 'Cat'
-                }
-            }));
-        };
-
-        const user = new User({
-            username: 'ren',
-            roles: {
-                account: {
-                    id: '5250W35',
-                    name: 'Stimpson J Cat'
-                },
-                admin: {
-                    id: '953P150D35',
-                    name: 'Ren Höek'
-                }
-            }
-        });
-
-        user.hydrateRoles((err) => {
+        stmpyUser.hydrateRoles(sequelize, (err) => {
 
             Code.expect(err).to.not.exist();
 
-            stub.Account.findById = realAccountFindById;
-            stub.Admin.findById = realAdminFindById;
+            Account.findOne = accountFindOne;
+            Admin.findOne = adminFindOne;
 
             done();
         });
@@ -403,14 +296,13 @@ lab.experiment('User Instance Methods', () => {
 
     lab.test('it returns successful when hydrating roles where there are none defined', (done) => {
 
-        const user = new User({
-            username: 'ren',
-            roles: {}
-        });
+        const realRoles = stmpyUser.roles;
+        stmpyUser.roles = {};
 
-        user.hydrateRoles((err) => {
+        stmpyUser.hydrateRoles(sequelize, (err, roles) => {
 
             Code.expect(err).to.not.exist();
+            stmpyUser.roles = realRoles;
 
             done();
         });
