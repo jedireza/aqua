@@ -3,6 +3,10 @@ language: node_js
 node_js:
   - "6"
 services:
+  - postgresql
+before_script:
+  - psql -c 'create database aqua_test;' -U postgres
+  - psql -c "CREATE ROLE aqua_test LOGIN ENCRYPTED PASSWORD 'md512d23bb09f295a82e5a316755dfdc0ca' NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;" -U postgres
 env:
   - NODE_ENV=test CXX=g++-4.8
 addons:

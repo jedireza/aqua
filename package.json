@@ -2,6 +2,10 @@
   "name": "aqua-sql",
   "version": "5.0.5",
   "description": "A website and user system for Node.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:jimlowrey/aqua-sql.git"
+  },
   "main": "index.js",
   "scripts": {
     "start": "gulp",

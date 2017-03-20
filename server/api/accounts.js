@@ -581,6 +581,9 @@ internals.applyRoutes = function (server, next) {
             }, (err) => {
 
                 reply(err);
+            }).catch( (err) => {
+
+                reply(err);
             });
         }
     });
