@@ -4,8 +4,8 @@ node_js:
   - "6"
 services:
   - postgresql
-before_install:
-  - sudo apt-get update
+#before_install:
+#  - sudo apt-get update
 before_script:
   - psql -c 'create database aqua_test;' -U postgres
   - psql -c "CREATE ROLE aqua_test LOGIN ENCRYPTED PASSWORD 'md512d23bb09f295a82e5a316755dfdc0ca' NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;" -U postgres
