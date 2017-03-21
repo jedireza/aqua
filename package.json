@@ -39,8 +39,6 @@
     "hoek": "4.x.x",
     "inert": "4.x.x",
     "joi": "10.x.x",
-    "mongo-models": "1.x.x",
-    "mongodb": "2.x.x",
     "node-uuid": "1.4.7",
     "nodemailer": "3.x.x",
     "nodemailer-markdown": "1.x.x",

@@ -44,7 +44,7 @@ const config = {
     },
     db_test : {
         database: 'aqua_test',
-        username: 'aqua',
+        username: 'aqua_test',
         password: 'test'
 
     },
