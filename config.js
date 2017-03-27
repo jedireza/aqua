@@ -37,12 +37,14 @@ const config = {
         $default: '!k3yb04rdK4tz~4qu4~k3yb04rdd0gz!'
     },
     db : {
+        host: 'localhost',
         database: 'aqua',
         username: 'aqua',
         password: process.env.DB_PASSWORD
 
     },
     db_test : {
+        host: 'localhost',
         database: 'aqua_test',
         username: 'aqua_test',
         password: 'test'
