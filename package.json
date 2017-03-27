@@ -33,7 +33,6 @@
     "handlebars": "4.x.x",
     "hapi": "16.x.x",
     "hapi-auth-cookie": "6.x.x",
-    "hapi-mongo-models": "6.x.x",
     "hapi-react-views": "9.x.x",
     "hapi-sequelize": "^3.0.4",
     "hoek": "4.x.x",
