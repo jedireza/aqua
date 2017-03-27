@@ -111,7 +111,7 @@ lab.experiment('Admin Instance Methods', () => {
 
     lab.test('it returns false when groups are not found', (done) => {
 
-        admin.isMemberOf(sequelize.models, groupNames[0], ( err, isMember ) => {
+        admin.isMemberOf(groupNames[0], ( err, isMember ) => {
 
             if ( err ){
                 return done(err);
@@ -158,11 +158,11 @@ lab.experiment('Admin Instance Methods', () => {
             }],
             checkSales: ['add', function (results, cb ){
 
-                admin.isMemberOf(sequelize.models, groupNames[0], cb);
+                admin.isMemberOf(groupNames[0], cb);
             }],
             checkSupport: ['add', function (results, cb ){
 
-                admin.isMemberOf(sequelize.models, groupNames[1], cb);
+                admin.isMemberOf(groupNames[1], cb);
             }]
 
         }, (err, results ) => {
@@ -175,226 +175,4 @@ lab.experiment('Admin Instance Methods', () => {
             done();
         });
     });
-
-/* todo doesn't apply I think.  We don't have the functionality of hydrating permissions
- * we just do the sql call.
-
-    lab.test('it exits early when hydrating groups where groups are missing', (done) => {
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            }
-        });
-
-        admin.hydrateGroups((err) => {
-
-            Code.expect(err).to.not.exist();
-
-            done();
-        });
-    });
-
-
-    lab.test('it exits early when hydrating groups where hydrated groups exist', (done) => {
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                sales: 'Sales'
-            },
-            _groups: {
-                sales: new AdminGroup({
-                    _id: 'sales',
-                    name: 'Sales',
-                    permissions: {
-                        SPACE_MADNESS: true,
-                        UNTAMED_WORLD: false
-                    }
-                })
-            }
-        });
-
-        admin.hydrateGroups((err) => {
-
-            Code.expect(err).to.not.exist();
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when hydrating groups and find by id fails', (done) => {
-
-        const realFindById = stub.AdminGroup.findById;
-        stub.AdminGroup.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                sales: 'Sales'
-            }
-        });
-
-        admin.hydrateGroups((err) => {
-
-            Code.expect(err).to.be.an.object();
-
-            stub.AdminGroup.findById = realFindById;
-
-            done();
-        });
-    });
-
-
-    lab.test('it successfully hydrates groups', (done) => {
-
-        const realFindById = stub.AdminGroup.findById;
-        stub.AdminGroup.findById = function (id, callback) {
-
-            const group = new AdminGroup({
-                _id: 'sales',
-                name: 'Sales',
-                permissions: {
-                    SPACE_MADNESS: true,
-                    UNTAMED_WORLD: false
-                }
-            });
-
-            callback(null, group);
-        };
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                sales: 'Sales'
-            }
-        });
-
-        admin.hydrateGroups((err) => {
-
-            Code.expect(err).to.not.exist();
-
-            stub.AdminGroup.findById = realFindById;
-
-            done();
-        });
-    });
-
-    lab.test('it exits early when the permission exists on the admin', (done) => {
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            permissions: {
-                SPACE_MADNESS: true,
-                UNTAMED_WORLD: false
-            }
-        });
-
-        admin.hasPermissionTo('SPACE_MADNESS', (err, permit) => {
-
-            Code.expect(err).to.not.exist();
-            Code.expect(permit).to.equal(true);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when checking permission and hydrating groups fails', (done) => {
-
-        const realHydrateGroups = Admin.prototype.hydrateGroups;
-        Admin.prototype.hydrateGroups = function (callback) {
-
-            callback(Error('hydrate groups failed'));
-        };
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                sales: 'Sales'
-            }
-        });
-
-        admin.hasPermissionTo('SPACE_MADNESS', (err) => {
-
-            Code.expect(err).to.be.an.object();
-
-            Admin.prototype.hydrateGroups = realHydrateGroups;
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns correct permission from hydrated group permissions', (done) => {
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                sales: 'Sales',
-                support: 'Support'
-            }
-        });
-
-        admin._groups = {
-            sales: new AdminGroup({
-                _id: 'sales',
-                name: 'Sales',
-                permissions: {
-                    UNTAMED_WORLD: false,
-                    WORLD_UNTAMED: true
-                }
-            }),
-            support: new AdminGroup({
-                _id: 'support',
-                name: 'Support',
-                permissions: {
-                    SPACE_MADNESS: true,
-                    MADNESS_SPACE: false
-                }
-            })
-        };
-
-        Async.auto({
-            test1: function (cb) {
-
-                admin.hasPermissionTo('SPACE_MADNESS', cb);
-            },
-            test2: function (cb) {
-
-                admin.hasPermissionTo('UNTAMED_WORLD', cb);
-            }
-        }, (err, results) => {
-
-            Code.expect(err).to.not.exist();
-            Code.expect(results.test1).to.equal(true);
-            Code.expect(results.test2).to.equal(false);
-
-            done(err);
-        });
-    });
-    */
 });

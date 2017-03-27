@@ -78,7 +78,7 @@ lab.before((done) => {
             Credentials( db, '00000000-0000-0000-0000-000000000000', ( err, iresults ) => {
 
                 if ( err ){
-                    cb(err);
+                    return cb(err);
                 }
                 adminCredentials = iresults;
                 cb(null);

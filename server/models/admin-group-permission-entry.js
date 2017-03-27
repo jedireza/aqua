@@ -51,7 +51,7 @@ module.exports = function (sequelize, DataTypes){
             output.data = result.rows;
             output.items.total = result.count;
 
-          // paging calculations
+            // paging calculations
             output.pages.total = Math.ceil(output.items.total / limit);
             output.pages.next = output.pages.current + 1;
             output.pages.hasNext = output.pages.next <= output.pages.total;

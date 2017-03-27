@@ -9,15 +9,16 @@ const internals = {};
 
 internals.applyStrategy = function (server, next) {
 
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const User = models.User;
+    const Session = models.Session;
+
     server.auth.strategy('session', 'cookie', {
         password: Config.get('/cookieSecret'),
         cookie: 'sid-aqua',
         isSecure: false,
         redirectTo: '/login',
         validateFunc: function (request, data, callback) {
-
-            const Session = request.getDb('aqua').getModel('Session');
-            const User = request.getDb('aqua').getModel('User');
 
             Async.auto({
                 session: function (done) {
@@ -51,7 +52,7 @@ internals.applyStrategy = function (server, next) {
                         return done();
                     }
 
-                    results.user.hydrateRoles(request.getDb('aqua'),done);
+                    results.user.hydrateRoles(done);
                 }],
                 scope: ['roles', function (results, done) {
 
@@ -103,13 +104,12 @@ internals.preware = {
                 if (Object.prototype.toString.call(groups) !== '[object Array]') {
                     groups = [groups];
                 }
-                const models  = request.getDb('aqua').getModels();
                 const admin = request.auth.credentials.roles.admin;
 
                 (function next(i){
 
                     if ( groups.length > i ){
-                        admin.isMemberOf(models,groups[i], (err, isMember) => {
+                        admin.isMemberOf(groups[i], (err, isMember) => {
 
                             if (err){
                                 return reply(Boom.badRequest(err));

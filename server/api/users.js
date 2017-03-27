@@ -2,12 +2,15 @@
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
 const Joi = require('joi');
-
+const Config = require('../../config');
 
 const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
+
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const User = models.User;
 
     server.route({
         method: 'GET',
@@ -65,8 +68,7 @@ internals.applyRoutes = function (server, next) {
 
             }
 
-            const User = request.getDb('aqua').getModel('User');
-            User.pagedFind(request.getDb('aqua').getModels(), query, request.query.page, request.query.limit, order, isAdmin, isAccount,
+            User.pagedFind(query, request.query.page, request.query.limit, order, isAdmin, isAccount,
                  (err, data) => {
 
                      if ( err ){
@@ -92,15 +94,7 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const User = request.getDb('aqua').getModel('User');
-            User.findById(request.params.id,
-                {
-                    raw: true,//todo raw? also put password hash stuff in model def
-                    attributes : {
-                        exclude: 'password_hash'
-                    }
-                }
-            ).then((user) => {
+            User.findById(request.params.id).then((user) => {
 
                 if (!user){
                     return reply(Boom.notFound('User not found.'));
@@ -127,19 +121,8 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const id = request.auth.credentials.user.id.toString();
-            //const fields = User.fieldsAdapter('username email roles');
 
-            const User = request.getDb('aqua').getModel('User');
-            //don't I have the user already?
-            User.findById(id,
-                {
-                    raw: true,
-                    attributes : {
-                        exclude: 'password_hash'
-                    }
-                }
-
-            ).then((user) => {
+            User.findById(id).then((user) => {
 
                 if (!user){
                     return reply(Boom.notFound('User not found.'));
@@ -175,7 +158,6 @@ internals.applyRoutes = function (server, next) {
                     assign: 'usernameCheck',
                     method: function (request, reply) {
 
-                        const User = request.getDb('aqua').getModel('User');
                         const conditions = {
                             username: request.payload.username
                         };
@@ -198,7 +180,6 @@ internals.applyRoutes = function (server, next) {
                     assign: 'emailCheck',
                     method: function (request, reply) {
 
-                        const User = request.getDb('aqua').getModel('User');
                         const conditions = {
                             email: request.payload.email
                         };
@@ -221,7 +202,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const User = request.getDb('aqua').getModel('User');
             User.create({
                 username : request.payload.username,
                 isActive: true,
@@ -267,7 +247,6 @@ internals.applyRoutes = function (server, next) {
                             username: request.payload.username,
                             id: { $ne: request.params.id }
                         };
-                        const User = request.getDb('aqua').getModel('User');
                         User.findOne(
                             {
                                 where : conditions
@@ -292,7 +271,6 @@ internals.applyRoutes = function (server, next) {
                             email: request.payload.email,
                             id: { $ne: request.params.id }
                         };
-                        const User = request.getDb('aqua').getModel('User');
                         User.findOne(
                             {
                                 where : conditions
@@ -314,7 +292,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const User = request.getDb('aqua').getModel('User');
             User.update(
                 {
                     isActive: request.payload.isActive,
@@ -363,7 +340,6 @@ internals.applyRoutes = function (server, next) {
                             username: request.payload.username,
                             id: { $ne: request.auth.credentials.user.id }
                         };
-                        const User = request.getDb('aqua').getModel('User');
                         User.findOne(
                             {
                                 where : conditions
@@ -384,7 +360,6 @@ internals.applyRoutes = function (server, next) {
                     assign: 'emailCheck',
                     method: function (request, reply) {
 
-                        const User = request.getDb('aqua').getModel('User');
                         const conditions = {
                             email: request.payload.email,
                             id: { $ne: request.auth.credentials.user.id }
@@ -410,7 +385,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const User = request.getDb('aqua').getModel('User');
             const id = request.auth.credentials.user.id.toString();
             User.update(
                 {
@@ -458,7 +432,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const User = request.getDb('aqua').getModel('User');
             User.update(
                 {
                     password: request.payload.password
@@ -473,7 +446,6 @@ internals.applyRoutes = function (server, next) {
                         return reply(Boom.notFound('User not found.'));
                     }
 
-                    //todo should anything be passed back?
                     reply(result);
 
                 }, (err) => {
@@ -502,7 +474,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const User = request.getDb('aqua').getModel('User');
             User.update(
                 {
                     password: request.payload.password
@@ -547,7 +518,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const User = request.getDb('aqua').getModel('User');
             User.destroy({
                 where: {
                     id : request.params.id

@@ -2,12 +2,19 @@
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
 const Joi = require('joi');
+const Config = require('../../config');
 
 
 const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
+
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const AdminGroup = models.AdminGroup;
+    const AdminGroupPermissionEntry = models.AdminGroupPermissionEntry;
+    const Admin = models.Admin;
+    const Permission = models.Permission;
 
     server.route({
         method: 'GET',
@@ -32,8 +39,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
-            const Admin = request.getDb('aqua').getModel('Admin');
             const query = {};
             const include = [{ model: Admin }];
             if (request.query.username) {
@@ -70,10 +75,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
-            const Admin = request.getDb('aqua').getModel('Admin');
-            const AdminGroupPermissionEntry = request.getDb('aqua').getModel('AdminGroupPermissionEntry');
-            const Permission = request.getDb('aqua').getModel('Permission');
             AdminGroup.findById(request.params.id,
                 {
                     include: [{ model : Admin },
@@ -115,7 +116,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
 
             AdminGroup.create({
                 name: request.payload.name
@@ -156,7 +156,6 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const id = request.params.id;
-            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
             AdminGroup.update(
                 {
                     name: request.payload.name
@@ -206,8 +205,6 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const id = request.params.id;
-            const AdminGroupPermissionEntry = request.getDb('aqua').getModel('AdminGroupPermissionEntry');
-            const Permission = request.getDb('aqua').getModel('Permission');
             const adminGroupPermissionEntries = request.payload.permissionEntries;
             const ids = adminGroupPermissionEntries.map((permission) => {
 
@@ -268,7 +265,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
 
             AdminGroup.destroy(
                 {

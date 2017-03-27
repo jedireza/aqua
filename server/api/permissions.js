@@ -2,10 +2,14 @@
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
 const Joi = require('joi');
+const Config = require('../../config');
 
 const internals = {};
 
 internals.applyRoutes = function (server, next) {
+
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const Permission = models.Permission;
 
     server.route({
         method: 'GET',
@@ -27,7 +31,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Permission = request.getDb('aqua').getModel('Permission');
             const query = {};
             if (request.query.name) {
                 query.name = { $like: '%' + request.query.name + '%' };
@@ -73,7 +76,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Permission = request.getDb('aqua').getModel('Permission');
             Permission.findOne(
                 {
                     where: {
@@ -115,7 +117,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Permission = request.getDb('aqua').getModel('Permission');
             const name = request.payload.name;
 
             Permission.create(
@@ -154,7 +155,6 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const id = request.params.id;
-            const Permission = request.getDb('aqua').getModel('Permission');
 
             Permission.update(
                 {

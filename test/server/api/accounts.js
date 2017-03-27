@@ -16,7 +16,7 @@ const stub = {
         if ( key === '/db' ){
             key = '/db_test';
         }
-        //is there a way to access the origianl function?
+        //todo is there a way to access the original function?
         //without loading ConfigOriginal
         return Config.get(key);
     }
@@ -24,12 +24,6 @@ const stub = {
 
 const DBSetup = Proxyquire('../../../dbsetup', { './config' : stub });
 
-/*
-todo: will need sql script with admin perms on the db to set up db name and user
-learned that hapi-sequelize registration was missing next in the correct spot
-probably can go through all api handlers and move the models out to the set up scope
-instead of the handler scope
-*/
 const lab = exports.lab = Lab.script();
 let request;
 let server;
@@ -952,7 +946,22 @@ lab.experiment('Accounts Plugin Add Note', () => {
 
             return new Promise( (resolve, reject) => {
 
-                resolve({});
+                resolve({
+                    createNoteEntry : function (obj) {
+
+                        return new Promise( (iresolve, ireject) => {
+
+                            iresolve(obj);
+                        });
+                    },
+                    reload : function () {
+
+                        return new Promise( (iresolve, ireject) => {
+
+                            iresolve({});
+                        });
+                    }
+                });
             });
         };
         NoteEntry.create = function (note) {
@@ -960,7 +969,6 @@ lab.experiment('Accounts Plugin Add Note', () => {
             return new Promise( (resolve, reject) => {
 
                 resolve({});
-
             });
         };
 

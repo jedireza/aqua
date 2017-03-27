@@ -4,23 +4,6 @@ const Async = require('async');
 
 module.exports = function (sequelize, DataTypes){
 
-/*
-  function _hashPassword(user){
-    if (!user.getDataValue('password')) {
-        return Promise.reject();
-    }
-    return Bcrypt.genSalt(10)
-        .then(function(salt) {
-            return Bcrypt.hash(user.getDataValue('password'), salt);
-        })
-        .then(function(hash) {
-            user.setDataValue('password_hash', hash);
-            return user;
-        });
-  };
-  */
-
-    //todo make this testable
     const _hashPassword = function (user, options, cb){
 
         Bcrypt.genSalt(10, (err, salt) => {
@@ -51,10 +34,6 @@ module.exports = function (sequelize, DataTypes){
         password_hash: { type:DataTypes.STRING },//, allowNull: false, validate: { min: 20} ,
         password: {
             type: DataTypes.VIRTUAL
-        /*,
-       set: function(val, callback){
-        this.setDataValue('password', val);
-        }*/
         },
         email: { type:DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
         reset_token: { type:DataTypes.STRING },
@@ -65,6 +44,15 @@ module.exports = function (sequelize, DataTypes){
             beforeUpdate: _hashPassword
         },
         instanceMethods : {
+            toJSON: function (){
+
+                const values = Object.assign({}, this.get());
+                delete values.password_hash;
+                delete values.password;
+                delete values.reset_token;
+                delete values.reset_expires;
+                return values;
+            },
             comparePassword: function (password, cb){
 
                 Bcrypt.compare(password, this.password_hash, cb);
@@ -78,11 +66,10 @@ module.exports = function (sequelize, DataTypes){
 
                 return this.roles.hasOwnProperty(role);
             },
-            //todo remove the db dependency
-            hydrateRoles: function (db, callback) {
+            hydrateRoles: function (callback) {
 
-                const Admin = sequelize.models.Admin;// db.getModel('Admin');
-                const Account = sequelize.models.Account;// db.getModel('Account');
+                const Admin = sequelize.models.Admin;
+                const Account = sequelize.models.Account;
 
                 const self = this;
                 const roles = {};
@@ -114,6 +101,10 @@ module.exports = function (sequelize, DataTypes){
             }
         },
         classMethods : {
+            generatePasswordHash: function (user, options, cb){
+
+                _hashPassword(user, options, cb);
+            },
             associate: function (db){
 
                 User.hasOne(db.Account, { foreignKey: 'user_id' });
@@ -170,19 +161,19 @@ module.exports = function (sequelize, DataTypes){
                     callback();
                 });
             },
-            pagedFind: function (models, where, page, limit, order, isAdmin, isAccount, callback){
+            pagedFind: function (where, page, limit, order, isAdmin, isAccount, callback){
 
                 const offset = (page - 1) * limit;
                 const include = [];
                 if ( isAdmin ){
                     include.push({
-                        model : models.Admin,
+                        model : sequelize.models.Admin,
                         where : { user_id: { $ne: null } }
                     });
                 }
                 if ( isAccount ){
                     include.push({
-                        model : models.Account,
+                        model : sequelize.models.Account,
                         where : { user_id: { $ne: null } }
                     });
                 }
@@ -193,9 +184,6 @@ module.exports = function (sequelize, DataTypes){
                         offset,
                         limit,
                         order,
-                        attributes : {
-                            exclude: 'password_hash'
-                        },
                         include
                     }
         ).then((result) => {
@@ -220,7 +208,7 @@ module.exports = function (sequelize, DataTypes){
             output.data = result.rows;
             output.items.total = result.count;
 
-          // paging calculations
+            // paging calculations
             output.pages.total = Math.ceil(output.items.total / limit);
             output.pages.next = output.pages.current + 1;
             output.pages.hasNext = output.pages.next <= output.pages.total;

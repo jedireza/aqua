@@ -2,12 +2,20 @@
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
 const Joi = require('joi');
+const Config = require('../../config');
 
 
 const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
+
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const Account = models.Account;
+    const User = models.User;
+    const NoteEntry = models.NoteEntry;
+    const StatusEntry = models.StatusEntry;
+    const Status = models.Status;
 
     server.route({
         method: 'GET',
@@ -29,10 +37,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Account = request.getDb('aqua').getModel('Account');
-            const User = request.getDb('aqua').getModel('User');
-            const StatusEntry = request.getDb('aqua').getModel('StatusEntry');
-            const NoteEntry = request.getDb('aqua').getModel('NoteEntry');
             const query = {};
             const include = [{ model: User }, { model: StatusEntry }, { model: NoteEntry }];
             if (request.query.username) {
@@ -64,11 +68,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Account = request.getDb('aqua').getModel('Account');
-            const User = request.getDb('aqua').getModel('User');
-            const NoteEntry = request.getDb('aqua').getModel('NoteEntry');
-            const StatusEntry = request.getDb('aqua').getModel('StatusEntry');
-            const Status = request.getDb('aqua').getModel('Status');
             Account.findById( request.params.id,
                 {
                     include: [
@@ -76,11 +75,9 @@ internals.applyRoutes = function (server, next) {
                             model : User,
                             attributes: ['id', 'username', 'isActive', 'createdAt']
                         },
-                        { model: NoteEntry, include: [{ model: User, attributes:{ exclude:['password_hash'] } }] },
-                        //todo fix the attributes with scope default attributes
-                        //user password_hash etc is being sent around all over the place
+                        { model: NoteEntry, include: [{ model: User }] },
                         { model: StatusEntry, include: [
-                            { model: User, attributes:{ exclude:['password_hash'] } }, { model: Status }]
+                            { model: User }, { model: Status }]
                         }]
                 }
             ).then((account) => {
@@ -109,9 +106,6 @@ internals.applyRoutes = function (server, next) {
             }
         },
         handler: function (request, reply) {
-
-            const Account = request.getDb('aqua').getModel('Account');
-            const User = request.getDb('aqua').getModel('User');
 
             const id = request.auth.credentials.user.id;//roles.account.id.toString();
 
@@ -151,7 +145,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Account = request.getDb('aqua').getModel('Account');
             const name = Account.parseName(request.payload.name);
             Account.create({
                 first: name.first,
@@ -186,7 +179,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Account = request.getDb('aqua').getModel('Account');
 
             const id = request.params.id;
             Account.update(
@@ -233,8 +225,6 @@ internals.applyRoutes = function (server, next) {
             }
         },
         handler: function (request, reply) {
-
-            const Account = request.getDb('aqua').getModel('Account');
 
             const userId = request.auth.credentials.user.id;
 
@@ -283,7 +273,6 @@ internals.applyRoutes = function (server, next) {
                 assign: 'account',
                 method: function (request, reply) {
 
-                    const Account = request.getDb('aqua').getModel('Account');
                     Account.findById(request.params.id).then((account) => {
 
                         if (!account) {
@@ -306,7 +295,6 @@ internals.applyRoutes = function (server, next) {
                 assign: 'user',
                 method: function (request, reply) {
 
-                    const User = request.getDb('aqua').getModel('User');
                     User.findOne(
                         {
                             where: {
@@ -361,7 +349,6 @@ internals.applyRoutes = function (server, next) {
                 assign: 'account',
                 method: function (request, reply) {
 
-                    const Account = request.getDb('aqua').getModel('Account');
                     Account.findById(request.params.id).then((account) => {
 
                         if (!account) {
@@ -421,42 +408,35 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Account = request.getDb('aqua').getModel('Account');
-            const NoteEntry = request.getDb('aqua').getModel('NoteEntry');
-            const StatusEntry = request.getDb('aqua').getModel('StatusEntry');
-            const User = request.getDb('aqua').getModel('User');
-
             const id = request.params.id;
-            Account.findById(id).then((account) => {
+
+            Account.findById(id,
+                {
+                    include: [
+                        { model : User },
+                        { model: NoteEntry, include: [{ model: User }] }, { model: StatusEntry }]
+                }
+            ).then((account) => {
 
                 if ( !account){
                     return reply(Boom.notFound('Account not found'));
                 }
-                return NoteEntry.create(
-                    {
-                        data: request.payload.data,
-                        account_id: id,
-                        user_id: request.auth.credentials.user.id
-                    }
-                );
-            }).then((noteEntry) => {
-                //todo a better way than requerying?
+                account.createNoteEntry({
+                    data: request.payload.data,
+                    user_id: request.auth.credentials.user.id
+                }) .then( (result) => {
 
-                return Account.findById(request.params.id,
-                    {
-                        include: [
-                            {
-                                model : User,
-                                attributes: ['id', 'username', 'isActive', 'createdAt']
-                            }, { model: NoteEntry, include: [{ model: User, attributes: { exclude: ['password_hash'] } }] }, { model: StatusEntry }]
-                    });
-            }).then((account) => {
+                    return account.reload();//todo figure out why we need to reload here.
+                                            //for some reason the NoteEntry doesn't get appended to NoteEntries
+                }) .then( (result) => {
 
-                reply(account);
+                    reply(result);
+                });
             }, (err) => {
 
                 reply(err);
             });
+
         }
     });
 
@@ -478,8 +458,6 @@ internals.applyRoutes = function (server, next) {
                 assign: 'status',
                 method: function (request, reply) {
 
-                    const Status = request.getDb('aqua').getModel('Status');
-
                     Status.findById(request.payload.status).then( (status) => {
 
                         if ( !status ){
@@ -496,8 +474,6 @@ internals.applyRoutes = function (server, next) {
                 assign: 'account',
                 method: function (request, reply) {
 
-                    const Account = request.getDb('aqua').getModel('Account');
-
                     Account.findById(request.params.id).then( (account) => {
 
                         if ( !account ){
@@ -513,20 +489,13 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Account = request.getDb('aqua').getModel('Account');
-            const StatusEntry = request.getDb('aqua').getModel('StatusEntry');
-            const Status = request.getDb('aqua').getModel('Status');
-            const User = request.getDb('aqua').getModel('User');
-            const NoteEntry = request.getDb('aqua').getModel('NoteEntry');
             StatusEntry.create({
                 name : request.pre.status.name,
                 account_id : request.pre.account.id,
                 status_id : request.pre.status.id,
                 user_id: request.auth.credentials.user.id
-            }
-            ).then((statusEntry) => {
+            }).then((statusEntry) => {
 
-                //xxx a better way than requerying?
                 return Account.findById(request.params.id,
                     {
                         include: [
@@ -534,9 +503,9 @@ internals.applyRoutes = function (server, next) {
                                 model : User,
                                 attributes: ['id', 'username', 'isActive', 'createdAt']
                             },
-                        {  model: NoteEntry, include: [{ model: User, attributes: { exclude: ['password_hash'] } }] },
-                            {  model: StatusEntry, include: [
-                            { model: User, attributes: { exclude: ['password_hash'] } },
+                        {  model: NoteEntry, include: [{ model: User }] },
+                            { model: StatusEntry, include: [
+                            { model: User },
                             { model: Status }
                             ] }]
                     });
@@ -564,8 +533,6 @@ internals.applyRoutes = function (server, next) {
             ]
         },
         handler: function (request, reply) {
-
-            const Account = request.getDb('aqua').getModel('Account');
 
             Account.destroy(
                 {

@@ -2,12 +2,15 @@
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
 const Joi = require('joi');
-
+const Config = require('../../config');
 
 const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
+
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const Status = models.Status;
 
     server.route({
         method: 'GET',
@@ -30,7 +33,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Status = request.getDb('aqua').getModel('Status');
             const query = {};
             if (request.query.pivot) {
                 query.pivot = { $like: '%' + request.query.pivot + '%' };
@@ -81,7 +83,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Status = request.getDb('aqua').getModel('Status');
             Status.findById(request.params.id).then( (status) => {
 
                 if (!status) {
@@ -118,7 +119,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Status = request.getDb('aqua').getModel('Status');
             const pivot = request.payload.pivot;
             const name = request.payload.name;
 
@@ -159,7 +159,6 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const id = request.params.id;
-            const Status = request.getDb('aqua').getModel('Status');
 
             Status.update(
                 {
@@ -175,7 +174,7 @@ internals.applyRoutes = function (server, next) {
                         return reply(Boom.notFound('Document not found.'));
                     }
 
-                    reply(count);//todo should this reply with the object instead?
+                    reply(count);
 
                 }, (err) => {
 
@@ -199,7 +198,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Status = request.getDb('aqua').getModel('Status');
             Status.destroy(
                 {
                     where: { id : request.params.id }

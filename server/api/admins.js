@@ -3,12 +3,20 @@ const AuthPlugin = require('../auth');
 const Boom = require('boom');
 const Joi = require('joi');
 const Promise = require('promise');
+const Config = require('../../config');
 
 
 const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
+
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const AdminGroup = models.AdminGroup;
+    const AdminPermissionEntry = models.AdminPermissionEntry;
+    const Admin = models.Admin;
+    const Permission = models.Permission;
+    const User = models.User;
 
     server.route({
         method: 'GET',
@@ -33,8 +41,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Admin = request.getDb('aqua').getModel('Admin');
-            const User = request.getDb('aqua').getModel('User');
             const query = {};
             const include = [{ model: User }];
             if (request.query.username) {
@@ -72,16 +78,9 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Admin = request.getDb('aqua').getModel('Admin');
-            const AdminGroup = request.getDb('aqua').getModel('AdminGroup');
-            const AdminPermissionEntry = request.getDb('aqua').getModel('AdminPermissionEntry');
-            const Permission = request.getDb('aqua').getModel('Permission');
-            const User = request.getDb('aqua').getModel('User');
-
             Admin.findById(request.params.id, {
                 include: [
-                    //todo exlucde or include correctly
-                    { model: User, attributes:{ exclude:['password_hash'] } },
+                    { model: User },
                     { model: AdminGroup },
                     { model: AdminPermissionEntry, include: [{ model: Permission }] }
                 ]
@@ -120,7 +119,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Admin = request.getDb('aqua').getModel('Admin');
             const nameParts = request.payload.name.trim().split(/\s/);
             const name = {
                 first: nameParts.shift(),
@@ -165,8 +163,6 @@ internals.applyRoutes = function (server, next) {
             ]
         },
         handler: function (request, reply) {
-
-            const Admin = request.getDb('aqua').getModel('Admin');
 
             const id = request.params.id;
             Admin.update(
@@ -219,8 +215,6 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const id = request.params.id;
-            const AdminPermissionEntry = request.getDb('aqua').getModel('AdminPermissionEntry');
-            const Permission = request.getDb('aqua').getModel('Permission');
             const adminPermissionEntries = request.payload.permissionEntries;
             const ids = adminPermissionEntries.map((permission) => {
 
@@ -285,7 +279,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Admin = request.getDb('aqua').getModel('Admin');
             Admin.findById(request.params.id).then((admin) => {
 
                 if (!admin){
@@ -329,7 +322,6 @@ internals.applyRoutes = function (server, next) {
                     assign: 'admin',
                     method: function (request, reply) {
 
-                        const Admin = request.getDb('aqua').getModel('Admin');
                         Admin.findById(request.params.id).then((account) => {
 
                             if (!account) {
@@ -345,7 +337,6 @@ internals.applyRoutes = function (server, next) {
                     assign: 'user',
                     method: function (request, reply) {
 
-                        const User = request.getDb('aqua').getModel('User');
                         User.findOne(
                             {
                                 where: {
@@ -431,8 +422,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Admin = request.getDb('aqua').getModel('Admin');
-
             Admin.findById(request.params.id).then((admin) => {
 
                 if ( !admin ){
@@ -469,7 +458,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Admin = request.getDb('aqua').getModel('Admin');
             Admin.destroy(request.params.id).then((count) => {
 
                 if ( count === 0 ){

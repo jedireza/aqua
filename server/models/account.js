@@ -22,6 +22,13 @@ module.exports = function (sequelize, DataTypes){
             allowNull: false
         }
     }, {
+        instanceMethods: {
+            toJSON: function (){
+
+                const values = Object.assign({}, this.get());
+                return values;
+            }
+        },
         classMethods: {
             parseName: function (fullName){
 
@@ -51,49 +58,54 @@ module.exports = function (sequelize, DataTypes){
                         order,
                         include
                     }
-        ).then((result) => {
+                    ).then((result) => {
 
-            const output = {
-                data: undefined,
-                pages: {
-                    current: page,
-                    prev: 0,
-                    hasPrev: false,
-                    next: 0,
-                    hasNext: false,
-                    total: 0
-                },
-                items: {
-                    limit,
-                    begin: ((page * limit) - limit) + 1,
-                    end: page * limit,
-                    total: 0
-                }
-            };
-            output.data = result.rows;
-            output.items.total = result.count;
+                        const output = {
+                            data: undefined,
+                            pages: {
+                                current: page,
+                                prev: 0,
+                                hasPrev: false,
+                                next: 0,
+                                hasNext: false,
+                                total: 0
+                            },
+                            items: {
+                                limit,
+                                begin: ((page * limit) - limit) + 1,
+                                end: page * limit,
+                                total: 0
+                            }
+                        };
+                        output.data = result.rows;
+                        output.items.total = result.count;
 
-          // paging calculations
-            output.pages.total = Math.ceil(output.items.total / limit);
-            output.pages.next = output.pages.current + 1;
-            output.pages.hasNext = output.pages.next <= output.pages.total;
-            output.pages.prev = output.pages.current - 1;
-            output.pages.hasPrev = output.pages.prev !== 0;
-            if (output.items.begin > output.items.total) {
-                output.items.begin = output.items.total;
-            }
-            if (output.items.end > output.items.total) {
-                output.items.end = output.items.total;
-            }
+                        // paging calculations
+                        output.pages.total = Math.ceil(output.items.total / limit);
+                        output.pages.next = output.pages.current + 1;
+                        output.pages.hasNext = output.pages.next <= output.pages.total;
+                        output.pages.prev = output.pages.current - 1;
+                        output.pages.hasPrev = output.pages.prev !== 0;
+                        if (output.items.begin > output.items.total) {
+                            output.items.begin = output.items.total;
+                        }
+                        if (output.items.end > output.items.total) {
+                            output.items.end = output.items.total;
+                        }
 
-            callback(null, output);
+                        //result.rows.toJSON = function () {
+
+                        //    JSON.stringify(result.rows);
+                        //};
+                        console.log('rows is ',  Array.isArray(result.rows));
+
+                        callback(null, output);
 
 
-        }, (err) => {
+                    }, (err) => {
 
-            return callback(err);
-        });
-
+                        return callback(err);
+                    });
             }
         },
         version: true

@@ -17,20 +17,12 @@ const stub = {
         if ( key === '/db' ){
             key = '/db_test';
         }
-        //is there a way to access the origianl function?
-        //without loading ConfigOriginal
         return Config.get(key);
     }
 };
 
 const DBSetup = Proxyquire('../../../dbsetup', { './config' : stub });
 
-/*
-todo: will need sql script with admin perms on the db to set up db name and user
-learned that hapi-sequelize registration was missing next in the correct spot
-probably can go through all api handlers and move the models out to the set up scope
-instead of the handler scope
-*/
 const lab = exports.lab = Lab.script();
 let request;
 let server;

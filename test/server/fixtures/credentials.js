@@ -6,7 +6,7 @@ module.exports = function (sequelize, userId, callback) {
 
     User.findById(userId).then( (user) => {
 
-        user.hydrateRoles(sequelize, (err, roles) => {
+        user.hydrateRoles((err, roles) => {
 
             if (err){
                 callback(err);

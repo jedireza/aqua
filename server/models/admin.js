@@ -23,11 +23,14 @@ module.exports = function (sequelize, DataTypes){
         }
     }, {
         instanceMethods: {
-            isMemberOf: function (models, group, callback){
+            toJSON: function (){
 
-                const self = this;
-                const AdminGroup = models.AdminGroup;
-                //const Admin = models.Admin;
+                const values = Object.assign({}, this.get());
+                return values;
+            },
+            isMemberOf: function (group, callback){
+
+                const AdminGroup = sequelize.models.AdminGroup;
                 AdminGroup.findOne(
                     {
                         where:{
@@ -35,7 +38,7 @@ module.exports = function (sequelize, DataTypes){
                         },
                         include : [{
                             model : Admin,
-                            where : { id: self.id }
+                            where : { id: this.id }
                         }]
                     }
         ).then((adminGroup) => {

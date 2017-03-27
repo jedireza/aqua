@@ -11,6 +11,13 @@ module.exports = function (sequelize, DataTypes){
         data: { type:DataTypes.STRING, allowNull: false, defaultValue: '' }
 
     }, {
+        instanceMethods: {
+            toJSON: function (){
+
+                const values = Object.assign({}, this.get());
+                return values;
+            }
+        },
         classMethods: {
             associate: function (db){
 

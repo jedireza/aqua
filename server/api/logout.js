@@ -1,11 +1,15 @@
 'use strict';
 const Boom = require('boom');
+const Config = require('../../config');
 
 
 const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
+
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const Session = models.Session;
 
     server.route({
         method: 'DELETE',
@@ -25,7 +29,6 @@ internals.applyRoutes = function (server, next) {
 
             const credentials = request.auth.credentials || { session: {} };
             const session = credentials.session || {};
-            const Session = request.getDb('aqua').getModel('Session');
 
             Session.destroy({
                 where: {

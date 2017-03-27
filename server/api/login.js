@@ -11,6 +11,11 @@ const internals = {};
 
 internals.applyRoutes = function (server, next) {
 
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const AuthAttempt = models.AuthAttempt;
+    const User = models.User;
+    const Session = models.Session;
+
     server.route({
         method: 'POST',
         path: '/login',
@@ -27,7 +32,6 @@ internals.applyRoutes = function (server, next) {
 
                     const ip = request.info.remoteAddress;
                     const username = request.payload.username;
-                    const AuthAttempt = request.getDb('aqua').getModel('AuthAttempt');
 
                     AuthAttempt.abuseDetected(ip, username, (err, detected) => {
 
@@ -48,14 +52,13 @@ internals.applyRoutes = function (server, next) {
 
                     const username = request.payload.username;
                     const password = request.payload.password;
-                    const User = request.getDb('aqua').getModel('User');
                     User.findByCredentials(username, password, (err, user) => {
 
                         if (err) {
                             return reply(err);
                         }
                         if ( user ){
-                            user.hydrateRoles(request.getDb('aqua'), (err) => {
+                            user.hydrateRoles((err) => {
 
                                 if ( err ){
                                     reply(err);
@@ -80,7 +83,6 @@ internals.applyRoutes = function (server, next) {
 
                     const ip = request.info.remoteAddress;
                     const username = request.payload.username;
-                    const AuthAttempt = request.getDb('aqua').getModel('AuthAttempt');
 
                     AuthAttempt.create(
                         {
@@ -100,7 +102,6 @@ internals.applyRoutes = function (server, next) {
                 assign: 'session',
                 method: function (request, reply) {
 
-                    const Session = request.getDb('aqua').getModel('Session');
                     Session.createNew(request.pre.user.id.toString(), (err, session) => {
 
                         if (err) {
@@ -146,8 +147,6 @@ internals.applyRoutes = function (server, next) {
                 assign: 'user',
                 method: function (request, reply) {
 
-                    const User = request.getDb('aqua').getModel('User');
-
                     const conditions = {
                         email: request.payload.email
                     };
@@ -175,7 +174,6 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const mailer = request.server.plugins.mailer;
-            const Session = request.getDb('aqua').getModel('Session');
 
             Async.auto({
                 keyHash: function (done) {
@@ -240,7 +238,6 @@ internals.applyRoutes = function (server, next) {
                 assign: 'user',
                 method: function (request, reply) {
 
-                    const User = request.getDb('aqua').getModel('User');
                     const conditions = {
                         email: request.payload.email,
                         'reset_expires': { $gt: Date.now() }

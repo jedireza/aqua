@@ -4,11 +4,15 @@ const Boom = require('boom');
 const Config = require('../../config');
 const Joi = require('joi');
 
-
 const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
+
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const User = models.User;
+    const Account = models.Account;
+    const Session = models.Session;
 
     server.route({
         method: 'POST',
@@ -35,8 +39,6 @@ internals.applyRoutes = function (server, next) {
                 assign: 'usernameCheck',
                 method: function (request, reply) {
 
-                    const User = request.getDb('aqua').getModel('User');
-
                     const conditions = {
                         username: request.payload.username
                     };
@@ -57,7 +59,6 @@ internals.applyRoutes = function (server, next) {
                 assign: 'emailCheck',
                 method: function (request, reply) {
 
-                    const User = request.getDb('aqua').getModel('User');
                     const conditions = {
                         email: request.payload.email
                     };
@@ -80,9 +81,6 @@ internals.applyRoutes = function (server, next) {
         handler: function (request, reply) {
 
             const mailer = request.server.plugins.mailer;
-            const Account = request.getDb('aqua').getModel('Account');
-            const User = request.getDb('aqua').getModel('User');
-            const Session = request.getDb('aqua').getModel('Session');
 
             Async.auto({
                 user: function (done) {

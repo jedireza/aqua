@@ -273,9 +273,10 @@ lab.experiment('Auth Plugin', () => {
 
     lab.test('it takes over when the required role is missing', (done) => {
 
-        //todo put a row in the session table to match the cookie
         Session.findByCredentials = function (id, key, callback) {
 
+            //todo put a row in the session table to match the cookie
+            //instead of making one up here
             Session.createNew(accountCredentials.user.id, callback);
         };
         server.route({

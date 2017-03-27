@@ -10,7 +10,6 @@ const lab = exports.lab = Lab.script();
 let Admin;
 let User;
 let Account;
-let sequelize;
 let userCreate;
 let adminFindOne;
 let accountFindOne;
@@ -36,7 +35,6 @@ lab.experiment('User Class Methods', () => {
         PrepareData( (err, db ) => {
 
             if ( !err ){
-                sequelize = db;
                 User = UserConstructor(db, Sequelize.DataTypes);
                 Account = AccountConstructor(db, Sequelize.DataTypes);
                 Admin = AdminConstructor(db, Sequelize.DataTypes);
@@ -48,20 +46,20 @@ lab.experiment('User Class Methods', () => {
         });
     });
 
-    /* make this testable by exposing _hashPassword in user.js
     lab.test('it creates a password hash combination', (done) => {
 
-        User.generatePasswordHash('bighouseblues', (err, result) => {
+        const user_a = User.build( user );
+
+        User.generatePasswordHash(user_a, {}, (err, result) => {
 
             Code.expect(err).to.not.exist();
             Code.expect(result).to.be.an.object();
             Code.expect(result.password).to.be.a.string();
-            Code.expect(result.hash).to.be.a.string();
+            Code.expect(result.password_hash).to.be.a.string();
 
             done();
         });
     });
-
 
     lab.test('it returns an error when password hash fails', (done) => {
 
@@ -71,7 +69,9 @@ lab.experiment('User Class Methods', () => {
             callback(Error('bcrypt failed'));
         };
 
-        User.generatePasswordHash('bighouseblues', (err, result) => {
+        const user_a = User.build( user );
+
+        User.generatePasswordHash(user_a, {}, (err, result) => {
 
             Code.expect(err).to.be.an.object();
             Code.expect(result).to.not.exist();
@@ -80,7 +80,7 @@ lab.experiment('User Class Methods', () => {
 
             done();
         });
-    });*/
+    });
 
     lab.test('it returns a new instance when create succeeds', (done) => {
 
@@ -236,7 +236,7 @@ lab.experiment('User Instance Methods', () => {
 
     lab.test('it exits early when hydrating roles where roles are missing', (done) => {
 
-        stmpyUser.hydrateRoles(sequelize, (err, roles) => {
+        stmpyUser.hydrateRoles((err, roles) => {
 
             Code.expect(err).to.not.exist();
 
@@ -254,7 +254,7 @@ lab.experiment('User Instance Methods', () => {
             });
         };
 
-        stmpyUser.hydrateRoles(sequelize, (err) => {
+        stmpyUser.hydrateRoles((err) => {
 
             Code.expect(err).to.be.an.object();
 
@@ -282,7 +282,7 @@ lab.experiment('User Instance Methods', () => {
             });
         };
 
-        stmpyUser.hydrateRoles(sequelize, (err) => {
+        stmpyUser.hydrateRoles((err) => {
 
             Code.expect(err).to.not.exist();
 
@@ -299,7 +299,7 @@ lab.experiment('User Instance Methods', () => {
         const realRoles = stmpyUser.roles;
         stmpyUser.roles = {};
 
-        stmpyUser.hydrateRoles(sequelize, (err, roles) => {
+        stmpyUser.hydrateRoles((err, roles) => {
 
             Code.expect(err).to.not.exist();
             stmpyUser.roles = realRoles;

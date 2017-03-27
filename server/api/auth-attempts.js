@@ -2,12 +2,16 @@
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
 const Joi = require('joi');
+const Config = require('../../config');
 
 
 const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
+
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const AuthAttempt = models.AuthAttempt;
 
     server.route({
         method: 'GET',
@@ -31,7 +35,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const AuthAttempt = request.getDb('aqua').getModel('AuthAttempt');
             const query = {};
             //const fields = request.query.fields;
             let sort = request.query.sort;
@@ -75,7 +78,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const AuthAttempt = request.getDb('aqua').getModel('AuthAttempt');
             AuthAttempt.findById(request.params.id).then( (authAttempt) => {
 
                 if (!authAttempt) {
@@ -106,7 +108,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const AuthAttempt = request.getDb('aqua').getModel('AuthAttempt');
             AuthAttempt.destroy(
                 {
                     where: { id : request.params.id }

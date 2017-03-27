@@ -2,13 +2,15 @@
 const AuthPlugin = require('../auth');
 const Boom = require('boom');
 const Joi = require('joi');
-
+const Config = require('../../config');
 
 const internals = {};
 
 
 internals.applyRoutes = function (server, next) {
 
+    const models = server.plugins['hapi-sequelize'][Config.get('/db').database].models;
+    const Session = models.Session;
 
     server.route({
         method: 'GET',
@@ -32,7 +34,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Session = request.getDb('aqua').getModel('Session');
             const query = {};
             //const fields = request.query.fields;
             let sort = request.query.sort;
@@ -77,7 +78,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Session = request.getDb('aqua').getModel('Session');
             Session.findById(request.params.id).then( (session) => {
 
                 if (!session) {
@@ -108,7 +108,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const Session = request.getDb('aqua').getModel('Session');
             Session.destroy(
                 {
                     where: { id : request.params.id }
