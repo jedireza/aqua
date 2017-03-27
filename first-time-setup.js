@@ -5,13 +5,20 @@ const Promptly = require('promptly');
 
 
 Async.auto({
-    pgName: (done) => {
+    pgHost: (done) => {
+
+        const options = {
+            default: 'localhost'
+        };
+        Promptly.prompt(`Postgres DB Host Name: (${options.default})`, options, done);
+    },
+    pgName:['pgHost', (results, done) => {
 
         const options = {
             default: 'aqua'
         };
         Promptly.prompt(`Postgres DB Name: (${options.default})`, options, done);
-    },
+    }],
     pgUser:['pgName', (results, done) => {
 
         const options = {
@@ -30,7 +37,7 @@ Async.auto({
     testPg: ['pgPass', (results, done) => {
 
         const sequelize = new Sequelize(results.pgName, results.pgUser, results.pgPass, {
-            host: 'localhost',
+            host: results.pgHost,
             dialect: 'postgres',
             pool: {
                 max: 5,
@@ -51,13 +58,21 @@ Async.auto({
              }
         );
     }],
-    pgTestName: ['testPg', (results, done) => {
+    pgTestHost: ['testPg', (results, done) => {
+
+        const options = {
+            default: 'localhost'
+        };
+        Promptly.prompt(`Postgres Test DB Host Name: (${options.default})`, options, done);
+    }],
+    pgTestName: ['pgTestHost', (results, done) => {
 
         const options = {
             default: 'aqua_test'
         };
         Promptly.prompt(`Postgres Test DB Name: (${options.default})`, options, done);
     }],
+
     pgTestUser:['pgTestName', (results, done) => {
 
         const options = {
@@ -76,7 +91,7 @@ Async.auto({
     testTestPg: ['pgTestPass', (results, done) => {
 
         const sequelize = new Sequelize(results.pgTestName, results.pgTestUser, results.pgTestPass, {
-            host: 'localhost',
+            host: results.pgTestHost,
             dialect: 'postgres',
             pool: {
                 max: 5,

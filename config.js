@@ -24,7 +24,7 @@ const config = {
     baseUrl: {
         $filter: 'env',
         $meta: 'values should not end in "/"',
-        production: 'https://getaqua.herokuapp.com',
+        production: 'https://aqua-sql.herokuapp.com',
         $default: 'http://127.0.0.1:8000'
     },
     authAttempts: {
