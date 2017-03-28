@@ -52,11 +52,11 @@ If you don't use React and/or would rather bring your own front-end, checkout
 [Frame](https://github.com/jedireza/frame). It's just the HTTP API parts of Aqua.
 
 
-## Live demo coming soon.  For now here is the original
+## Live demo
 
 | url                                                              | username | password |
 |:---------------------------------------------------------------- |:-------- |:-------- |
-| [https://getaqua.herokuapp.com/](https://getaqua.herokuapp.com/) | root     | root     |
+| [https://aqua-sql.herokuapp.com/](https://aqua-sql.herokuapp.com/) | root     | root     |
 
 
 ## Requirements
