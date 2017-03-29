@@ -11,9 +11,6 @@ Node conventions that I missed.
 
 All feedback is welcome.
 
-As they say, "it works on my machine".  Now I want to make it work on yours.
-
-
 Finally a huge thank you to [Reza Akhava](https://twitter.com/jedireza) for  [Aqua](https://jedireza.github.io/aqua/).
 
 
