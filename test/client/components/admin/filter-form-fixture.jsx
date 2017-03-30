@@ -1,6 +1,6 @@
 'use strict';
 const React = require('react');
-const FilterFormHoc = require('../../../../client/components/admin/filter-form-hoc.jsx');
+const FilterFormHoc = require('../../../../client/pages/admin/components/filter-form-hoc.jsx');
 const SelectControl = require('../../../../client/components/form/select-control.jsx');
 const TextControl = require('../../../../client/components/form/text-control.jsx');
 
