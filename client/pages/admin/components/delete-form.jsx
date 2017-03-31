@@ -1,9 +1,9 @@
 /* global window */
 'use strict';
-const Alert = require('../alert.jsx');
-const Button = require('../form/button.jsx');
+const Alert = require('../../../components/alert.jsx');
+const Button = require('../../../components/form/button.jsx');
 const React = require('react');
-const Spinner = require('../form/spinner.jsx');
+const Spinner = require('../../../components/form/spinner.jsx');
 
 
 const propTypes = {

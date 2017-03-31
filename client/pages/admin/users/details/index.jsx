@@ -1,6 +1,6 @@
 'use strict';
 const Actions = require('./actions');
-const DeleteForm = require('../../../../../client/components/admin/delete-form.jsx');
+const DeleteForm = require('../../../../../client/pages/admin/components/delete-form.jsx');
 const DetailsForm = require('./details-form.jsx');
 const PasswordForm = require('./password-form.jsx');
 const React = require('react');
