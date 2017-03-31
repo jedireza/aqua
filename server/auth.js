@@ -17,6 +17,7 @@ internals.applyStrategy = function (server, next) {
         cookie: 'sid-aqua',
         isSecure: false,
         redirectTo: '/login',
+        appendNext: 'returnUrl',
         validateFunc: function (request, data, callback) {
 
             Async.auto({

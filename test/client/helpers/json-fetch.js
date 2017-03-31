@@ -6,14 +6,12 @@ const Proxyquire = require('proxyquire');
 
 const lab = exports.lab = Lab.script();
 const stub = {
-    ReturnUrlActions: {},
     xhr: function () {
 
         stub.xhr.mock.apply(this, arguments);
     }
 };
 const JsonFetch = Proxyquire('../../../client/helpers/json-fetch', {
-    '../actions/return-url': stub.ReturnUrlActions,
     xhr: stub.xhr
 });
 
@@ -92,13 +90,6 @@ lab.experiment('JSON Fetch Helper', () => {
             callback(null, response, {});
         };
 
-        const saveReturnUrl = stub.ReturnUrlActions.saveReturnUrl;
-
-        stub.ReturnUrlActions.saveReturnUrl = () => {
-
-            stub.ReturnUrlActions.saveReturnUrl = saveReturnUrl;
-        };
-
         const options = {
             method: 'GET',
             url: '/blamo'
@@ -156,13 +147,6 @@ lab.experiment('JSON Fetch Helper', () => {
 
     lab.test('it makes a request and gets a less than 2xx response', (done) => {
 
-        global.window.localStorage = {
-            getItem: function () {
-
-                return '';
-            }
-        };
-
         stub.xhr.mock = function (options, callback) {
 
             const response = {
@@ -191,13 +175,6 @@ lab.experiment('JSON Fetch Helper', () => {
 
     lab.test('it makes a request and gets a greater than 2xx response', (done) => {
 
-        global.window.localStorage = {
-            getItem: function () {
-
-                return '';
-            }
-        };
-
         stub.xhr.mock = function (options, callback) {
 
             const response = {
@@ -225,13 +202,6 @@ lab.experiment('JSON Fetch Helper', () => {
 
 
     lab.test('it handles an xhr error', (done) => {
-
-        global.window.localStorage = {
-            getItem: function () {
-
-                return '';
-            }
-        };
 
         stub.xhr.mock = function (options, callback) {
 
