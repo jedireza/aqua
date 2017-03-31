@@ -2,10 +2,10 @@
 'use strict';
 const ApiActions = require('../../actions/api');
 const Constants = require('./constants');
-const ReturnUrlActions = require('../../actions/return-url');
 const ForgotStore = require('./forgot/store');
 const LoginStore = require('./home/store');
 const LogoutStore = require('./logout/store');
+const Qs = require('qs');
 const ResetStore = require('./reset/store');
 
 
@@ -32,11 +32,10 @@ class Actions {
             (err, response) => {
 
                 if (!err) {
-                    const returnUrl = window.localStorage.getItem('returnUrl');
+                    const query = Qs.parse(window.location.search.substring(1));
 
-                    if (returnUrl) {
-                        ReturnUrlActions.clearReturnUrl();
-                        window.location.href = returnUrl;
+                    if (query.returnUrl) {
+                        window.location.href = query.returnUrl;
                     }
                     else if (response.user.roles.admin) {
                         window.location.href = '/admin';

@@ -16,14 +16,10 @@ const stub = {
 
             stub.ApiActions.delete.mock.apply(null, arguments);
         }
-    },
-    ReturnUrlActions: {
-        clearReturnUrl: function () {}
     }
 };
 const Actions = Proxyquire('../../../../client/pages/login/actions', {
-    '../../actions/api': stub.ApiActions,
-    '../../actions/return-url': stub.ReturnUrlActions
+    '../../actions/api': stub.ApiActions
 });
 
 
@@ -49,22 +45,22 @@ lab.experiment('Login Actions', () => {
 
     lab.test('it calls ApiActions.post from login (redirect to returnUrl)', (done) => {
 
-        const returnUrl = '/deep/link';
-        const localStorage = global.window.localStorage;
         const windowLocation = global.window.location;
+        const returnUrl = '/deep/link';
 
-        global.window.localStorage = {
-            getItem: function () {
-
-                global.window.localStorage = localStorage;
-
-                return returnUrl;
-            }
-        };
+        Object.defineProperty(global.window.location, 'search', {
+            writable: true,
+            value: `?returnUrl=${encodeURIComponent(returnUrl)}`
+        });
 
         Object.defineProperty(global.window.location, 'href', {
             configurable: true,
             set: function (value) {
+
+                Object.defineProperty(global.window.location, 'search', {
+                    writable: true,
+                    value: ''
+                });
 
                 global.window.location = windowLocation;
 
@@ -92,17 +88,7 @@ lab.experiment('Login Actions', () => {
 
     lab.test('it calls ApiActions.post from login (redirect to admin)', (done) => {
 
-        const localStorage = global.window.localStorage;
         const windowLocation = global.window.location;
-
-        global.window.localStorage = {
-            getItem: function () {
-
-                global.window.localStorage = localStorage;
-
-                return undefined;
-            }
-        };
 
         Object.defineProperty(global.window.location, 'href', {
             configurable: true,
@@ -140,17 +126,7 @@ lab.experiment('Login Actions', () => {
 
     lab.test('it calls ApiActions.post from login (redirect to account)', (done) => {
 
-        const localStorage = global.window.localStorage;
         const windowLocation = global.window.location;
-
-        global.window.localStorage = {
-            getItem: function () {
-
-                global.window.localStorage = localStorage;
-
-                return undefined;
-            }
-        };
 
         Object.defineProperty(global.window.location, 'href', {
             configurable: true,
