@@ -15,7 +15,8 @@ const propTypes = {
     help: React.PropTypes.object,
     loading: React.PropTypes.bool,
     notes: React.PropTypes.array,
-    showSaveSuccess: React.PropTypes.bool
+    showSaveSuccess: React.PropTypes.bool,
+    newNote: React.PropTypes.string
 };
 
 

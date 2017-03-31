@@ -1,4 +1,4 @@
-sudo: false
+sudo: true
 language: node_js
 node_js:
   - "6"
@@ -6,6 +6,8 @@ services:
   - mongodb
 env:
   - NODE_ENV=test CXX=g++-4.8
+before_install:
+  - sudo apt-get install unicode-data
 addons:
   apt:
     sources:
