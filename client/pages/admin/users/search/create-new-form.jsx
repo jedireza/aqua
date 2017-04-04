@@ -18,7 +18,10 @@ const propTypes = {
     hasError: React.PropTypes.object,
     help: React.PropTypes.object,
     loading: React.PropTypes.bool,
-    show: React.PropTypes.bool
+    show: React.PropTypes.bool,
+    username: React.PropTypes.string,
+    email: React.PropTypes.string,
+    password: React.PropTypes.string
 };
 
 

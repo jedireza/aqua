@@ -39,7 +39,6 @@ module.exports = function (sequelize, DataTypes){
                     last: nameParts.join(' ')
                 };
                 return name;
-
             },
             associate: function (db){
 

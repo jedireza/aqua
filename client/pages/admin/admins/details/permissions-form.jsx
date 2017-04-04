@@ -6,7 +6,7 @@ const ControlGroup = require('../../../../components/form/control-group.jsx');
 const LinkState = require('../../../../helpers/link-state');
 const React = require('react');
 const Spinner = require('../../../../components/form/spinner.jsx');
-const NodeUUId = require('node-uuid');
+const UUId = require('uuid');
 
 
 const propTypes = {
@@ -48,7 +48,7 @@ class PermissionsForm extends React.Component {
             }
         });
         const permissionEntry = {
-            id : NodeUUId.v1(),
+            id : UUId.v1(),
             admin_id : this.props.adminId,
             active: true,
             permission_id : permission.id,

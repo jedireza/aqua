@@ -1,7 +1,7 @@
 'use strict';
 const Async = require('async');
 const Bcrypt = require('bcrypt');
-const Uuid = require('node-uuid');
+const Uuid = require('uuid');
 
 module.exports = function (sequelize, DataTypes){
 
