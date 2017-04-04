@@ -4,23 +4,36 @@ const Lab = require('lab');
 const Navbar = require('../../../../client/pages/account/navbar.jsx');
 const React = require('react');
 const ReactDOM = require('react-dom');
+const ReactRouter = require('react-router-dom');
 const ReactTestUtils = require('react-addons-test-utils');
 
 
 const lab = exports.lab = Lab.script();
+const MemoryRouter = ReactRouter.MemoryRouter;
 
 
 lab.experiment('Account Navbar', () => {
 
-    const defaultProps = { location: {} };
+    let RootEl;
+
+    lab.beforeEach((done) => {
+
+        const NavbarEl = React.createElement(Navbar, {
+            location: {}
+        });
+
+        RootEl = React.createElement(MemoryRouter, {}, NavbarEl);
+
+        done();
+    });
 
 
     lab.test('it renders', (done) => {
 
-        const NavbarEl = React.createElement(Navbar, defaultProps);
-        const mainElement = ReactTestUtils.renderIntoDocument(NavbarEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const navbar = ReactTestUtils.findRenderedComponentWithType(root, Navbar);
 
-        Code.expect(mainElement).to.exist();
+        Code.expect(navbar).to.exist();
 
         done();
     });
@@ -28,10 +41,9 @@ lab.experiment('Account Navbar', () => {
 
     lab.test('it toggles the menu', (done) => {
 
-        const NavbarEl = React.createElement(Navbar, defaultProps);
-        const mainElement = ReactTestUtils.renderIntoDocument(NavbarEl);
-        const button = ReactTestUtils.findRenderedDOMComponentWithTag(mainElement, 'button');
-        const menuDiv = ReactTestUtils.findRenderedDOMComponentWithClass(mainElement, 'navbar-collapse');
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const button = ReactTestUtils.findRenderedDOMComponentWithTag(root, 'button');
+        const menuDiv = ReactTestUtils.findRenderedDOMComponentWithClass(root, 'navbar-collapse');
         const menuDivNode = menuDiv;
 
         Code.expect(menuDivNode.className).to.equal('navbar-collapse collapse');
@@ -48,12 +60,10 @@ lab.experiment('Account Navbar', () => {
         const container = document.createElement('div');
 
         // initial render
-        let NavbarEl = React.createElement(Navbar, defaultProps);
-        ReactDOM.render(NavbarEl, container);
+        ReactDOM.render(RootEl, container);
 
         // send props again by rendering
-        NavbarEl = React.createElement(Navbar, defaultProps);
-        ReactDOM.render(NavbarEl, container);
+        ReactDOM.render(RootEl, container);
 
         done();
     });

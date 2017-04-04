@@ -5,6 +5,7 @@ const Lab = require('lab');
 const Proxyquire = require('proxyquire');
 const React = require('react');
 const ReactDOM = require('react-dom');
+const ReactRouter = require('react-router-dom');
 const ReactTestUtils = require('react-addons-test-utils');
 const Store = require('../../../../../client/pages/login/logout/store');
 
@@ -18,16 +19,28 @@ const stub = {
 const Logout = Proxyquire('../../../../../client/pages/login/logout/index.jsx', {
     '../actions': stub.Actions
 });
+const MemoryRouter = ReactRouter.MemoryRouter;
 
 
 lab.experiment('Login Logout Form', () => {
 
-    lab.test('it renders', (done) => {
+    let RootEl;
+
+    lab.beforeEach((done) => {
 
         const LogoutEl = React.createElement(Logout, {});
-        const logout = ReactTestUtils.renderIntoDocument(LogoutEl);
 
-        Code.expect(logout).to.exist();
+        RootEl = React.createElement(MemoryRouter, {}, LogoutEl);
+
+        done();
+    });
+
+
+    lab.test('it renders', (done) => {
+
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+
+        Code.expect(root).to.exist();
 
         done();
     });
@@ -36,9 +49,8 @@ lab.experiment('Login Logout Form', () => {
     lab.test('it handles unmounting', (done) => {
 
         const container = global.document.createElement('div');
-        const LogoutEl = React.createElement(Logout, {});
 
-        ReactDOM.render(LogoutEl, container);
+        ReactDOM.render(RootEl, container);
         ReactDOM.unmountComponentAtNode(container);
 
         done();
@@ -47,8 +59,8 @@ lab.experiment('Login Logout Form', () => {
 
     lab.test('it handles a store change', (done) => {
 
-        const LogoutEl = React.createElement(Logout, {});
-        const logout = ReactTestUtils.renderIntoDocument(LogoutEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const logout = ReactTestUtils.findRenderedComponentWithType(root, Logout);
 
         Store.dispatch({
             type: Constants.LOGOUT
@@ -62,15 +74,14 @@ lab.experiment('Login Logout Form', () => {
 
     lab.test('it renders with success state', (done) => {
 
-        const LogoutEl = React.createElement(Logout, {});
-        const logout = ReactTestUtils.renderIntoDocument(LogoutEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
 
         Store.dispatch({
             type: Constants.LOGOUT_RESPONSE,
             err: null
         });
 
-        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(logout, 'alert-success');
+        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(root, 'alert-success');
 
         Code.expect(alerts).to.have.length(1);
 
@@ -80,8 +91,7 @@ lab.experiment('Login Logout Form', () => {
 
     lab.test('it renders with error state', (done) => {
 
-        const LogoutEl = React.createElement(Logout, {});
-        const logout = ReactTestUtils.renderIntoDocument(LogoutEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
 
         Store.dispatch({
             type: Constants.LOGOUT_RESPONSE,
@@ -91,7 +101,7 @@ lab.experiment('Login Logout Form', () => {
             }
         });
 
-        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(logout, 'alert-warning');
+        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(root, 'alert-warning');
 
         Code.expect(alerts).to.have.length(1);
 

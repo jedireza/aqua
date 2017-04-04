@@ -1,14 +1,14 @@
 /* global window */
 'use strict';
+const App = require('./app.jsx');
 const ReactDOM = require('react-dom');
-const Routes = require('./routes.jsx');
 
 
 class Page {
     static blastoff() {
 
         this.mainElement = ReactDOM.render(
-            Routes,
+            App,
             window.document.getElementById('app-mount')
         );
     }

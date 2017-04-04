@@ -24,17 +24,11 @@ const stub = {
 
             stub.Store.dispatch.mock.apply(null, arguments);
         }
-    },
-    ReactRouter: {
-        browserHistory: {
-            push: () => {}
-        }
     }
 };
 const Actions = Proxyquire('../../../../../../client/pages/admin/admins/search/actions', {
     '../../../../actions/api': stub.ApiActions,
-    './store': stub.Store,
-    'react-router': stub.ReactRouter
+    './store': stub.Store
 });
 
 
@@ -58,7 +52,7 @@ lab.experiment('Admin Admins Search Actions', () => {
     });
 
 
-    lab.test('it calls browserHistory.push from changeSearchQuery', (done) => {
+    lab.test('it calls history.push from changeSearchQuery', (done) => {
 
         const scrollTo = global.window.scrollTo;
 
@@ -69,15 +63,15 @@ lab.experiment('Admin Admins Search Actions', () => {
             done();
         };
 
-        stub.ReactRouter.browserHistory.push = function (config) {
+        const history = {
+            push: function (config) {
 
-            stub.ReactRouter.browserHistory.push = () => {};
-
-            Code.expect(config.pathname).to.be.a.string();
-            Code.expect(config.query).to.be.an.object();
+                Code.expect(config.pathname).to.be.a.string();
+                Code.expect(config.search).to.be.a.string();
+            }
         };
 
-        Actions.changeSearchQuery({});
+        Actions.changeSearchQuery({}, history);
     });
 
 
@@ -122,13 +116,6 @@ lab.experiment('Admin Admins Search Actions', () => {
 
         stub.Store.dispatch.mock = () => {};
 
-        stub.ReactRouter.browserHistory.push = function (path) {
-
-            stub.ReactRouter.browserHistory.push = () => {};
-
-            Code.expect(path).to.be.a.string();
-        };
-
         stub.ApiActions.post.mock = function (url, data, store, typeReq, typeRes, callback) {
 
             Code.expect(url).to.be.a.string();
@@ -141,7 +128,14 @@ lab.experiment('Admin Admins Search Actions', () => {
             callback(null, {});
         };
 
-        Actions.createNew({});
+        const history = {
+            push: function (path) {
+
+                Code.expect(path).to.be.a.string();
+            }
+        };
+
+        Actions.createNew({}, history);
     });
 
 

@@ -3,9 +3,9 @@ const React = require('react');
 
 
 const propTypes = {
-    type: React.PropTypes.oneOf(['success', 'info', 'warning', 'danger']),
+    message: React.PropTypes.string,
     onClose: React.PropTypes.func,
-    message: React.PropTypes.string
+    type: React.PropTypes.oneOf(['success', 'info', 'warning', 'danger'])
 };
 
 

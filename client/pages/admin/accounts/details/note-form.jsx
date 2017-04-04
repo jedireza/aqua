@@ -14,9 +14,9 @@ const propTypes = {
     hasError: React.PropTypes.object,
     help: React.PropTypes.object,
     loading: React.PropTypes.bool,
+    newNote: React.PropTypes.string,
     notes: React.PropTypes.array,
-    showSaveSuccess: React.PropTypes.bool,
-    newNote: React.PropTypes.string
+    showSaveSuccess: React.PropTypes.bool
 };
 
 

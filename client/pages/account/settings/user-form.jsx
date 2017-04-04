@@ -10,14 +10,14 @@ const TextControl = require('../../../components/form/text-control.jsx');
 
 
 const propTypes = {
-    hydrated: React.PropTypes.bool,
-    loading: React.PropTypes.bool,
-    showSaveSuccess: React.PropTypes.bool,
+    email: React.PropTypes.string,
     error: React.PropTypes.string,
     hasError: React.PropTypes.object,
     help: React.PropTypes.object,
-    username: React.PropTypes.string,
-    email: React.PropTypes.string
+    hydrated: React.PropTypes.bool,
+    loading: React.PropTypes.bool,
+    showSaveSuccess: React.PropTypes.bool,
+    username: React.PropTypes.string
 };
 
 

@@ -28,17 +28,11 @@ const stub = {
 
             stub.Store.dispatch.mock.apply(null, arguments);
         }
-    },
-    ReactRouter: {
-        browserHistory: {
-            push: () => {}
-        }
     }
 };
 const Actions = Proxyquire('../../../../../../client/pages/admin/users/details/actions', {
     '../../../../actions/api': stub.ApiActions,
-    './store': stub.Store,
-    'react-router': stub.ReactRouter
+    './store': stub.Store
 });
 
 
@@ -178,7 +172,14 @@ lab.experiment('Admin Users Details Actions', () => {
             callback(null, {});
         };
 
-        Actions.delete('abcxyz');
+        const history = {
+            push: function (path) {
+
+                Code.expect(path).to.be.a.string();
+            }
+        };
+
+        Actions.delete('abcxyz', history);
     });
 
 

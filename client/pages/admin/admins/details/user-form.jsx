@@ -6,7 +6,7 @@ const Button = require('../../../../components/form/button.jsx');
 const ControlGroup = require('../../../../components/form/control-group.jsx');
 const LinkState = require('../../../../helpers/link-state');
 const React = require('react');
-const ReactRouter = require('react-router');
+const ReactRouter = require('react-router-dom');
 const Spinner = require('../../../../components/form/spinner.jsx');
 const TextControl = require('../../../../components/form/text-control.jsx');
 

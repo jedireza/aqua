@@ -1,21 +1,11 @@
 'use strict';
+const App = require('../../../../client/pages/account/index.jsx');
 const Code = require('code');
-const CreateMemoryHistory = require('history/lib/createMemoryHistory');
 const Lab = require('lab');
-const Proxyquire = require('proxyquire');
 const ReactDOM = require('react-dom');
 
 
 const lab = exports.lab = Lab.script();
-const TestLocation = CreateMemoryHistory();
-const stub = {
-    ReactRouter: {
-        HistoryLocation: TestLocation
-    }
-};
-const App = Proxyquire('../../../../client/pages/account/index.jsx', {
-    'react-router': stub.ReactRouter
-});
 let mountNode;
 
 

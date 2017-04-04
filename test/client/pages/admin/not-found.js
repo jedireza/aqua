@@ -4,18 +4,32 @@ const Lab = require('lab');
 const NotFound = require('../../../../client/pages/admin/not-found.jsx');
 const React = require('react');
 const ReactDOM = require('react-dom');
-const TestUtils = require('react-addons-test-utils');
+const ReactRouter = require('react-router-dom');
+const ReactTestUtils = require('react-addons-test-utils');
 
 
 const lab = exports.lab = Lab.script();
+const MemoryRouter = ReactRouter.MemoryRouter;
 
 
 lab.experiment('Admin Not Found Page', () => {
 
-    lab.test('it renders', (done) => {
+    let RootEl;
+
+    lab.beforeEach((done) => {
 
         const NotFoundEl = React.createElement(NotFound, {});
-        const notFound = TestUtils.renderIntoDocument(NotFoundEl);
+
+        RootEl = React.createElement(MemoryRouter, {}, NotFoundEl);
+
+        done();
+    });
+
+
+    lab.test('it renders', (done) => {
+
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const notFound = ReactTestUtils.findRenderedComponentWithType(root, NotFound);
 
         Code.expect(notFound).to.exist();
         done();
@@ -25,9 +39,8 @@ lab.experiment('Admin Not Found Page', () => {
     lab.test('it handles unmounting', (done) => {
 
         const container = global.document.createElement('div');
-        const NotFoundEl = React.createElement(NotFound, {});
 
-        ReactDOM.render(NotFoundEl, container);
+        ReactDOM.render(RootEl, container);
         ReactDOM.unmountComponentAtNode(container);
 
         done();

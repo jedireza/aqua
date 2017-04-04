@@ -4,7 +4,7 @@ const DeleteForm = require('../../../../../client/pages/admin/components/delete-
 const DetailsForm = require('./details-form.jsx');
 const NoteForm = require('./note-form.jsx');
 const React = require('react');
-const ReactRouter = require('react-router');
+const ReactRouter = require('react-router-dom');
 const StatusForm = require('./status-form.jsx');
 const Store = require('./store');
 const UserForm = require('./user-form.jsx');
@@ -12,7 +12,8 @@ const UserForm = require('./user-form.jsx');
 
 const Link = ReactRouter.Link;
 const propTypes = {
-    params: React.PropTypes.object
+    history: React.PropTypes.object,
+    match: React.PropTypes.object
 };
 
 
@@ -21,7 +22,7 @@ class DetailsPage extends React.Component {
 
         super(props);
 
-        Actions.getDetails(this.props.params.id);
+        Actions.getDetails(this.props.match.params.id);
         Actions.getStatusOptions();
 
         this.state = Store.getState();
@@ -88,7 +89,7 @@ class DetailsPage extends React.Component {
                     <div className="col-sm-12">
                         <DeleteForm
                             {...this.state.delete}
-                            action={Actions.delete.bind(Actions, id)}
+                            action={Actions.delete.bind(Actions, id, this.props.history)}
                         />
                     </div>
                 </div>

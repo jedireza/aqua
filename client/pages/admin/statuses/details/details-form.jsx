@@ -15,8 +15,8 @@ const propTypes = {
     hasError: React.PropTypes.object,
     help: React.PropTypes.object,
     loading: React.PropTypes.bool,
-    pivot: React.PropTypes.string,
     name: React.PropTypes.string,
+    pivot: React.PropTypes.string,
     showSaveSuccess: React.PropTypes.bool
 };
 

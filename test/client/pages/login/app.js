@@ -1,17 +1,17 @@
 'use strict';
+const App = require('../../../../client/pages/login/app.jsx');
 const Code = require('code');
 const Lab = require('lab');
-const Routes = require('../../../../client/pages/account/routes.jsx');
 
 
 const lab = exports.lab = Lab.script();
 
 
-lab.experiment('Account Routes', () => {
+lab.experiment('Login App', () => {
 
     lab.test('it loads', (done) => {
 
-        Code.expect(Routes).to.exist();
+        Code.expect(App).to.exist();
 
         done();
     });

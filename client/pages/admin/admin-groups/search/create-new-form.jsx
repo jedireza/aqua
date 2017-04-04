@@ -14,9 +14,10 @@ const propTypes = {
     error: React.PropTypes.string,
     hasError: React.PropTypes.object,
     help: React.PropTypes.object,
+    history: React.PropTypes.object,
     loading: React.PropTypes.bool,
-    show: React.PropTypes.bool,
-    name: React.PropTypes.string
+    name: React.PropTypes.string,
+    show: React.PropTypes.bool
 };
 
 
@@ -53,7 +54,7 @@ class CreateNewForm extends React.Component {
 
         Actions.createNew({
             name: this.state.name
-        });
+        }, this.props.history);
     }
 
     render() {

@@ -4,8 +4,8 @@ const React = require('react');
 
 
 const propTypes = {
-    space: React.PropTypes.string,
-    show: React.PropTypes.bool
+    show: React.PropTypes.bool,
+    space: React.PropTypes.string
 };
 
 

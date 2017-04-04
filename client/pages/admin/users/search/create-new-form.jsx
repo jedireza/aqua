@@ -11,14 +11,15 @@ const TextControl = require('../../../../components/form/text-control.jsx');
 
 
 const propTypes = {
+    email: React.PropTypes.string,
     error: React.PropTypes.string,
     hasError: React.PropTypes.object,
     help: React.PropTypes.object,
+    history: React.PropTypes.object,
     loading: React.PropTypes.bool,
+    password: React.PropTypes.string,
     show: React.PropTypes.bool,
-    username: React.PropTypes.string,
-    email: React.PropTypes.string,
-    password: React.PropTypes.string
+    username: React.PropTypes.string
 };
 
 
@@ -61,7 +62,7 @@ class CreateNewForm extends React.Component {
             username: this.state.username,
             email: this.state.email,
             password: this.state.password
-        });
+        }, this.props.history);
     }
 
     render() {

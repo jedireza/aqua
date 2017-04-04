@@ -7,8 +7,8 @@
     "start": "gulp",
     "first-time-setup": "node first-time-setup.js",
     "test": "lab -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/lab/client-before.js ./test/client/ ./test/lab/client-after.js ./test/server/ ./test/lab/server-after.js ./test/misc/",
-    "test-client": "lab -v -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' ./test/lab/client-before.js $TEST_TARGET ./test/lab/client-after.js || true",
-    "test-server": "lab -v -t 99 -S -T ./test/lab/transform -L --lint-options '{\"extensions\":[\".js\",\".jsx\"]}' $TEST_TARGET ./test/lab/server-after.js || true",
+    "test-client": "lab -v -t 99 -S -T ./test/lab/transform ./test/lab/client-before.js $TEST_TARGET ./test/lab/client-after.js || true",
+    "test-server": "lab -v -t 99 -S -T ./test/lab/transform $TEST_TARGET ./test/lab/server-after.js || true",
     "postinstall": "gulp build"
   },
   "author": "Reza Akhavan <jedireza@gmail.com> (http://reza.akhavan.me/)",
@@ -80,7 +80,7 @@
     "react-addons-linked-state-mixin": "15.x.x",
     "react-addons-test-utils": "15.x.x",
     "react-dom": "15.x.x",
-    "react-router": "2.x.x",
+    "react-router-dom": "4.x.x",
     "require-dir": "0.3.x",
     "webpack": "1.x.x",
     "xhr": "2.x.x"

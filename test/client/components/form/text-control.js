@@ -2,7 +2,7 @@
 const Code = require('code');
 const Lab = require('lab');
 const React = require('react');
-const TestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-addons-test-utils');
 const TextControl = require('../../../../client/components/form/text-control.jsx');
 
 
@@ -15,8 +15,8 @@ lab.experiment('TextControl', () => {
 
         const props = {};
         const TextControlEl = React.createElement(TextControl, props);
-        const textControl = TestUtils.renderIntoDocument(TextControlEl);
-        const input = TestUtils.findRenderedDOMComponentWithTag(textControl, 'input');
+        const textControl = ReactTestUtils.renderIntoDocument(TextControlEl);
+        const input = ReactTestUtils.findRenderedDOMComponentWithTag(textControl, 'input');
 
         Code.expect(input).to.exist();
 
@@ -30,8 +30,8 @@ lab.experiment('TextControl', () => {
             disabled: true
         };
         const TextControlEl = React.createElement(TextControl, props);
-        const textControl = TestUtils.renderIntoDocument(TextControlEl);
-        const input = TestUtils.findRenderedDOMComponentWithTag(textControl, 'input');
+        const textControl = ReactTestUtils.renderIntoDocument(TextControlEl);
+        const input = ReactTestUtils.findRenderedDOMComponentWithTag(textControl, 'input');
 
         Code.expect(input.disabled).to.be.true();
 
@@ -46,7 +46,7 @@ lab.experiment('TextControl', () => {
             onChange: function () {}
         };
         const TextControlEl = React.createElement(TextControl, props);
-        const textControl = TestUtils.renderIntoDocument(TextControlEl);
+        const textControl = ReactTestUtils.renderIntoDocument(TextControlEl);
 
         Code.expect(textControl.value()).to.equal('foo');
 
@@ -61,7 +61,7 @@ lab.experiment('TextControl', () => {
             onChange: function () {}
         };
         const TextControlEl = React.createElement(TextControl, props);
-        const textControl = TestUtils.renderIntoDocument(TextControlEl);
+        const textControl = ReactTestUtils.renderIntoDocument(TextControlEl);
 
         textControl.focus();
 

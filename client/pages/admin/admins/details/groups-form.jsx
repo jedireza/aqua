@@ -9,12 +9,12 @@ const Spinner = require('../../../../components/form/spinner.jsx');
 
 
 const propTypes = {
-    error: React.PropTypes.string,
-    loading: React.PropTypes.bool,
-    showSaveSuccess: React.PropTypes.bool,
-    options: React.PropTypes.array,
     adminId: React.PropTypes.string,
-    groups: React.PropTypes.object
+    error: React.PropTypes.string,
+    groups: React.PropTypes.object,
+    loading: React.PropTypes.bool,
+    options: React.PropTypes.array,
+    showSaveSuccess: React.PropTypes.bool
 };
 
 

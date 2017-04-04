@@ -1,6 +1,6 @@
 'use strict';
 const React = require('react');
-const ReactRouter = require('react-router');
+const ReactRouter = require('react-router-dom');
 const ClassNames = require('classnames');
 
 
@@ -25,7 +25,7 @@ class Navbar extends React.Component {
         this.setState({ navBarOpen: false });
     }
 
-    isPathActive(path) {
+    classForPath(path) {
 
         return ClassNames({
             active: this.props.location.pathname === path
@@ -63,10 +63,10 @@ class Navbar extends React.Component {
                     </div>
                     <div className={navBarCollapse}>
                         <ul className="nav navbar-nav">
-                            <li className={this.isPathActive('/account')}>
+                            <li className={this.classForPath('/account')}>
                                 <Link to="/account">My account</Link>
                             </li>
-                            <li className={this.isPathActive('/account/settings')}>
+                            <li className={this.classForPath('/account/settings')}>
                                 <Link to="/account/settings">Settings</Link>
                             </li>
                         </ul>

@@ -9,11 +9,11 @@ const Spinner = require('../../../../components/form/spinner.jsx');
 
 
 const propTypes = {
+    adminId: React.PropTypes.string,
     error: React.PropTypes.string,
     loading: React.PropTypes.bool,
-    showSaveSuccess: React.PropTypes.bool,
-    adminId: React.PropTypes.string,
-    permissions: React.PropTypes.object
+    permissions: React.PropTypes.object,
+    showSaveSuccess: React.PropTypes.bool
 };
 
 

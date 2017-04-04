@@ -3,6 +3,7 @@ const Code = require('code');
 const Lab = require('lab');
 const Proxyquire = require('proxyquire');
 const React = require('react');
+const ReactRouter = require('react-router-dom');
 const ReactTestUtils = require('react-addons-test-utils');
 
 
@@ -18,6 +19,7 @@ const defaultProps = {
     help: {},
     id: undefined
 };
+const MemoryRouter = ReactRouter.MemoryRouter;
 
 
 lab.experiment('Admin Admins User Form', () => {
@@ -25,7 +27,9 @@ lab.experiment('Admin Admins User Form', () => {
     lab.test('it renders', (done) => {
 
         const FormEl = React.createElement(Form, defaultProps);
-        const form = ReactTestUtils.renderIntoDocument(FormEl);
+        const RootEl = React.createElement(MemoryRouter, {}, FormEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const form = ReactTestUtils.findRenderedComponentWithType(root, Form);
 
         Code.expect(form).to.exist();
 
@@ -51,7 +55,9 @@ lab.experiment('Admin Admins User Form', () => {
             adminId: 'axbycz'
         });
         const FormEl = React.createElement(Form, props);
-        const form = ReactTestUtils.renderIntoDocument(FormEl);
+        const RootEl = React.createElement(MemoryRouter, {}, FormEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const form = ReactTestUtils.findRenderedComponentWithType(root, Form);
         const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
         ReactTestUtils.Simulate.submit(formTag);
@@ -79,7 +85,9 @@ lab.experiment('Admin Admins User Form', () => {
             adminId: 'axbycz'
         });
         const FormEl = React.createElement(Form, props);
-        const form = ReactTestUtils.renderIntoDocument(FormEl);
+        const RootEl = React.createElement(MemoryRouter, {}, FormEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const form = ReactTestUtils.findRenderedComponentWithType(root, Form);
         const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
         ReactTestUtils.Simulate.submit(formTag);
@@ -94,7 +102,9 @@ lab.experiment('Admin Admins User Form', () => {
         };
 
         const FormEl = React.createElement(Form, defaultProps);
-        const form = ReactTestUtils.renderIntoDocument(FormEl);
+        const RootEl = React.createElement(MemoryRouter, {}, FormEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const form = ReactTestUtils.findRenderedComponentWithType(root, Form);
         const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
         ReactTestUtils.Simulate.submit(formTag);
@@ -107,7 +117,9 @@ lab.experiment('Admin Admins User Form', () => {
             loading: true
         });
         const FormEl = React.createElement(Form, props);
-        const form = ReactTestUtils.renderIntoDocument(FormEl);
+        const RootEl = React.createElement(MemoryRouter, {}, FormEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const form = ReactTestUtils.findRenderedComponentWithType(root, Form);
         const button = ReactTestUtils.findRenderedDOMComponentWithTag(form, 'button');
 
         Code.expect(button.disabled).to.be.true();
@@ -122,7 +134,9 @@ lab.experiment('Admin Admins User Form', () => {
             showSaveSuccess: true
         });
         const FormEl = React.createElement(Form, props);
-        const form = ReactTestUtils.renderIntoDocument(FormEl);
+        const RootEl = React.createElement(MemoryRouter, {}, FormEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const form = ReactTestUtils.findRenderedComponentWithType(root, Form);
         const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-success');
 
         Code.expect(alerts).to.have.length(1);
