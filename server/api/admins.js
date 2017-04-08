@@ -486,7 +486,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-
             Admin.findByIdAndDelete(request.params.id, (err, admin) => {
 
                 if (err) {
