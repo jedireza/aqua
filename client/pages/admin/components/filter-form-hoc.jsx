@@ -58,8 +58,8 @@ const FilterFormFactory = function (FilterForm, defaultValues) {
                     onSubmit={this.props.onChange}>
 
                     <FilterForm
+                        {...this.props}
                         state={this.state}
-                        loading={this.props.loading}
                         linkInputState={LinkState.bind(this)}
                         linkSelectState={LinkState.bind(this, this.onSelectChange.bind(this))}
                     />
