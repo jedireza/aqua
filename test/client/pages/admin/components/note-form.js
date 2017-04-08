@@ -3,6 +3,7 @@ const Code = require('code');
 const Lab = require('lab');
 const Proxyquire = require('proxyquire');
 const React = require('react');
+const ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 
 
@@ -10,33 +11,25 @@ const lab = exports.lab = Lab.script();
 const stub = {
     Actions: {}
 };
-const Form = Proxyquire('../../../../../../client/pages/admin/accounts/details/status-form.jsx', {
+const Form = Proxyquire('../../../../../client/pages/admin/components/note-form.jsx', {
     './actions': stub.Actions
 });
 const defaultProps = {
     hasError: {},
     help: {},
-    options: [{
-        _id: 'some-foo',
-        name: 'Some Foo'
-    }, {
-        _id: 'some-bar',
-        name: 'Some Bar'
-    }],
-    newStatus: '',
-    current: undefined,
-    log: []
+    newNote: '',
+    notes: [],
+    saveAction: () => {}
 };
 
 
-lab.experiment('Admin Accounts Status Form', () => {
+lab.experiment('Note Form', () => {
 
     lab.test('it renders', (done) => {
 
         const props = Object.assign({}, defaultProps, {
-            current: undefined,
-            log: [{
-                name: 'Some Status',
+            notes: [{
+                data: 'toasting bread',
                 userCreated: {
                     name: 'stimpson'
                 },
@@ -52,14 +45,34 @@ lab.experiment('Admin Accounts Status Form', () => {
     });
 
 
+    lab.test('it updates props with new input state data', (done) => {
+
+        const container = document.createElement('div');
+
+        // initial render
+        let FormEl = React.createElement(Form, defaultProps);
+        ReactDOM.render(FormEl, container);
+
+        // update props and render again
+        const props = Object.assign({}, defaultProps, {
+            newNote: 'toasting bread'
+        });
+        FormEl = React.createElement(Form, props);
+        ReactDOM.render(FormEl, container);
+
+        done();
+    });
+
+
     lab.test('it handles a submit event', (done) => {
 
-        stub.Actions.newStatus = function () {
+        const props = Object.assign({}, defaultProps, {
+            saveAction: function () {
 
-            done();
-        };
-
-        const FormEl = React.createElement(Form, defaultProps);
+                done();
+            }
+        });
+        const FormEl = React.createElement(Form, props);
         const form = ReactTestUtils.renderIntoDocument(FormEl);
         const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(form, 'form');
 

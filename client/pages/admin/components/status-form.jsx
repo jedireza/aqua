@@ -1,16 +1,14 @@
 'use strict';
-const Actions = require('./actions');
-const Alert = require('../../../../components/alert.jsx');
-const ControlGroup = require('../../../../components/form/control-group.jsx');
-const LinkState = require('../../../../helpers/link-state');
+const Alert = require('../../../components/alert.jsx');
+const ControlGroup = require('../../../components/form/control-group.jsx');
+const LinkState = require('../../../helpers/link-state');
 const Moment = require('moment');
 const PropTypes = require('prop-types');
 const React = require('react');
-const Spinner = require('../../../../components/form/spinner.jsx');
+const Spinner = require('../../../components/form/spinner.jsx');
 
 
 const propTypes = {
-    accountId: PropTypes.string,
     current: PropTypes.object,
     error: PropTypes.string,
     hasError: PropTypes.object,
@@ -19,7 +17,9 @@ const propTypes = {
     log: PropTypes.array,
     newStatus: PropTypes.string,
     options: PropTypes.array,
-    showSaveSuccess: PropTypes.bool
+    saveAction: PropTypes.func,
+    showSaveSuccess: PropTypes.bool,
+    successCloseAction: PropTypes.func
 };
 
 
@@ -38,13 +38,12 @@ class StatusForm extends React.Component {
         event.preventDefault();
         event.stopPropagation();
 
-        const id = this.props.accountId;
         const data = {
             current: this.props.current,
             status: this.state.newStatus
         };
 
-        Actions.newStatus(id, data);
+        this.props.saveAction(data);
     }
 
     render() {
@@ -55,7 +54,7 @@ class StatusForm extends React.Component {
             alerts.push(<Alert
                 key="success"
                 type="success"
-                onClose={Actions.hideStatusSaveSuccess}
+                onClose={this.props.successCloseAction}
                 message="Success. Changes have been saved."
             />);
         }

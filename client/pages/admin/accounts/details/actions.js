@@ -110,7 +110,11 @@ class Actions {
         });
     }
 
-    static newNote(id, data) {
+    static newNote(id, newNote) {
+
+        const data = {
+            data: newNote
+        };
 
         ApiActions.post(
             `/api/accounts/${id}/notes`,
