@@ -5,7 +5,7 @@ const NotFound = require('../../../../client/pages/login/not-found.jsx');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const ReactRouter = require('react-router-dom');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 
 
 const lab = exports.lab = Lab.script();

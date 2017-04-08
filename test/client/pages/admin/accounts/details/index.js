@@ -6,7 +6,7 @@ const Proxyquire = require('proxyquire');
 const React = require('react');
 const ReactRouter = require('react-router-dom');
 const ReactDOM = require('react-dom');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 const Store = require('../../../../../../client/pages/admin/accounts/details/store');
 
 

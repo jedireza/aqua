@@ -3,7 +3,7 @@ const Code = require('code');
 const Lab = require('lab');
 const React = require('react');
 const ReactRouter = require('react-router-dom');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 const Results = require('../../../../../../client/pages/admin/admins/search/results.jsx');
 
 

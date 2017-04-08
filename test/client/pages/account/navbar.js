@@ -5,7 +5,7 @@ const Navbar = require('../../../../client/pages/account/navbar.jsx');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const ReactRouter = require('react-router-dom');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 
 
 const lab = exports.lab = Lab.script();

@@ -3,7 +3,7 @@ const Code = require('code');
 const Form = require('../../../../client/pages/admin/components/delete-form.jsx');
 const Lab = require('lab');
 const React = require('react');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 
 
 const lab = exports.lab = Lab.script();

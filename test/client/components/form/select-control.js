@@ -2,7 +2,7 @@
 const Code = require('code');
 const Lab = require('lab');
 const React = require('react');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 const SelectControl = require('../../../../client/components/form/select-control.jsx');
 
 

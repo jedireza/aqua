@@ -3,7 +3,7 @@ const Code = require('code');
 const Lab = require('lab');
 const Proxyquire = require('proxyquire');
 const React = require('react');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 
 
 const lab = exports.lab = Lab.script();

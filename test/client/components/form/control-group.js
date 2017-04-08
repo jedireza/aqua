@@ -3,7 +3,7 @@ const Code = require('code');
 const ControlGroup = require('../../../../client/components/form/control-group.jsx');
 const Lab = require('lab');
 const React = require('react');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 
 
 const lab = exports.lab = Lab.script();

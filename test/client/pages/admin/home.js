@@ -4,7 +4,7 @@ const Component = require('../../../../client/pages/admin/home.jsx');
 const Lab = require('lab');
 const React = require('react');
 const ReactDOM = require('react-dom');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 
 
 const lab = exports.lab = Lab.script();

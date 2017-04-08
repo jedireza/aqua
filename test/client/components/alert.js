@@ -3,7 +3,7 @@ const Alert = require('../../../client/components/alert.jsx');
 const Code = require('code');
 const Lab = require('lab');
 const React = require('react');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 
 
 const lab = exports.lab = Lab.script();

@@ -5,7 +5,7 @@ const Lab = require('lab');
 const Proxyquire = require('proxyquire');
 const React = require('react');
 const ReactDOM = require('react-dom');
-const ReactTestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-dom/test-utils');
 const Store = require('../../../../../../client/pages/admin/admin-groups/search/store');
 
 
