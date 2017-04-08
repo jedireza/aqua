@@ -4,19 +4,20 @@ const Alert = require('../../../components/alert.jsx');
 const Button = require('../../../components/form/button.jsx');
 const ControlGroup = require('../../../components/form/control-group.jsx');
 const LinkState = require('../../../helpers/link-state');
+const PropTypes = require('prop-types');
 const React = require('react');
 const Spinner = require('../../../components/form/spinner.jsx');
 const TextControl = require('../../../components/form/text-control.jsx');
 
 
 const propTypes = {
-    loading: React.PropTypes.bool,
-    showSaveSuccess: React.PropTypes.bool,
-    error: React.PropTypes.string,
-    hasError: React.PropTypes.object,
-    help: React.PropTypes.object,
-    password: React.PropTypes.string,
-    passwordConfirm: React.PropTypes.string
+    error: PropTypes.string,
+    hasError: PropTypes.object,
+    help: PropTypes.object,
+    loading: PropTypes.bool,
+    password: PropTypes.string,
+    passwordConfirm: PropTypes.string,
+    showSaveSuccess: PropTypes.bool
 };
 
 

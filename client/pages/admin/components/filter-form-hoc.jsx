@@ -1,14 +1,15 @@
 'use strict';
 const LinkState = require('../../../helpers/link-state');
 const ObjectAssign = require('object-assign');
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    children: React.PropTypes.node,
-    loading: React.PropTypes.bool,
-    onChange: React.PropTypes.func,
-    query: React.PropTypes.object
+    children: PropTypes.node,
+    loading: PropTypes.bool,
+    onChange: PropTypes.func,
+    query: PropTypes.object
 };
 
 

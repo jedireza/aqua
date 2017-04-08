@@ -1,12 +1,13 @@
 'use strict';
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    children: React.PropTypes.node,
-    feet: React.PropTypes.node,
-    neck: React.PropTypes.node,
-    title: React.PropTypes.string
+    children: PropTypes.node,
+    feet: PropTypes.node,
+    neck: PropTypes.node,
+    title: PropTypes.string
 };
 
 class PlainLayout extends React.Component {

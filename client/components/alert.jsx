@@ -1,11 +1,12 @@
 'use strict';
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    type: React.PropTypes.oneOf(['success', 'info', 'warning', 'danger']),
-    onClose: React.PropTypes.func,
-    message: React.PropTypes.string
+    message: PropTypes.string,
+    onClose: PropTypes.func,
+    type: PropTypes.oneOf(['success', 'info', 'warning', 'danger'])
 };
 
 

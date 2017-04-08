@@ -5,6 +5,7 @@ const Lab = require('lab');
 const Proxyquire = require('proxyquire');
 const React = require('react');
 const ReactDOM = require('react-dom');
+const ReactRouter = require('react-router-dom');
 const ReactTestUtils = require('react-addons-test-utils');
 const Store = require('../../../../../../client/pages/admin/statuses/details/store');
 
@@ -26,11 +27,26 @@ const defaultProps = {
             defaultProps.ref.impl.apply(null, arguments);
         }
     },
-    params: {}
+    match: {
+        params: {}
+    }
 };
+const MemoryRouter = ReactRouter.MemoryRouter;
 
 
 lab.experiment('Admin Statuses Details Page', () => {
+
+    let RootEl;
+
+    lab.beforeEach((done) => {
+
+        const PageEl = React.createElement(Page, defaultProps);
+
+        RootEl = React.createElement(MemoryRouter, {}, PageEl);
+
+        done();
+    });
+
 
     lab.afterEach((done) => {
 
@@ -42,11 +58,16 @@ lab.experiment('Admin Statuses Details Page', () => {
 
     lab.test('it renders', (done) => {
 
-        const PageEl = React.createElement(Page, defaultProps);
+        defaultProps.ref.impl = function (page) {
 
-        ReactDOM.render(PageEl, container);
+            defaultProps.ref.impl = undefined;
 
-        done();
+            Code.expect(page).to.exist();
+
+            done();
+        };
+
+        ReactDOM.render(RootEl, container);
     });
 
 
@@ -67,9 +88,7 @@ lab.experiment('Admin Statuses Details Page', () => {
             done();
         };
 
-        const PageEl = React.createElement(Page, defaultProps);
-
-        ReactDOM.render(PageEl, container);
+        ReactDOM.render(RootEl, container);
     });
 
 
@@ -94,9 +113,7 @@ lab.experiment('Admin Statuses Details Page', () => {
             done();
         };
 
-        const PageEl = React.createElement(Page, defaultProps);
-
-        ReactDOM.render(PageEl, container);
+        ReactDOM.render(RootEl, container);
     });
 
 
@@ -122,9 +139,7 @@ lab.experiment('Admin Statuses Details Page', () => {
             done();
         };
 
-        const PageEl = React.createElement(Page, defaultProps);
-
-        ReactDOM.render(PageEl, container);
+        ReactDOM.render(RootEl, container);
     });
 
 
@@ -144,9 +159,7 @@ lab.experiment('Admin Statuses Details Page', () => {
             };
         };
 
-        const PageEl = React.createElement(Page, defaultProps);
-
-        ReactDOM.render(PageEl, container);
+        ReactDOM.render(RootEl, container);
 
         Store.dispatch({
             type: 'UNKNOWN'

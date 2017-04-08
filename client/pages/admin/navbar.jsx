@@ -1,12 +1,13 @@
 'use strict';
+const PropTypes = require('prop-types');
 const React = require('react');
-const ReactRouter = require('react-router');
+const ReactRouter = require('react-router-dom');
 const ClassNames = require('classnames');
 
 
 const Link = ReactRouter.Link;
 const propTypes = {
-    location: React.PropTypes.object
+    location: PropTypes.object
 };
 
 
@@ -25,7 +26,7 @@ class Navbar extends React.Component {
         this.setState({ navBarOpen: false });
     }
 
-    isPathActive(pathPattern) {
+    classForPath(pathPattern) {
 
         return ClassNames({
             active: this.props.location.pathname.match(pathPattern)
@@ -66,19 +67,19 @@ class Navbar extends React.Component {
                     </div>
                     <div className={navBarCollapse}>
                         <ul className="nav navbar-nav">
-                            <li className={this.isPathActive(/^\/admin\/accounts/)}>
+                            <li className={this.classForPath(/^\/admin\/accounts/)}>
                                 <Link to="/admin/accounts">Accounts</Link>
                             </li>
-                            <li className={this.isPathActive(/^\/admin\/admins/)}>
+                            <li className={this.classForPath(/^\/admin\/admins/)}>
                                 <Link to="/admin/admins">Admins</Link>
                             </li>
-                            <li className={this.isPathActive(/^\/admin\/admin-groups/)}>
+                            <li className={this.classForPath(/^\/admin\/admin-groups/)}>
                                 <Link to="/admin/admin-groups">Admin Groups</Link>
                             </li>
-                            <li className={this.isPathActive(/^\/admin\/statuses/)}>
+                            <li className={this.classForPath(/^\/admin\/statuses/)}>
                                 <Link to="/admin/statuses">Statuses</Link>
                             </li>
-                            <li className={this.isPathActive(/^\/admin\/users/)}>
+                            <li className={this.classForPath(/^\/admin\/users/)}>
                                 <Link to="/admin/users">Users</Link>
                             </li>
                         </ul>

@@ -5,18 +5,20 @@ const Button = require('../../../../components/form/button.jsx');
 const ControlGroup = require('../../../../components/form/control-group.jsx');
 const LinkState = require('../../../../helpers/link-state.js');
 const Modal = require('../../../../components/modal.jsx');
+const PropTypes = require('prop-types');
 const React = require('react');
 const Spinner = require('../../../../components/form/spinner.jsx');
 const TextControl = require('../../../../components/form/text-control.jsx');
 
 
 const propTypes = {
-    error: React.PropTypes.string,
-    hasError: React.PropTypes.object,
-    help: React.PropTypes.object,
-    loading: React.PropTypes.bool,
-    show: React.PropTypes.bool,
-    name: React.PropTypes.string
+    error: PropTypes.string,
+    hasError: PropTypes.object,
+    help: PropTypes.object,
+    history: PropTypes.object,
+    loading: PropTypes.bool,
+    name: PropTypes.string,
+    show: PropTypes.bool
 };
 
 
@@ -53,7 +55,7 @@ class CreateNewForm extends React.Component {
 
         Actions.createNew({
             name: this.state.name
-        });
+        }, this.props.history);
     }
 
     render() {

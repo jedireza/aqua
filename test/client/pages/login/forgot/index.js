@@ -5,6 +5,7 @@ const Lab = require('lab');
 const Proxyquire = require('proxyquire');
 const React = require('react');
 const ReactDOM = require('react-dom');
+const ReactRouter = require('react-router-dom');
 const ReactTestUtils = require('react-addons-test-utils');
 const Store = require('../../../../../client/pages/login/forgot/store');
 
@@ -16,16 +17,28 @@ const stub = {
 const Forgot = Proxyquire('../../../../../client/pages/login/forgot/index.jsx', {
     '../actions': stub.Actions
 });
+const MemoryRouter = ReactRouter.MemoryRouter;
 
 
 lab.experiment('Login Forgot Form', () => {
 
-    lab.test('it renders', (done) => {
+    let RootEl;
+
+    lab.beforeEach((done) => {
 
         const ForgotEl = React.createElement(Forgot, {});
-        const forgot = ReactTestUtils.renderIntoDocument(ForgotEl);
 
-        Code.expect(forgot).to.exist();
+        RootEl = React.createElement(MemoryRouter, {}, ForgotEl);
+
+        done();
+    });
+
+
+    lab.test('it renders', (done) => {
+
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+
+        Code.expect(root).to.exist();
 
         done();
     });
@@ -34,9 +47,8 @@ lab.experiment('Login Forgot Form', () => {
     lab.test('it handles unmounting', (done) => {
 
         const container = global.document.createElement('div');
-        const ForgotEl = React.createElement(Forgot, {});
 
-        ReactDOM.render(ForgotEl, container);
+        ReactDOM.render(RootEl, container);
         ReactDOM.unmountComponentAtNode(container);
 
         done();
@@ -45,14 +57,14 @@ lab.experiment('Login Forgot Form', () => {
 
     lab.test('it handles a store change', (done) => {
 
-        const ForgotEl = React.createElement(Forgot, {});
-        const form = ReactTestUtils.renderIntoDocument(ForgotEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const forgot = ReactTestUtils.findRenderedComponentWithType(root, Forgot);
 
         Store.dispatch({
             type: Constants.FORGOT
         });
 
-        Code.expect(form.state.loading).to.be.true();
+        Code.expect(forgot.state.loading).to.be.true();
 
         done();
     });
@@ -65,9 +77,8 @@ lab.experiment('Login Forgot Form', () => {
             done();
         };
 
-        const ForgotEl = React.createElement(Forgot, {});
-        const forgot = ReactTestUtils.renderIntoDocument(ForgotEl);
-        const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(forgot, 'form');
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(root, 'form');
 
         ReactTestUtils.Simulate.submit(formTag);
     });
@@ -75,9 +86,8 @@ lab.experiment('Login Forgot Form', () => {
 
     lab.test('it renders with loading state', (done) => {
 
-        const ForgotEl = React.createElement(Forgot, {});
-        const forgot = ReactTestUtils.renderIntoDocument(ForgotEl);
-        const button = ReactTestUtils.findRenderedDOMComponentWithTag(forgot, 'button');
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const button = ReactTestUtils.findRenderedDOMComponentWithTag(root, 'button');
 
         Store.dispatch({
             type: Constants.FORGOT
@@ -91,15 +101,14 @@ lab.experiment('Login Forgot Form', () => {
 
     lab.test('it renders with success state', (done) => {
 
-        const ForgotEl = React.createElement(Forgot, {});
-        const forgot = ReactTestUtils.renderIntoDocument(ForgotEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
 
         Store.dispatch({
             type: Constants.FORGOT_RESPONSE,
             err: null
         });
 
-        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(forgot, 'alert-success');
+        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(root, 'alert-success');
 
         Code.expect(alerts.length).to.equal(1);
 
@@ -109,8 +118,7 @@ lab.experiment('Login Forgot Form', () => {
 
     lab.test('it renders with error state', (done) => {
 
-        const ForgotEl = React.createElement(Forgot, {});
-        const forgot = ReactTestUtils.renderIntoDocument(ForgotEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
 
         Store.dispatch({
             type: Constants.FORGOT_RESPONSE,
@@ -120,7 +128,7 @@ lab.experiment('Login Forgot Form', () => {
             }
         });
 
-        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(forgot, 'alert-danger');
+        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(root, 'alert-danger');
 
         Code.expect(alerts).to.have.length(1);
 

@@ -1,7 +1,7 @@
 'use strict';
 const Actions = require('../actions');
 const React = require('react');
-const ReactRouter = require('react-router');
+const ReactRouter = require('react-router-dom');
 const Store = require('./store');
 
 

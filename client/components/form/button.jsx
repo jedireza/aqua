@@ -1,17 +1,18 @@
 'use strict';
 const ClassNames = require('classnames');
 const ObjectAssign = require('object-assign');
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    children: React.PropTypes.node,
-    disabled: React.PropTypes.bool,
-    inputClasses: React.PropTypes.object,
-    name: React.PropTypes.string,
-    onClick: React.PropTypes.func,
-    type: React.PropTypes.string,
-    value: React.PropTypes.string
+    children: PropTypes.node,
+    disabled: PropTypes.bool,
+    inputClasses: PropTypes.object,
+    name: PropTypes.string,
+    onClick: PropTypes.func,
+    type: PropTypes.string,
+    value: PropTypes.string
 };
 const defaultProps = {
     type: 'button'

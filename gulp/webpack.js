@@ -1,6 +1,7 @@
 'use strict';
 const Gulp = require('gulp');
 const Gutil = require('gulp-util');
+const Path = require('path');
 const Webpack = require('webpack');
 
 
@@ -26,7 +27,7 @@ Gulp.task('webpack', (callback) => {
 
     if (process.env.NODE_ENV === 'production') {
         plugins.push(new Webpack.optimize.UglifyJsPlugin({
-            compressor: {
+            compress: {
                 warnings: false
             }
         }));
@@ -44,18 +45,20 @@ Gulp.task('webpack', (callback) => {
             signup: './client/pages/signup/index'
         },
         output: {
-            path: './public/pages',
+            path: Path.resolve(__dirname, '../public/pages'),
             filename: '[name].min.js',
             sourceMapFilename: '[name].map.js'
         },
         resolve: {
-            extensions: ['', '.js', '.jsx']
+            extensions: ['.js', '.jsx']
         },
         module: {
-            loaders: [{
+            rules: [{
                 test: /\.jsx?$/,
-                exclude: /node_modules/,
-                loader: 'babel',
+                include: [
+                    Path.resolve(__dirname, '../client')
+                ],
+                loader: 'babel-loader',
                 query: {
                     presets: ['react', 'es2015']
                 }

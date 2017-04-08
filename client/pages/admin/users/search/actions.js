@@ -2,8 +2,8 @@
 'use strict';
 const ApiActions = require('../../../../actions/api');
 const Constants = require('./constants');
-const ReactRouter = require('react-router');
 const Store = require('./store');
+const Qs = require('qs');
 
 
 class Actions {
@@ -18,11 +18,11 @@ class Actions {
         );
     }
 
-    static changeSearchQuery(data) {
+    static changeSearchQuery(data, history) {
 
-        ReactRouter.browserHistory.push({
+        history.push({
             pathname: '/admin/users',
-            query: data
+            search: `?${Qs.stringify(data)}`
         });
 
         window.scrollTo(0, 0);
@@ -42,7 +42,7 @@ class Actions {
         });
     }
 
-    static createNew(data) {
+    static createNew(data, history) {
 
         ApiActions.post(
             '/api/users',
@@ -57,7 +57,7 @@ class Actions {
 
                     const path = `/admin/users/${response._id}`;
 
-                    ReactRouter.browserHistory.push(path);
+                    history.push(path);
 
                     window.scrollTo(0, 0);
                 }

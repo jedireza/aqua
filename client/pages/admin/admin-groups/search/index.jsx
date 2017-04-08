@@ -3,13 +3,16 @@ const Actions = require('./actions');
 const CreateNewForm = require('./create-new-form.jsx');
 const FilterForm = require('./filter-form.jsx');
 const Paging = require('../../../../components/paging.jsx');
+const PropTypes = require('prop-types');
 const React = require('react');
 const Results = require('./results.jsx');
 const Store = require('./store');
+const Qs = require('qs');
 
 
 const propTypes = {
-    location: React.PropTypes.object
+    history: PropTypes.object,
+    location: PropTypes.object
 };
 
 
@@ -18,7 +21,9 @@ class SearchPage extends React.Component {
 
         super(props);
 
-        Actions.getResults(this.props.location.query);
+        const query = Qs.parse(this.props.location.search.substring(1));
+
+        Actions.getResults(query);
 
         this.els = {};
         this.state = Store.getState();
@@ -26,7 +31,9 @@ class SearchPage extends React.Component {
 
     componentWillReceiveProps(nextProps) {
 
-        Actions.getResults(nextProps.location.query);
+        const query = Qs.parse(nextProps.location.search.substring(1));
+
+        Actions.getResults(query);
     }
 
     componentDidMount() {
@@ -51,7 +58,7 @@ class SearchPage extends React.Component {
             event.stopPropagation();
         }
 
-        Actions.changeSearchQuery(this.els.filters.state);
+        Actions.changeSearchQuery(this.els.filters.state, this.props.history);
     }
 
     onPageChange(page) {
@@ -81,7 +88,7 @@ class SearchPage extends React.Component {
                 <FilterForm
                     ref={(c) => (this.els.filters = c)}
                     loading={this.state.results.loading}
-                    query={this.props.location.query}
+                    query={Qs.parse(this.props.location.search.substring(1))}
                     onChange={this.onFiltersChange.bind(this)}
                 />
                 <Results data={this.state.results.data} />
@@ -92,7 +99,11 @@ class SearchPage extends React.Component {
                     loading={this.state.results.loading}
                     onChange={this.onPageChange.bind(this)}
                 />
-                <CreateNewForm {...this.state.createNew} />
+                <CreateNewForm
+                    history={this.props.history}
+                    location={this.props.location}
+                    {...this.state.createNew}
+                />
             </section>
         );
     }

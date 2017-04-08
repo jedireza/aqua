@@ -2,7 +2,6 @@
 'use strict';
 const ApiActions = require('../../../../actions/api');
 const Constants = require('./constants');
-const ReactRouter = require('react-router');
 const Store = require('./store');
 
 
@@ -112,7 +111,7 @@ class Actions {
         });
     }
 
-    static delete(id) {
+    static delete(id, history) {
 
         ApiActions.delete(
             `/api/admins/${id}`,
@@ -123,7 +122,7 @@ class Actions {
             (err, response) => {
 
                 if (!err) {
-                    ReactRouter.browserHistory.push('/admin/admins');
+                    history.push('/admin/admins');
 
                     window.scrollTo(0, 0);
                 }

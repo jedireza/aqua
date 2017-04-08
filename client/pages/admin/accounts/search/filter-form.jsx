@@ -1,15 +1,16 @@
 'use strict';
 const FilterFormHoc = require('../../../../pages/admin/components/filter-form-hoc.jsx');
+const PropTypes = require('prop-types');
 const React = require('react');
 const SelectControl = require('../../../../components/form/select-control.jsx');
 const TextControl = require('../../../../components/form/text-control.jsx');
 
 
 const propTypes = {
-    linkInputState: React.PropTypes.func,
-    linkSelectState: React.PropTypes.func,
-    loading: React.PropTypes.bool,
-    state: React.PropTypes.object
+    linkInputState: PropTypes.func,
+    linkSelectState: PropTypes.func,
+    loading: PropTypes.bool,
+    state: PropTypes.object
 };
 const defaultValues = {
     username: '',
@@ -55,6 +56,7 @@ class FilterForm extends React.Component {
                         onChange={this.props.linkSelectState}
                         disabled={this.props.loading}>
 
+                        <option value="5">5 items</option>
                         <option value="10">10 items</option>
                         <option value="20">20 items</option>
                         <option value="50">50 items</option>

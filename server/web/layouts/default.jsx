@@ -1,14 +1,15 @@
 'use strict';
 const Navbar = require('./navbar.jsx');
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    activeTab: React.PropTypes.string,
-    children: React.PropTypes.node,
-    feet: React.PropTypes.node,
-    neck: React.PropTypes.node,
-    title: React.PropTypes.string
+    activeTab: PropTypes.string,
+    children: PropTypes.node,
+    feet: PropTypes.node,
+    neck: PropTypes.node,
+    title: PropTypes.string
 };
 
 class DefaultLayout extends React.Component {

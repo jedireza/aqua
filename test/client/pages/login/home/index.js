@@ -5,6 +5,7 @@ const Lab = require('lab');
 const Proxyquire = require('proxyquire');
 const React = require('react');
 const ReactDOM = require('react-dom');
+const ReactRouter = require('react-router-dom');
 const ReactTestUtils = require('react-addons-test-utils');
 const Store = require('../../../../../client/pages/login/home/store');
 
@@ -16,14 +17,27 @@ const stub = {
 const Home = Proxyquire('../../../../../client/pages/login/home/index.jsx', {
     '../actions': stub.Actions
 });
+const MemoryRouter = ReactRouter.MemoryRouter;
 
 
 lab.experiment('Login Home Form', () => {
 
-    lab.test('it renders', (done) => {
+    let RootEl;
+
+    lab.beforeEach((done) => {
 
         const HomeEl = React.createElement(Home, {});
-        const home = ReactTestUtils.renderIntoDocument(HomeEl);
+
+        RootEl = React.createElement(MemoryRouter, {}, HomeEl);
+
+        done();
+    });
+
+
+    lab.test('it renders', (done) => {
+
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const home = ReactTestUtils.findRenderedComponentWithType(root, Home);
 
         Code.expect(home).to.exist();
 
@@ -34,9 +48,8 @@ lab.experiment('Login Home Form', () => {
     lab.test('it handles unmounting', (done) => {
 
         const container = global.document.createElement('div');
-        const HomeEl = React.createElement(Home, {});
 
-        ReactDOM.render(HomeEl, container);
+        ReactDOM.render(RootEl, container);
         ReactDOM.unmountComponentAtNode(container);
 
         done();
@@ -45,8 +58,8 @@ lab.experiment('Login Home Form', () => {
 
     lab.test('it handles a store change', (done) => {
 
-        const HomeEl = React.createElement(Home, {});
-        const home = ReactTestUtils.renderIntoDocument(HomeEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const home = ReactTestUtils.findRenderedComponentWithType(root, Home);
 
         Store.dispatch({
             type: Constants.LOGIN
@@ -65,9 +78,8 @@ lab.experiment('Login Home Form', () => {
             done();
         };
 
-        const HomeEl = React.createElement(Home, {});
-        const home = ReactTestUtils.renderIntoDocument(HomeEl);
-        const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(home, 'form');
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(root, 'form');
 
         ReactTestUtils.Simulate.submit(formTag);
     });
@@ -75,9 +87,8 @@ lab.experiment('Login Home Form', () => {
 
     lab.test('it renders with loading state', (done) => {
 
-        const HomeEl = React.createElement(Home, {});
-        const home = ReactTestUtils.renderIntoDocument(HomeEl);
-        const button = ReactTestUtils.findRenderedDOMComponentWithTag(home, 'button');
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const button = ReactTestUtils.findRenderedDOMComponentWithTag(root, 'button');
 
         Store.dispatch({
             type: Constants.LOGIN
@@ -91,15 +102,14 @@ lab.experiment('Login Home Form', () => {
 
     lab.test('it renders with success state', (done) => {
 
-        const HomeEl = React.createElement(Home, {});
-        const home = ReactTestUtils.renderIntoDocument(HomeEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
 
         Store.dispatch({
             type: Constants.LOGIN_RESPONSE,
             err: null
         });
 
-        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(home, 'alert-success');
+        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(root, 'alert-success');
 
         Code.expect(alerts).to.have.length(1);
 
@@ -109,8 +119,7 @@ lab.experiment('Login Home Form', () => {
 
     lab.test('it renders with error state', (done) => {
 
-        const HomeEl = React.createElement(Home, {});
-        const home = ReactTestUtils.renderIntoDocument(HomeEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
 
         Store.dispatch({
             type: Constants.LOGIN_RESPONSE,
@@ -120,7 +129,7 @@ lab.experiment('Login Home Form', () => {
             }
         });
 
-        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(home, 'alert-danger');
+        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(root, 'alert-danger');
 
         Code.expect(alerts).to.have.length(1);
 

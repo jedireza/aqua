@@ -4,19 +4,20 @@ const Alert = require('../../../../components/alert.jsx');
 const ControlGroup = require('../../../../components/form/control-group.jsx');
 const LinkState = require('../../../../helpers/link-state');
 const Moment = require('moment');
+const PropTypes = require('prop-types');
 const React = require('react');
 const Spinner = require('../../../../components/form/spinner.jsx');
 
 
 const propTypes = {
-    accountId: React.PropTypes.string,
-    error: React.PropTypes.string,
-    hasError: React.PropTypes.object,
-    help: React.PropTypes.object,
-    loading: React.PropTypes.bool,
-    notes: React.PropTypes.array,
-    showSaveSuccess: React.PropTypes.bool,
-    newNote: React.PropTypes.string
+    accountId: PropTypes.string,
+    error: PropTypes.string,
+    hasError: PropTypes.object,
+    help: PropTypes.object,
+    loading: PropTypes.bool,
+    newNote: PropTypes.string,
+    notes: PropTypes.array,
+    showSaveSuccess: PropTypes.bool
 };
 
 

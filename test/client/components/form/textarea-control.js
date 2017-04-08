@@ -2,7 +2,7 @@
 const Code = require('code');
 const Lab = require('lab');
 const React = require('react');
-const TestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-addons-test-utils');
 const TextareaControl = require('../../../../client/components/form/textarea-control.jsx');
 
 
@@ -15,8 +15,8 @@ lab.experiment('TextareaControl', () => {
 
         const props = {};
         const TextareaControlEl = React.createElement(TextareaControl, props);
-        const textareaControl = TestUtils.renderIntoDocument(TextareaControlEl);
-        const textarea = TestUtils.findRenderedDOMComponentWithTag(textareaControl, 'textarea');
+        const textareaControl = ReactTestUtils.renderIntoDocument(TextareaControlEl);
+        const textarea = ReactTestUtils.findRenderedDOMComponentWithTag(textareaControl, 'textarea');
 
         Code.expect(textarea).to.exist();
 
@@ -30,8 +30,8 @@ lab.experiment('TextareaControl', () => {
             disabled: true
         };
         const TextareaControlEl = React.createElement(TextareaControl, props);
-        const textareaControl = TestUtils.renderIntoDocument(TextareaControlEl);
-        const textarea = TestUtils.findRenderedDOMComponentWithTag(textareaControl, 'textarea');
+        const textareaControl = ReactTestUtils.renderIntoDocument(TextareaControlEl);
+        const textarea = ReactTestUtils.findRenderedDOMComponentWithTag(textareaControl, 'textarea');
 
         Code.expect(textarea.disabled).to.be.true();
 
@@ -46,7 +46,7 @@ lab.experiment('TextareaControl', () => {
             onChange: function () {}
         };
         const TextareaControlEl = React.createElement(TextareaControl, props);
-        const textareaControl = TestUtils.renderIntoDocument(TextareaControlEl);
+        const textareaControl = ReactTestUtils.renderIntoDocument(TextareaControlEl);
 
         Code.expect(textareaControl.value()).to.equal('foo');
 
@@ -61,7 +61,7 @@ lab.experiment('TextareaControl', () => {
             onChange: function () {}
         };
         const TextareaControlEl = React.createElement(TextareaControl, props);
-        const textareaControl = TestUtils.renderIntoDocument(TextareaControlEl);
+        const textareaControl = ReactTestUtils.renderIntoDocument(TextareaControlEl);
 
         textareaControl.focus();
 

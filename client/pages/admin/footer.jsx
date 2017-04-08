@@ -5,11 +5,13 @@ const React = require('react');
 class Footer extends React.Component {
     render() {
 
+        const year = new Date().getFullYear();
+
         return (
             <div className="footer">
                 <div className="container">
                     <span className="copyright pull-right">
-                        &#169; 2014 Acme, Inc.
+                        &#169; {year} Acme, Inc.
                     </span>
                     <ul className="links">
                         <li><a href="/">Home</a></li>

@@ -5,6 +5,7 @@ const Lab = require('lab');
 const Proxyquire = require('proxyquire');
 const React = require('react');
 const ReactDOM = require('react-dom');
+const ReactRouter = require('react-router-dom');
 const ReactTestUtils = require('react-addons-test-utils');
 const Store = require('../../../../../client/pages/login/reset/store');
 
@@ -16,21 +17,32 @@ const stub = {
 const Reset = Proxyquire('../../../../../client/pages/login/reset/index.jsx', {
     '../actions': stub.Actions
 });
+const MemoryRouter = ReactRouter.MemoryRouter;
 
 
 lab.experiment('Login Reset Form', () => {
 
-    const params = {
-        email: 'ren@stimpy',
-        key: 'abcxyz'
-    };
+    let RootEl;
+
+    lab.beforeEach((done) => {
+
+        const params = {
+            email: 'ren@stimpy',
+            key: 'abcxyz'
+        };
+        const ResetEl = React.createElement(Reset, { params });
+
+        RootEl = React.createElement(MemoryRouter, {}, ResetEl);
+
+        done();
+    });
+
 
     lab.test('it renders', (done) => {
 
-        const ResetEl = React.createElement(Reset, { params });
-        const reset = ReactTestUtils.renderIntoDocument(ResetEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
 
-        Code.expect(reset).to.exist();
+        Code.expect(root).to.exist();
 
         done();
     });
@@ -39,9 +51,8 @@ lab.experiment('Login Reset Form', () => {
     lab.test('it handles unmounting', (done) => {
 
         const container = global.document.createElement('div');
-        const ResetEl = React.createElement(Reset, { params });
 
-        ReactDOM.render(ResetEl, container);
+        ReactDOM.render(RootEl, container);
         ReactDOM.unmountComponentAtNode(container);
 
         done();
@@ -50,8 +61,8 @@ lab.experiment('Login Reset Form', () => {
 
     lab.test('it handles a store change', (done) => {
 
-        const ResetEl = React.createElement(Reset, { params });
-        const reset = ReactTestUtils.renderIntoDocument(ResetEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const reset = ReactTestUtils.findRenderedComponentWithType(root, Reset);
 
         Store.dispatch({
             type: Constants.RESET
@@ -70,9 +81,8 @@ lab.experiment('Login Reset Form', () => {
             done();
         };
 
-        const ResetEl = React.createElement(Reset, { params });
-        const reset = ReactTestUtils.renderIntoDocument(ResetEl);
-        const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(reset, 'form');
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(root, 'form');
 
         ReactTestUtils.Simulate.submit(formTag);
     });
@@ -80,9 +90,8 @@ lab.experiment('Login Reset Form', () => {
 
     lab.test('it renders with loading state', (done) => {
 
-        const ResetEl = React.createElement(Reset, { params });
-        const reset = ReactTestUtils.renderIntoDocument(ResetEl);
-        const button = ReactTestUtils.findRenderedDOMComponentWithTag(reset, 'button');
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
+        const button = ReactTestUtils.findRenderedDOMComponentWithTag(root, 'button');
 
         Store.dispatch({
             type: Constants.RESET
@@ -96,15 +105,14 @@ lab.experiment('Login Reset Form', () => {
 
     lab.test('it renders with success state', (done) => {
 
-        const ResetEl = React.createElement(Reset, { params });
-        const reset = ReactTestUtils.renderIntoDocument(ResetEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
 
         Store.dispatch({
             type: Constants.RESET_RESPONSE,
             err: null
         });
 
-        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(reset, 'alert-success');
+        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(root, 'alert-success');
 
         Code.expect(alerts).to.have.length(1);
 
@@ -114,8 +122,7 @@ lab.experiment('Login Reset Form', () => {
 
     lab.test('it renders with error state', (done) => {
 
-        const ResetEl = React.createElement(Reset, { params });
-        const reset = ReactTestUtils.renderIntoDocument(ResetEl);
+        const root = ReactTestUtils.renderIntoDocument(RootEl);
 
         Store.dispatch({
             type: Constants.RESET_RESPONSE,
@@ -125,7 +132,7 @@ lab.experiment('Login Reset Form', () => {
             }
         });
 
-        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(reset, 'alert-danger');
+        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(root, 'alert-danger');
 
         Code.expect(alerts).to.have.length(1);
 

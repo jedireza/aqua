@@ -2,21 +2,22 @@
 const ClassNames = require('classnames');
 const ControlGroup = require('./control-group.jsx');
 const ObjectAssign = require('object-assign');
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    autoCapitalize: React.PropTypes.string,
-    disabled: React.PropTypes.bool,
-    hasError: React.PropTypes.bool,
-    help: React.PropTypes.string,
-    inputClasses: React.PropTypes.object,
-    label: React.PropTypes.string,
-    name: React.PropTypes.string,
-    onChange: React.PropTypes.func,
-    placeholder: React.PropTypes.string,
-    type: React.PropTypes.string,
-    value: React.PropTypes.string
+    autoCapitalize: PropTypes.string,
+    disabled: PropTypes.bool,
+    hasError: PropTypes.bool,
+    help: PropTypes.string,
+    inputClasses: PropTypes.object,
+    label: PropTypes.string,
+    name: PropTypes.string,
+    onChange: PropTypes.func,
+    placeholder: PropTypes.string,
+    type: PropTypes.string,
+    value: PropTypes.string
 };
 const defaultProps = {
     type: 'text',

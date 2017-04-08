@@ -24,18 +24,11 @@ const stub = {
 
             stub.Store.dispatch.mock.apply(null, arguments);
         }
-    },
-    ReactRouter: {
-        browserHistory: {
-            push: () => {},
-            replace: () => {}
-        }
     }
 };
 const Actions = Proxyquire('../../../../../../client/pages/admin/statuses/search/actions', {
     '../../../../actions/api': stub.ApiActions,
-    './store': stub.Store,
-    'react-router': stub.ReactRouter
+    './store': stub.Store
 });
 
 
@@ -59,7 +52,7 @@ lab.experiment('Admin Statuses Search Actions', () => {
     });
 
 
-    lab.test('it calls browserHistory.push from changeSearchQuery', (done) => {
+    lab.test('it calls history.push from changeSearchQuery', (done) => {
 
         const scrollTo = global.window.scrollTo;
 
@@ -70,15 +63,15 @@ lab.experiment('Admin Statuses Search Actions', () => {
             done();
         };
 
-        stub.ReactRouter.browserHistory.push = function (config) {
+        const history = {
+            push: function (config) {
 
-            stub.ReactRouter.browserHistory.push = () => {};
-
-            Code.expect(config.pathname).to.be.a.string();
-            Code.expect(config.query).to.be.an.object();
+                Code.expect(config.pathname).to.be.a.string();
+                Code.expect(config.search).to.be.a.string();
+            }
         };
 
-        Actions.changeSearchQuery({});
+        Actions.changeSearchQuery({}, history);
     });
 
 
@@ -112,16 +105,16 @@ lab.experiment('Admin Statuses Search Actions', () => {
 
     lab.test('it calls ApiActions.post from createNew (success)', (done) => {
 
-        stub.Store.dispatch.mock = () => {};
+        const scrollTo = global.window.scrollTo;
 
-        stub.ReactRouter.browserHistory.replace = function (location) {
+        global.window.scrollTo = function () {
 
-            stub.ReactRouter.browserHistory.replace = () => {};
-
-            Code.expect(location).to.be.an.object();
+            global.window.scrollTo = scrollTo;
 
             done();
         };
+
+        stub.Store.dispatch.mock = () => {};
 
         stub.ApiActions.post.mock = function (url, data, store, typeReq, typeRes, callback) {
 
@@ -135,7 +128,14 @@ lab.experiment('Admin Statuses Search Actions', () => {
             callback(null, {});
         };
 
-        Actions.createNew({});
+        const history = {
+            replace: function (path) {
+
+                Code.expect(path).to.be.an.object();
+            }
+        };
+
+        Actions.createNew({}, history);
     });
 
 

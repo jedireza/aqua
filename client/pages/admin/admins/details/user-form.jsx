@@ -5,22 +5,23 @@ const Alert = require('../../../../components/alert.jsx');
 const Button = require('../../../../components/form/button.jsx');
 const ControlGroup = require('../../../../components/form/control-group.jsx');
 const LinkState = require('../../../../helpers/link-state');
+const PropTypes = require('prop-types');
 const React = require('react');
-const ReactRouter = require('react-router');
+const ReactRouter = require('react-router-dom');
 const Spinner = require('../../../../components/form/spinner.jsx');
 const TextControl = require('../../../../components/form/text-control.jsx');
 
 
 const Link = ReactRouter.Link;
 const propTypes = {
-    adminId: React.PropTypes.string,
-    error: React.PropTypes.string,
-    hasError: React.PropTypes.object,
-    help: React.PropTypes.object,
-    id: React.PropTypes.string,
-    loading: React.PropTypes.bool,
-    name: React.PropTypes.string,
-    showSaveSuccess: React.PropTypes.bool
+    adminId: PropTypes.string,
+    error: PropTypes.string,
+    hasError: PropTypes.object,
+    help: PropTypes.object,
+    id: PropTypes.string,
+    loading: PropTypes.bool,
+    name: PropTypes.string,
+    showSaveSuccess: PropTypes.bool
 };
 
 

@@ -5,7 +5,7 @@ const ObjectAssign = require('object-assign');
 const Proxyquire = require('proxyquire');
 const React = require('react');
 const ReactDOM = require('react-dom');
-const TestUtils = require('react-addons-test-utils');
+const ReactTestUtils = require('react-addons-test-utils');
 
 
 const lab = exports.lab = Lab.script();
@@ -31,7 +31,7 @@ lab.experiment('Account Settings Password Form', () => {
     lab.test('it renders', (done) => {
 
         const FormEl = React.createElement(Form, defaultProps);
-        const form = TestUtils.renderIntoDocument(FormEl);
+        const form = ReactTestUtils.renderIntoDocument(FormEl);
 
         Code.expect(form).to.exist();
 
@@ -79,10 +79,10 @@ lab.experiment('Account Settings Password Form', () => {
         };
 
         const FormEl = React.createElement(Form, defaultProps);
-        const form = TestUtils.renderIntoDocument(FormEl);
-        const formTag = TestUtils.findRenderedDOMComponentWithTag(form, 'form');
+        const form = ReactTestUtils.renderIntoDocument(FormEl);
+        const formTag = ReactTestUtils.findRenderedDOMComponentWithTag(form, 'form');
 
-        TestUtils.Simulate.submit(formTag);
+        ReactTestUtils.Simulate.submit(formTag);
     });
 
 
@@ -92,8 +92,8 @@ lab.experiment('Account Settings Password Form', () => {
             loading: true
         });
         const FormEl = React.createElement(Form, props);
-        const form = TestUtils.renderIntoDocument(FormEl);
-        const button = TestUtils.findRenderedDOMComponentWithTag(form, 'button');
+        const form = ReactTestUtils.renderIntoDocument(FormEl);
+        const button = ReactTestUtils.findRenderedDOMComponentWithTag(form, 'button');
 
         Code.expect(button.disabled).to.be.true();
 
@@ -107,8 +107,8 @@ lab.experiment('Account Settings Password Form', () => {
             showSaveSuccess: true
         });
         const FormEl = React.createElement(Form, props);
-        const form = TestUtils.renderIntoDocument(FormEl);
-        const alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-success');
+        const form = ReactTestUtils.renderIntoDocument(FormEl);
+        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-success');
 
         Code.expect(alerts).to.have.length(1);
 
@@ -123,8 +123,8 @@ lab.experiment('Account Settings Password Form', () => {
             error: 'sorry pal'
         });
         const FormEl = React.createElement(Form, props);
-        const form = TestUtils.renderIntoDocument(FormEl);
-        const alerts = TestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-danger');
+        const form = ReactTestUtils.renderIntoDocument(FormEl);
+        const alerts = ReactTestUtils.scryRenderedDOMComponentsWithClass(form, 'alert-danger');
 
         Code.expect(alerts).to.have.length(1);
 

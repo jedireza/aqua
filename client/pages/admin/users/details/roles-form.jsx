@@ -1,13 +1,14 @@
 'use strict';
 const ControlGroup = require('../../../../components/form/control-group.jsx');
+const PropTypes = require('prop-types');
 const React = require('react');
-const ReactRouter = require('react-router');
+const ReactRouter = require('react-router-dom');
 
 
 const Link = ReactRouter.Link;
 const propTypes = {
-    account: React.PropTypes.object,
-    admin: React.PropTypes.object
+    account: PropTypes.object,
+    admin: PropTypes.object
 };
 
 
