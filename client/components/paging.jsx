@@ -1,11 +1,12 @@
 'use strict';
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    items: React.PropTypes.object,
-    onChange: React.PropTypes.func,
-    pages: React.PropTypes.object
+    items: PropTypes.object,
+    onChange: PropTypes.func,
+    pages: PropTypes.object
 };
 
 

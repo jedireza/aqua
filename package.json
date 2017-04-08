@@ -75,6 +75,7 @@
     "moment": "2.18.x",
     "nodemon": "1.x.x",
     "promptly": "2.x.x",
+    "prop-types": "15.x.x",
     "proxyquire": "1.x.x",
     "qs": "6.x.x",
     "react-addons-linked-state-mixin": "15.x.x",

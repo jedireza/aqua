@@ -4,6 +4,7 @@ const Alert = require('../../../../components/alert.jsx');
 const Button = require('../../../../components/form/button.jsx');
 const ControlGroup = require('../../../../components/form/control-group.jsx');
 const LinkState = require('../../../../helpers/link-state');
+const PropTypes = require('prop-types');
 const React = require('react');
 const SelectControl = require('../../../../components/form/select-control.jsx');
 const Spinner = require('../../../../components/form/spinner.jsx');
@@ -11,18 +12,18 @@ const TextControl = require('../../../../components/form/text-control.jsx');
 
 
 const propTypes = {
-    _id: React.PropTypes.string,
-    email: React.PropTypes.string,
-    error: React.PropTypes.string,
-    hasError: React.PropTypes.object,
-    help: React.PropTypes.object,
-    isActive: React.PropTypes.oneOfType([
-        React.PropTypes.bool,
-        React.PropTypes.string
+    _id: PropTypes.string,
+    email: PropTypes.string,
+    error: PropTypes.string,
+    hasError: PropTypes.object,
+    help: PropTypes.object,
+    isActive: PropTypes.oneOfType([
+        PropTypes.bool,
+        PropTypes.string
     ]),
-    loading: React.PropTypes.bool,
-    showSaveSuccess: React.PropTypes.bool,
-    username: React.PropTypes.string
+    loading: PropTypes.bool,
+    showSaveSuccess: PropTypes.bool,
+    username: PropTypes.string
 };
 
 

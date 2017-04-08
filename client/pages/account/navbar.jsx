@@ -1,4 +1,5 @@
 'use strict';
+const PropTypes = require('prop-types');
 const React = require('react');
 const ReactRouter = require('react-router-dom');
 const ClassNames = require('classnames');
@@ -6,7 +7,7 @@ const ClassNames = require('classnames');
 
 const Link = ReactRouter.Link;
 const propTypes = {
-    location: React.PropTypes.object
+    location: PropTypes.object
 };
 
 

@@ -2,6 +2,7 @@
 const Actions = require('./actions');
 const DeleteForm = require('../../../../../client/pages/admin/components/delete-form.jsx');
 const DetailsForm = require('./details-form.jsx');
+const PropTypes = require('prop-types');
 const React = require('react');
 const ReactRouter = require('react-router-dom');
 const Store = require('./store');
@@ -9,8 +10,8 @@ const Store = require('./store');
 
 const Link = ReactRouter.Link;
 const propTypes = {
-    history: React.PropTypes.object,
-    match: React.PropTypes.object
+    history: PropTypes.object,
+    match: PropTypes.object
 };
 
 

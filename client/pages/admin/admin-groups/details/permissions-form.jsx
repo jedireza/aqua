@@ -4,16 +4,17 @@ const Alert = require('../../../../components/alert.jsx');
 const Button = require('../../../../components/form/button.jsx');
 const ControlGroup = require('../../../../components/form/control-group.jsx');
 const LinkState = require('../../../../helpers/link-state');
+const PropTypes = require('prop-types');
 const React = require('react');
 const Spinner = require('../../../../components/form/spinner.jsx');
 
 
 const propTypes = {
-    adminGroupId: React.PropTypes.string,
-    error: React.PropTypes.string,
-    loading: React.PropTypes.bool,
-    permissions: React.PropTypes.object,
-    showSaveSuccess: React.PropTypes.bool
+    adminGroupId: PropTypes.string,
+    error: PropTypes.string,
+    loading: PropTypes.bool,
+    permissions: PropTypes.object,
+    showSaveSuccess: PropTypes.bool
 };
 
 

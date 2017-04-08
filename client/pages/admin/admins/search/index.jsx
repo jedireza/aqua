@@ -3,6 +3,7 @@ const Actions = require('./actions');
 const CreateNewForm = require('./create-new-form.jsx');
 const FilterForm = require('./filter-form.jsx');
 const Paging = require('../../../../components/paging.jsx');
+const PropTypes = require('prop-types');
 const React = require('react');
 const Results = require('./results.jsx');
 const Store = require('./store');
@@ -10,8 +11,8 @@ const Qs = require('qs');
 
 
 const propTypes = {
-    history: React.PropTypes.object,
-    location: React.PropTypes.object
+    history: PropTypes.object,
+    location: PropTypes.object
 };
 
 

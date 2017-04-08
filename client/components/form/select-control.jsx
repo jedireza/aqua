@@ -2,24 +2,25 @@
 const ClassNames = require('classnames');
 const ControlGroup = require('./control-group.jsx');
 const ObjectAssign = require('object-assign');
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    children: React.PropTypes.node,
-    defaultValue: React.PropTypes.string,
-    disabled: React.PropTypes.bool,
-    hasError: React.PropTypes.bool,
-    help: React.PropTypes.string,
-    inputClasses: React.PropTypes.object,
-    label: React.PropTypes.string,
-    multiple: React.PropTypes.string,
-    name: React.PropTypes.string,
-    onChange: React.PropTypes.func,
-    size: React.PropTypes.string,
-    value: React.PropTypes.oneOfType([
-        React.PropTypes.bool,
-        React.PropTypes.string
+    children: PropTypes.node,
+    defaultValue: PropTypes.string,
+    disabled: PropTypes.bool,
+    hasError: PropTypes.bool,
+    help: PropTypes.string,
+    inputClasses: PropTypes.object,
+    label: PropTypes.string,
+    multiple: PropTypes.string,
+    name: PropTypes.string,
+    onChange: PropTypes.func,
+    size: PropTypes.string,
+    value: PropTypes.oneOfType([
+        PropTypes.bool,
+        PropTypes.string
     ])
 };
 const defaultProps = {

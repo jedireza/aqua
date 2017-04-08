@@ -1,11 +1,12 @@
 'use strict';
 const ClassNames = require('classnames');
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    show: React.PropTypes.bool,
-    space: React.PropTypes.string
+    show: PropTypes.bool,
+    space: PropTypes.string
 };
 
 

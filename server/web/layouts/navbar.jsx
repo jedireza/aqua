@@ -1,10 +1,11 @@
 'use strict';
 const ClassNames = require('classnames');
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    activeTab: React.PropTypes.string
+    activeTab: PropTypes.string
 };
 
 class Navbar extends React.Component {

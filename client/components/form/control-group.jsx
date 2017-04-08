@@ -1,19 +1,20 @@
 'use strict';
 const ClassNames = require('classnames');
 const ObjectAssign = require('object-assign');
+const PropTypes = require('prop-types');
 const React = require('react');
 
 
 const propTypes = {
-    children: React.PropTypes.node,
-    groupClasses: React.PropTypes.object,
-    hasError: React.PropTypes.bool,
-    help: React.PropTypes.string,
-    helpClasses: React.PropTypes.object,
-    hideHelp: React.PropTypes.bool,
-    hideLabel: React.PropTypes.bool,
-    label: React.PropTypes.string,
-    labelClasses: React.PropTypes.object
+    children: PropTypes.node,
+    groupClasses: PropTypes.object,
+    hasError: PropTypes.bool,
+    help: PropTypes.string,
+    helpClasses: PropTypes.object,
+    hideHelp: PropTypes.bool,
+    hideLabel: PropTypes.bool,
+    label: PropTypes.string,
+    labelClasses: PropTypes.object
 };
 
 
