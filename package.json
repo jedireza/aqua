@@ -82,7 +82,7 @@
     "react-dom": "15.x.x",
     "react-router-dom": "4.x.x",
     "require-dir": "0.3.x",
-    "webpack": "1.x.x",
+    "webpack": "2.x.x",
     "xhr": "2.x.x"
   }
 }
