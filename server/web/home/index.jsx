@@ -1,5 +1,6 @@
 'use strict';
 const Layout = require('../layouts/default.jsx');
+const Package = require('../../../package.json');
 const React = require('react');
 
 
@@ -17,7 +18,7 @@ class HomePage extends React.Component {
                 <div className="jumbotron">
                     <h1>Success</h1>
                     <div>
-                        <p className="lead">Your Node.js website and user system is running.</p>
+                        <p className="lead">Your Node.js website and user system is running. (v{Package.version})</p>
                         <div>
                             <a className="btn btn-primary btn-lg" href="/signup">
                                 Create an account
