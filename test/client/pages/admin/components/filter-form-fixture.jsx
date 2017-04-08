@@ -1,9 +1,9 @@
 'use strict';
-const FilterFormHoc = require('../../../../client/pages/admin/components/filter-form-hoc.jsx');
+const FilterFormHoc = require('../../../../../client/pages/admin/components/filter-form-hoc.jsx');
 const PropTypes = require('prop-types');
 const React = require('react');
-const SelectControl = require('../../../../client/components/form/select-control.jsx');
-const TextControl = require('../../../../client/components/form/text-control.jsx');
+const SelectControl = require('../../../../../client/components/form/select-control.jsx');
+const TextControl = require('../../../../../client/components/form/text-control.jsx');
 
 
 const propTypes = {
