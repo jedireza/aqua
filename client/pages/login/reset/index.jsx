@@ -50,8 +50,8 @@ class ResetPage extends React.Component {
         event.stopPropagation();
 
         Actions.reset({
-            email: this.props.params.email,
-            key: this.props.params.key,
+            email: this.props.match.params.email,
+            key: this.props.match.params.key,
             password: this.input.password.value()
         });
     }
