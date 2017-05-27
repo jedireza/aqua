@@ -92,7 +92,7 @@ class ResetPage extends React.Component {
                     name="_key"
                     label="Key"
                     hasError={this.state.hasError.key}
-                    value={this.props.params.key}
+                    value={this.props.match.params.key}
                     help={this.state.help.key}
                     disabled={true}
                 />
@@ -100,7 +100,7 @@ class ResetPage extends React.Component {
                     name="_email"
                     label="Email"
                     hasError={this.state.hasError.email}
-                    value={this.props.params.email}
+                    value={this.props.match.params.email}
                     help={this.state.help.email}
                     disabled={true}
                 />
