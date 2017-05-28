@@ -12,7 +12,7 @@ const TextControl = require('../../../components/form/text-control.jsx');
 
 const Link = ReactRouter.Link;
 const propTypes = {
-    params: PropTypes.object
+    match: PropTypes.object
 };
 
 

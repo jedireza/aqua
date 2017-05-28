@@ -28,11 +28,13 @@ lab.experiment('Login Reset Form', () => {
 
         const params = {
             match: {
-                email: 'ren@stimpy',
-                key: 'abcxyz'
+                params: {
+                    email: 'ren@stimpy',
+                    key: 'abcxyz'
+                }
             }
         };
-        const ResetEl = React.createElement(Reset, { params });
+        const ResetEl = React.createElement(Reset, params);
 
         RootEl = React.createElement(MemoryRouter, {}, ResetEl);
 
