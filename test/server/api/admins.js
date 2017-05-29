@@ -947,7 +947,7 @@ lab.experiment('Admins Plugin Delete', () => {
         server.inject(request, (response) => {
 
             Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.message).to.match(/success/i);
+            Code.expect(response.result.success).to.be.true();
 
             done();
         });

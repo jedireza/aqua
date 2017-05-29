@@ -552,7 +552,7 @@ internals.applyRoutes = function (server, next) {
                     return reply(Boom.notFound('Document not found.'));
                 }
 
-                reply({ message: 'Success.' });
+                reply({ success: true });
             });
         }
     });

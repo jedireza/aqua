@@ -143,7 +143,7 @@ internals.applyRoutes = function (server, next) {
                         }
 
                         if (!user) {
-                            return reply({ message: 'Success.' }).takeover();
+                            return reply({ success: true }).takeover();
                         }
 
                         reply(user);
@@ -195,7 +195,7 @@ internals.applyRoutes = function (server, next) {
                     return reply(err);
                 }
 
-                reply({ message: 'Success.' });
+                reply({ success: true });
             });
         }
     });
@@ -273,7 +273,7 @@ internals.applyRoutes = function (server, next) {
                     return reply(err);
                 }
 
-                reply({ message: 'Success.' });
+                reply({ success: true });
             });
         }
     });

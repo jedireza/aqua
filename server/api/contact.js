@@ -39,7 +39,7 @@ internals.applyRoutes = function (server, next) {
                     return reply(err);
                 }
 
-                reply({ message: 'Success.' });
+                reply({ success: true });
             });
         }
     });
