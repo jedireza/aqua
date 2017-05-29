@@ -40,7 +40,8 @@ internals.applyRoutes = function (server, next) {
                 }
 
                 request.cookieAuth.clear();
-                reply({ message: 'Success.' });
+
+                reply({ success: true });
             });
         }
     });
