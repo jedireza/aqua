@@ -18,13 +18,15 @@ const config = {
             $filter: 'env',
             test: 9000,
             production: process.env.PORT,
+            development: process.env.PORT,
             $default: 8000
         }
     },
     baseUrl: {
         $filter: 'env',
         $meta: 'values should not end in "/"',
-        production: 'https://getaqua.herokuapp.com',
+        production: process.env.URL,
+        development: process.env.URL,
         $default: 'http://127.0.0.1:8000'
     },
     authAttempts: {
@@ -34,6 +36,7 @@ const config = {
     cookieSecret: {
         $filter: 'env',
         production: process.env.COOKIE_SECRET,
+        development: process.env.COOKIE_SECRET,
         $default: '!k3yb04rdK4tz~4qu4~k3yb04rdd0gz!'
     },
     hapiMongoModels: {
@@ -41,6 +44,7 @@ const config = {
             uri: {
                 $filter: 'env',
                 production: process.env.MONGODB_URI,
+                development: process.env.MONGODB_URI,
                 test: 'mongodb://localhost:27017/aqua-test',
                 $default: 'mongodb://localhost:27017/aqua'
             }

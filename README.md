@@ -189,6 +189,12 @@ $ npm test
 # Linting results: No issues
 ```
 
+## VSCode Debug
+Before run npm start, we need add this environment variable: DEBUG=DEBUGGER 
+Then open vscode attach the defalut debug port to debug server side code.
+
+## Docker file build
+check the official documentation: [`build-an-image-from-your-dockerfile`](https://docs.docker.com/engine/getstarted/step_four/#/step-2-build-an-image-from-your-dockerfile)
 
 ## License
 

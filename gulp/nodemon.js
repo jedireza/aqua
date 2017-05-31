@@ -2,12 +2,15 @@
 const Gulp = require('gulp');
 const Nodemon = require('gulp-nodemon');
 
-
 Gulp.task('nodemon', () => {
 
-    const nodeArgs = ['--inspect'];
+    const nodeArgs = [];
 
-    if (process.env.DEBUGGER) {
+    if (process.env.DEBUG && process.env.DEBUG.indexOf('INSPECTER') > -1) {
+        nodeArgs.push('--inspect');
+    }
+
+    if (process.env.DEBUG && process.env.DEBUG.indexOf('DEBUGGER') > -1) {
         nodeArgs.push('--debug');
     }
 
