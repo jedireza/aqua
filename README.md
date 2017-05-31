@@ -124,6 +124,11 @@ Chrome. It looks something like this:
 
 `chrome-devtools://devtools/remote/serve_file/@62cd277117e6f8ec53e31b1be58290a6f7ab42ef/inspector.html?experiments=true&v8only=true&ws=localhost:9229/node`
 
+## Running with Docker
+
+```bash
+$ docker-compose up
+```
 
 ## Running in production
 
