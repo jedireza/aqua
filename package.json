@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "babel-core": "6.x.x",
-    "babel-loader": "6.x.x",
+    "babel-loader": "7.x.x",
     "babel-preset-es2015": "6.x.x",
     "babel-preset-react": "6.x.x",
     "bootstrap": "3.x.x",
@@ -81,7 +81,7 @@
     "react-dom": "15.x.x",
     "react-router-dom": "4.x.x",
     "require-dir": "0.3.x",
-    "webpack": "2.x.x",
+    "webpack": "3.x.x",
     "xhr": "2.x.x"
   }
 }
