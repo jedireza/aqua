@@ -19,7 +19,7 @@ class ContactPage extends React.Component {
                     <div className="col-sm-6 text-center">
                         <h1 className="page-header">Contact us</h1>
                         <p className="lead">
-                            Freddy can't wait to hear from you.
+                            Freddy can’t wait to hear from you.
                         </p>
                         <i className="fa fa-reply-all bamf"></i>
                         <div>

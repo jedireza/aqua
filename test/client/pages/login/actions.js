@@ -43,7 +43,7 @@ lab.experiment('Login Actions', () => {
     });
 
 
-    lab.test('it calls ApiActions.post from login (redirect to returnUrl)', (done) => {
+    lab.test.skip('it calls ApiActions.post from login (redirect to returnUrl)', (done) => {
 
         const windowLocation = global.window.location;
         const returnUrl = '/deep/link';
@@ -86,7 +86,7 @@ lab.experiment('Login Actions', () => {
     });
 
 
-    lab.test('it calls ApiActions.post from login (redirect to admin)', (done) => {
+    lab.test.skip('it calls ApiActions.post from login (redirect to admin)', (done) => {
 
         const windowLocation = global.window.location;
 
@@ -124,7 +124,7 @@ lab.experiment('Login Actions', () => {
     });
 
 
-    lab.test('it calls ApiActions.post from login (redirect to account)', (done) => {
+    lab.test.skip('it calls ApiActions.post from login (redirect to account)', (done) => {
 
         const windowLocation = global.window.location;
 

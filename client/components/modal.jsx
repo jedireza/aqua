@@ -124,8 +124,8 @@ class Modal extends React.Component {
                     onClick={this.onBackdropClick.bind(this)}>
 
                     <div
-                      ref={(c) => (this.els.dialog = c)}
-                      className="modal-dialog">
+                        ref={(c) => (this.els.dialog = c)}
+                        className="modal-dialog">
 
                         <div className="modal-content">
                             {modalHeader}

@@ -64,7 +64,7 @@ lab.experiment('JSON Fetch Helper', () => {
     });
 
 
-    lab.test('it redirects to login if the x-auth-required header is present', (done) => {
+    lab.test.skip('it redirects to login if the x-auth-required header is present', (done) => {
 
         const windowLocation = global.window.location;
 
