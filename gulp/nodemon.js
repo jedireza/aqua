@@ -11,7 +11,7 @@ Gulp.task('nodemon', () => {
         nodeArgs.push('--debug');
     }
 
-    Nodemon({
+    const config = {
         script: 'server.js',
         ext: 'js md',
         ignore: [
@@ -21,8 +21,9 @@ Gulp.task('nodemon', () => {
             'node_modules/**/*'
         ],
         nodeArgs
-    })
-    .on('restart', (files) => {
+    };
+
+    Nodemon(config).on('restart', (files) => {
 
         console.log('change detected:', files);
     });

@@ -26,6 +26,7 @@ class NoteForm extends React.Component {
 
         super(props);
 
+        this.els = {};
         this.state = {
             newNote: ''
         };
@@ -95,7 +96,7 @@ class NoteForm extends React.Component {
                 help={this.props.help.data}>
 
                 <textarea
-                    ref="newNote"
+                    ref={(c) => (this.els.newNote = c)}
                     name="newNote"
                     rows="3"
                     className="form-control"
@@ -104,7 +105,7 @@ class NoteForm extends React.Component {
                 >
                 </textarea>
                 <button
-                    ref="newNoteButton"
+                    ref={(c) => (this.els.newNoteButton = c)}
                     type="submit"
                     className="btn btn-default btn-block"
                     disabled={this.props.loading}>

@@ -19,7 +19,7 @@ class SignupPage extends React.Component {
                     <div className="col-sm-6 text-center">
                         <h1 className="page-header">Campy benefits</h1>
                         <p className="lead">
-                            Really, you will love it inside. It's super great!
+                            Really, you will love it inside. It’s super great!
                         </p>
                         <i className="fa fa-thumbs-o-up bamf"></i>
                     </div>
