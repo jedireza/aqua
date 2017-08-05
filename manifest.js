@@ -55,6 +55,9 @@ const manifest = {
                 register: 'visionary',
                 options: {
                     engines: { jsx: 'hapi-react-views' },
+                    compileOptions: {
+                        removeCacheRegExp: '.jsx'
+                    },
                     relativeTo: __dirname,
                     path: './server/web'
                 }
