@@ -1,42 +1,103 @@
-.section-home {
-    .well {
-        background-color: #333;
-    }
-    .stat-label {
-        color: #ccc;
-        text-transform: uppercase;
+@import "../../../node_modules/bootstrap/less/variables.less";
+@import "./accounts/details/index.less";
+@import "./home/index.less";
+
+
+body {
+    font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    padding-top: 50px;
+}
+
+/* prevent ios zoom on input */
+select, textarea, input, .form-control {
+    font-size: 16px;
+}
+
+.bamf {
+    font-size: 20em;
+}
+
+.navbar {
+    .navbar-brand {
         font-weight: bold;
+        color: #eee;
+        position: relative;
+        display: inline-block;
+
+        .navbar-logo {
+            position: relative;
+            display: inline-block;
+            top: -5px;
+            height: 32px;
+            width: 32px;
+        }
     }
-    .stat-value {
-        color: #fff;
-        font-weight: bold;
-        font-size: 3em;
+
+    .navbar-brand-label {
+        position: relative;
+        top: -2px;
+        margin-left: 10px;
+
+        img {
+            height: 28px;
+        }
     }
 }
 
-.section-account-details {
-    .list-group-statuses,
-    .list-group-notes {
-        .badge {
-            color: #666;
-            font-weight: normal;
-            background-color: transparent;
-            border: 1px solid #ccc;
-        }
+.table-results {
+    thead tr th {
+        background-color: #ddd;
+    }
+    th.stretch,
+    td.stretch {
+        width: 100%;
+    }
+    th.nowrap,
+    td.nowrap {
+        white-space: nowrap;
+    }
+}
 
-        li:nth-child(odd) {
-            background-color: #eee;
-        }
+
+.panel-danger-zone {
+    border: 1px solid #d9534f;
+
+    p {
+        margin-bottom: 0;
     }
 
-    .form-group-notes {
-        textarea {
-            border-bottom-right-radius: 0;
-            border-bottom-left-radius: 0;
+    .panel-heading {
+        color: #eee;
+        background-color: #d9534f;
+    }
+}
+
+.footer {
+    margin-top: 50px;
+    color: #999;
+
+    .container {
+        border-top: 1px solid #ccc;
+        padding: 20px 15px;
+    }
+    a, a:visited {
+        color: #999;
+    }
+    .links {
+        margin: 0;
+        padding: 0;
+
+        li {
+            display: inline-block;
+            padding-right: 10px;
+            margin-right: 10px;
+            list-style: none;
+            border-right: 1px dotted #999;
         }
-        .btn-block {
-            border-top-right-radius: 0;
-            border-top-left-radius: 0;
+        li:last-child {
+            padding-right: 0;
+            margin-right: 0;
+            border: none;
         }
     }
 }

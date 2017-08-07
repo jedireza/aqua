@@ -3,21 +3,30 @@
 A website and user system starter.
 
 [![Build Status](https://travis-ci.org/jedireza/aqua.svg?branch=master)](https://travis-ci.org/jedireza/aqua)
-[![Dependency Status](https://david-dm.org/jedireza/aqua.svg?style=flat)](https://david-dm.org/jedireza/aqua)
-[![devDependency Status](https://david-dm.org/jedireza/aqua/dev-status.svg?style=flat)](https://david-dm.org/jedireza/aqua#info=devDependencies)
 
 
 ## Features
 
- - Basic front end web pages (home, about)
- - Contact page with form that emails submissions
- - Account sign-up page
- - Login system with forgot password and reset password
- - Abusive login attempt detection
- - User roles for accounts and admins
- - Admins only notes and status history for accounts
- - Admin groups with shared permissions
- - Admin level permissions that override group permissions
+ - Universal front-end website
+   - Basic web pages ready to customize
+   - Contact page with form to email
+   - Account sign-up page
+   - Login pages including forgot and reset password
+ - My account area
+   - Stub dashboard ready to customize
+   - Settings screen to update contact info and login credentials
+ - Admin back office
+   - Stub dashboard ready to customize
+   - Manage accounts, admins, groups and users
+   - Use groups (like departments) for shared permissions
+   - Granular permissions override group permissions
+
+
+## Live demo
+
+| url                            | username | password |
+|:------------------------------ |:-------- |:-------- |
+| https://getaqua.herokuapp.com/ | root     | root     |
 
 
 ## Technology
@@ -30,29 +39,16 @@ The front-end is built with [React](https://github.com/facebook/react). We use
 routing is done with [React Router](https://github.com/reactjs/react-router).
 We're using [Gulp](http://gulpjs.com/) for the build system.
 
+We use [`bcrypt`](https://github.com/ncb000gt/node.bcrypt.js) for hashing
+secrets. If you have issues during installation related to `bcrypt` then [refer
+to this wiki
+page](https://github.com/jedireza/aqua/wiki/bcrypt-Installation-Trouble).
+
 
 ## API only
 
 If you don't use React and/or would rather bring your own front-end, checkout
 [Frame](https://github.com/jedireza/frame). It's just the HTTP API parts of Aqua.
-
-
-## Live demo
-
-| url                                                              | username | password |
-|:---------------------------------------------------------------- |:-------- |:-------- |
-| [https://getaqua.herokuapp.com/](https://getaqua.herokuapp.com/) | root     | root     |
-
-
-## Requirements
-
-You need [Node.js](http://nodejs.org/download/) installed and you'll need
-[MongoDB](http://www.mongodb.org/downloads) installed and running.
-
-We use [`bcrypt`](https://github.com/ncb000gt/node.bcrypt.js) for hashing
-secrets. If you have issues during installation related to `bcrypt` then [refer
-to this wiki
-page](https://github.com/jedireza/aqua/wiki/bcrypt-Installation-Trouble).
 
 
 ## Installation
@@ -143,7 +139,11 @@ these environment variables in your production environment:
 ## Have a question?
 
 Any issues or questions (no matter how basic), open an issue. Please take the
-initiative to read relevant documentation and be pro-active with debugging.
+initiative to read relevant documentation and be proactive with debugging.
+
+ - There are some guides in [the wiki](https://github.com/jedireza/aqua/wiki)
+ - Read through [previously asked
+   questions](https://github.com/jedireza/aqua/issues?q=label%3Aquestion%20)
 
 
 ## Want to contribute?
@@ -187,6 +187,21 @@ $ npm test
 # No global variable leaks detected
 # Coverage: 100.00%
 # Linting results: No issues
+```
+
+### Targeted tests
+
+If you'd like to run a specific test or subset of tests you can use the
+`test-client` and `test-server` scripts included in the `package.json` file.
+
+You specificy the path(s) via the `TEST_TARGET` environment variable like:
+
+```bash
+$ TEST_TARGET=test/server/web/main.js npm run test-server
+
+# or
+
+$ TEST_TARGET=test/client/actions/api.js npm run test-client
 ```
 
 

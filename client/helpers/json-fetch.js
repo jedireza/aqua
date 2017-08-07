@@ -37,6 +37,10 @@ const jsonFetch = function (options, callback) {
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
             if (response.headers.hasOwnProperty('x-auth-required')) {
+                if (window.location.pathname === '/login') {
+                    return callback(Error('Auth required.'));
+                }
+
                 let returnUrl = window.location.pathname;
 
                 if (window.location.search.length > 0) {
@@ -60,7 +64,9 @@ const jsonFetch = function (options, callback) {
 };
 
 
-window.jsonFetch = jsonFetch;
+if (global.window) {
+    window.jsonFetch = jsonFetch;
+}
 
 
 module.exports = jsonFetch;

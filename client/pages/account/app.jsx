@@ -1,6 +1,6 @@
 'use strict';
 const Footer = require('./footer.jsx');
-const Home = require('./home.jsx');
+const Home = require('./home/index.jsx');
 const Navbar = require('./navbar.jsx');
 const NotFound = require('./not-found.jsx');
 const React = require('react');
@@ -18,8 +18,9 @@ const App = (
         <div>
             <Route component={Navbar} />
             <Switch>
-                <Route exact path="/account" component={Home} />
-                <Route path="/account/settings" component={Settings} />
+                <Route path="/account" exact component={Home} />
+                <Route path="/account/settings" exact component={Settings} />
+
                 <Route component={NotFound} />
             </Switch>
             <Footer />

@@ -7,7 +7,20 @@ const transformer = function (content, filename) {
     if (/^node_modules/.test(filename)) {
         return content;
     }
-    if (/^server\/models/.test(filename)) {
+
+    if (/^server/.test(filename) &&
+        /^server\/web/.test(filename) === false) {
+
+        return content;
+    }
+
+    if (/^test/.test(filename) &&
+        /^test\/client/.test(filename) === false) {
+
+        return content;
+    }
+
+    if (/^config\.js|manifest\.js/.test(filename)) {
         return content;
     }
 
