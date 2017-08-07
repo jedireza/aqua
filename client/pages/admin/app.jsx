@@ -6,7 +6,7 @@ const AdminGroupDetails = require('./admin-groups/details/index.jsx');
 const AdminGroupSearch = require('./admin-groups/search/index.jsx');
 const AdminSearch = require('./admins/search/index.jsx');
 const Footer = require('./footer.jsx');
-const Home = require('./home.jsx');
+const Home = require('./home/index.jsx');
 const Navbar = require('./navbar.jsx');
 const NotFound = require('./not-found.jsx');
 const React = require('react');
@@ -27,17 +27,18 @@ const App = (
         <div>
             <Route component={Navbar} />
             <Switch>
-                <Route exact path="/admin" component={Home} />
-                <Route exact path="/admin/accounts" component={AccountSearch} />
+                <Route path="/admin" exact component={Home} />
+                <Route path="/admin/accounts" exact component={AccountSearch} />
                 <Route path="/admin/accounts/:id" component={AccountDetails} />
-                <Route exact path="/admin/admins" component={AdminSearch} />
+                <Route path="/admin/admins" exact component={AdminSearch} />
                 <Route path="/admin/admins/:id" component={AdminDetails} />
-                <Route exact path="/admin/admin-groups" component={AdminGroupSearch} />
+                <Route path="/admin/admin-groups" exact component={AdminGroupSearch} />
                 <Route path="/admin/admin-groups/:id" component={AdminGroupDetails} />
-                <Route exact path="/admin/statuses" component={StatusSearch} />
+                <Route path="/admin/statuses" exact component={StatusSearch} />
                 <Route path="/admin/statuses/:id" component={StatusDetails} />
-                <Route exact path="/admin/users" component={UserSearch} />
+                <Route path="/admin/users" exact component={UserSearch} />
                 <Route path="/admin/users/:id" component={UserDetails} />
+
                 <Route component={NotFound} />
             </Switch>
             <Footer />

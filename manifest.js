@@ -55,6 +55,9 @@ const manifest = {
                 register: 'visionary',
                 options: {
                     engines: { jsx: 'hapi-react-views' },
+                    compileOptions: {
+                        removeCacheRegExp: '.jsx'
+                    },
                     relativeTo: __dirname,
                     path: './server/web'
                 }
@@ -157,28 +160,16 @@ const manifest = {
             }
         },
         {
-            plugin: './server/web/about'
-        },
-        {
             plugin: './server/web/account'
         },
         {
             plugin: './server/web/admin'
         },
         {
-            plugin: './server/web/contact'
-        },
-        {
-            plugin: './server/web/home'
-        },
-        {
-            plugin: './server/web/login'
+            plugin: './server/web/main'
         },
         {
             plugin: './server/web/public'
-        },
-        {
-            plugin: './server/web/signup'
         }
     ]
 };

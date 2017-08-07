@@ -6,4 +6,5 @@ Gulp.task('watch', () => {
 
     global.isWatching = true;
     Gulp.watch('./client/**/*.less', ['less']);
+    Gulp.watch('./client/media/**/*', ['media']);
 });

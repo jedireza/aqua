@@ -1,11 +1,74 @@
-.section-home {
-    .stat-label {
-        color: #777;
-        text-transform: uppercase;
+@import "../../../node_modules/bootstrap/less/variables.less";
+@import "./home/index.less";
+
+
+body {
+    font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    padding-top: 50px;
+}
+
+.bamf {
+    font-size: 20em;
+}
+
+/* prevent ios zoom on input */
+select, textarea, input, .form-control {
+    font-size: 16px;
+}
+
+.navbar {
+    .navbar-brand {
         font-weight: bold;
+        color: #333;
+        position: relative;
+        display: inline-block;
+
+        .navbar-logo {
+            position: relative;
+            display: inline-block;
+            top: -5px;
+            height: 32px;
+            width: 32px;
+        }
     }
-    .stat-value {
-        font-weight: bold;
-        font-size: 3em;
+
+    .navbar-brand-label {
+        position: relative;
+        top: -2px;
+        margin-left: 10px;
+
+        img {
+            height: 28px;
+        }
+    }
+}
+
+.footer {
+    margin-top: 50px;
+    color: #999;
+
+    .container {
+        border-top: 1px solid #ccc;
+        padding: 20px 15px;
+    }
+    a, a:visited {
+        color: #999;
+    }
+    .links {
+        margin: 0;
+        padding: 0;
+
+        li {
+            display: inline-block;
+            padding-right: 10px;
+            margin-right: 10px;
+            list-style: none;
+            border-right: 1px dotted #999;
+        }
+        li:last-child {
+            padding-right: 0;
+            margin-right: 0;
+            border: none;
+        }
     }
 }
