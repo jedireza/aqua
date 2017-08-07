@@ -27,9 +27,11 @@ lab.experiment('Login Reset Form', () => {
     lab.beforeEach((done) => {
 
         const props = {
-            params: {
-                email: 'ren@stimpy',
-                key: 'abcxyz'
+            match: {
+                params: {
+                    email: 'ren@stimpy',
+                    key: 'abcxyz'
+                }
             }
         };
         const ResetEl = React.createElement(Reset, props);

@@ -14,7 +14,7 @@ const TextControl = require('../../../../components/form/text-control.jsx');
 const Helmet = ReactHelmet.Helmet;
 const Link = ReactRouter.Link;
 const propTypes = {
-    params: PropTypes.object
+    match: PropTypes.object
 };
 
 
@@ -52,8 +52,8 @@ class ResetPage extends React.Component {
         event.stopPropagation();
 
         Actions.reset({
-            email: this.props.params.email,
-            key: this.props.params.key,
+            email: this.props.match.params.email,
+            key: this.props.match.params.key,
             password: this.input.password.value()
         });
     }
@@ -94,7 +94,7 @@ class ResetPage extends React.Component {
                     name="_key"
                     label="Key"
                     hasError={this.state.hasError.key}
-                    value={this.props.params.key}
+                    value={this.props.match.params.key}
                     help={this.state.help.key}
                     disabled={true}
                 />
@@ -102,7 +102,7 @@ class ResetPage extends React.Component {
                     name="_email"
                     label="Email"
                     hasError={this.state.hasError.email}
-                    value={this.props.params.email}
+                    value={this.props.match.params.email}
                     help={this.state.help.email}
                     disabled={true}
                 />
