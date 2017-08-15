@@ -57,10 +57,6 @@ Account.schema = Joi.object().keys({
         log: Joi.array().items(StatusEntry.schema)
     }),
     notes: Joi.array().items(NoteEntry.schema),
-    verification: Joi.object().keys({
-        complete: Joi.boolean(),
-        token: Joi.string()
-    }),
     timeCreated: Joi.date()
 });
 
