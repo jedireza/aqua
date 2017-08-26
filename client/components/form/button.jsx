@@ -12,7 +12,10 @@ const propTypes = {
     name: PropTypes.string,
     onClick: PropTypes.func,
     type: PropTypes.string,
-    value: PropTypes.string
+    value: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.number
+    ])
 };
 const defaultProps = {
     type: 'button'
