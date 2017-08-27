@@ -16,7 +16,10 @@ const propTypes = {
     onChange: PropTypes.func,
     placeholder: PropTypes.string,
     rows: PropTypes.string,
-    value: PropTypes.string
+    value: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.number
+    ])
 };
 
 
