@@ -23,8 +23,6 @@ class SearchPage extends React.Component {
 
         const query = Qs.parse(this.props.location.search.substring(1));
 
-        Actions.getResults(query);
-
         this.els = {};
         this.state = Store.getState();
     }
@@ -37,7 +35,9 @@ class SearchPage extends React.Component {
     }
 
     componentDidMount() {
-
+    
+        Actions.getResults(query);
+      
         this.unsubscribeStore = Store.subscribe(this.onStoreChange.bind(this));
     }
 
