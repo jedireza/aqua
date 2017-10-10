@@ -31,10 +31,32 @@ Async.auto({
 
         Promptly.prompt('Root user email:', done);
     }],
-    rootPassword: ['rootEmail', (results, done) => {
+    rootPassword: ['rootEmail', Async.retryable(3, (results, done) => {
 
-        Promptly.password('Root user password:', done);
-    }],
+        Async.auto({
+
+            askPassword: (done) => {
+
+                Promptly.password('Root user password:', { 'replace': '*' }, done);
+            },
+            confirmPassword: ['askPassword', (_, done) => {
+
+                Promptly.password('Confirm password:', { 'replace': '*' }, done);
+            }]
+        }, (err, pwResults) => {
+
+            if (err) {
+                return done(err);
+            }
+
+            if (pwResults.askPassword !== pwResults.confirmPassword) {
+                done(new Error('the passwords are not the same!'));
+            }
+            else {
+                done(null, pwResults.askPassword);
+            }
+        });
+    })],
     setupRootUser: ['rootPassword', (results, done) => {
 
         const Account = require('./server/models/account');
