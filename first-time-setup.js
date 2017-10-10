@@ -32,23 +32,28 @@ Async.auto({
         Promptly.prompt('Root user email:', done);
     }],
     rootPassword: ['rootEmail', Async.retryable(3, (results, done) => {
+
         Async.auto({
+
             askPassword: (done) => {
-                Promptly.password('Root user password:', {'replace': '*'}, done);
+
+                Promptly.password('Root user password:', { 'replace': '*' }, done);
             },
             confirmPassword: ['askPassword', (_, done) => {
-                Promptly.password('Confirm password:', {'replace': '*'}, done);
+
+                Promptly.password('Confirm password:', { 'replace': '*' }, done);
             }]
-        }, (err, results) => {
+        }, (err, pwResults) => {
 
             if (err) {
                 return done(err);
             }
 
-            if (results.askPassword != results.confirmPassword) {
+            if (pwResults.askPassword !== pwResults.confirmPassword) {
                 done(new Error('the passwords are not the same!'));
-            } else {
-                done(null, results.askPassword);
+            }
+            else {
+                done(null, pwResults.askPassword);
             }
         });
     })],
