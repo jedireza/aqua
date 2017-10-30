@@ -62,7 +62,7 @@ class AuthAttempt extends MongoModels {
 AuthAttempt.collection = 'authAttempts';
 
 
-AuthAttempt.schema = Joi.object().keys({
+AuthAttempt.schema = Joi.object({
     _id: Joi.object(),
     username: Joi.string().lowercase().required(),
     ip: Joi.string().required(),

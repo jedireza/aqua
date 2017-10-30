@@ -135,7 +135,7 @@ internals.applyRoutes = function (server, next) {
                     id: Joi.string().invalid('111111111111111111111111')
                 },
                 payload: {
-                    name: Joi.object().keys({
+                    name: Joi.object({
                         first: Joi.string().required(),
                         middle: Joi.string().allow(''),
                         last: Joi.string().required()

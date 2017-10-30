@@ -118,15 +118,15 @@ class Admin extends MongoModels {
 Admin.collection = 'admins';
 
 
-Admin.schema = Joi.object().keys({
+Admin.schema = Joi.object({
     _id: Joi.object(),
-    user: Joi.object().keys({
+    user: Joi.object({
         id: Joi.string().required(),
         name: Joi.string().lowercase().required()
     }),
     groups: Joi.object().description('{ groupId: name, ... }'),
     permissions: Joi.object().description('{ permission: boolean, ... }'),
-    name: Joi.object().keys({
+    name: Joi.object({
         first: Joi.string().required(),
         middle: Joi.string().allow(''),
         last: Joi.string().required()

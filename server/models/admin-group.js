@@ -39,7 +39,7 @@ AdminGroup.collection = 'adminGroups';
 AdminGroup._idClass = String;
 
 
-AdminGroup.schema = Joi.object().keys({
+AdminGroup.schema = Joi.object({
     _id: Joi.string(),
     name: Joi.string().required(),
     permissions: Joi.object().description('{ permission: boolean, ... }')

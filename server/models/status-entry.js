@@ -6,11 +6,11 @@ const MongoModels = require('mongo-models');
 class StatusEntry extends MongoModels {}
 
 
-StatusEntry.schema = Joi.object().keys({
+StatusEntry.schema = Joi.object({
     id: Joi.string().required(),
     name: Joi.string().required(),
     timeCreated: Joi.date().required(),
-    userCreated: Joi.object().keys({
+    userCreated: Joi.object({
         id: Joi.string().required(),
         name: Joi.string().lowercase().required()
     }).required()
