@@ -6,10 +6,10 @@ const MongoModels = require('mongo-models');
 class NoteEntry extends MongoModels {}
 
 
-NoteEntry.schema = Joi.object().keys({
+NoteEntry.schema = Joi.object({
     data: Joi.string().required(),
     timeCreated: Joi.date().required(),
-    userCreated: Joi.object().keys({
+    userCreated: Joi.object({
         id: Joi.string().required(),
         name: Joi.string().lowercase().required()
     }).required()

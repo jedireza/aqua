@@ -107,7 +107,7 @@ class Session extends MongoModels {
 Session.collection = 'sessions';
 
 
-Session.schema = Joi.object().keys({
+Session.schema = Joi.object({
     _id: Joi.object(),
     userId: Joi.string().required(),
     key: Joi.string().required(),

@@ -31,7 +31,7 @@ Status.collection = 'statuses';
 Status._idClass = String;
 
 
-Status.schema = Joi.object().keys({
+Status.schema = Joi.object({
     _id: Joi.string(),
     pivot: Joi.string().required(),
     name: Joi.string().required()
