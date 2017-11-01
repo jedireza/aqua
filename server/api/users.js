@@ -1,5 +1,6 @@
 'use strict';
 const AuthPlugin = require('../auth');
+const Async = require('async');
 const Boom = require('boom');
 const EscapeRegExp = require('escape-string-regexp');
 const Joi = require('joi');
@@ -11,7 +12,8 @@ const internals = {};
 internals.applyRoutes = function (server, next) {
 
     const User = server.plugins['hapi-mongo-models'].User;
-
+    const Admin = server.plugins['hapi-mongo-models'].Admin;
+    const Account = server.plugins['hapi-mongo-models'].Account;
 
     server.route({
         method: 'GET',
@@ -274,26 +276,69 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const id = request.params.id;
-            const update = {
-                $set: {
-                    isActive: request.payload.isActive,
-                    username: request.payload.username,
-                    email: request.payload.email
-                }
-            };
+            Async.auto({
+                user: function (done) {
 
-            User.findByIdAndUpdate(id, update, (err, user) => {
+                    const id = request.params.id;
+                    const update = {
+                        $set: {
+                            isActive: request.payload.isActive,
+                            username: request.payload.username,
+                            email: request.payload.email
+                        }
+                    };
+
+                    User.findByIdAndUpdate(id, update, done);
+                },
+                admin: ['user', function (results, done) {
+
+                    if (!results.user || !results.user.roles ) {
+                        return done();
+                    }
+                    const { admin } = results.user.roles;
+                    if (!admin) {
+                        return done();
+                    }
+                    const update = {
+                        $set: {
+                            user: {
+                                id: results.user._id,
+                                name: request.payload.username
+                            }
+                        }
+                    };
+                    Admin.findByIdAndUpdate(admin.id, update, done);
+                }],
+                account: ['user', function (results, done) {
+
+                    if (!results.user || !results.user.roles) {
+                        return done();
+                    }
+                    const { account } = results.user.roles;
+                    if (!account) {
+                        return done();
+                    }
+                    const update = {
+                        $set: {
+                            user: {
+                                id: results.user._id,
+                                name: request.payload.username
+                            }
+                        }
+                    };
+
+                    Account.findByIdAndUpdate(account.id, update, done);
+                }]
+            }, (err, results) => {
 
                 if (err) {
                     return reply(err);
                 }
 
-                if (!user) {
+                if (!results.user) {
                     return reply(Boom.notFound('Document not found.'));
                 }
-
-                reply(user);
+                reply(results.user);
             });
         }
     });
