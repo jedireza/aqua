@@ -276,69 +276,51 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
+            const id = request.params.id;
+            const update = {
+                $set: {
+                    isActive: request.payload.isActive,
+                    username: request.payload.username,
+                    email: request.payload.email
+                }
+            };
+
+            const filterById = {
+                'user.id': request.params.id
+            };
+
+            const updateReference = {
+                $set: {
+                    user: {
+                        id: request.params.id,
+                        name: request.payload.username
+                    }
+                }
+            };
             Async.auto({
                 user: function (done) {
 
-                    const id = request.params.id;
-                    const update = {
-                        $set: {
-                            isActive: request.payload.isActive,
-                            username: request.payload.username,
-                            email: request.payload.email
-                        }
-                    };
-
                     User.findByIdAndUpdate(id, update, done);
                 },
-                admin: ['user', function (results, done) {
+                account: function (done) {
 
-                    if (!results.user || !results.user.roles ) {
-                        return done();
-                    }
-                    const { admin } = results.user.roles;
-                    if (!admin) {
-                        return done();
-                    }
-                    const update = {
-                        $set: {
-                            user: {
-                                id: results.user._id,
-                                name: request.payload.username
-                            }
-                        }
-                    };
-                    Admin.findByIdAndUpdate(admin.id, update, done);
-                }],
-                account: ['user', function (results, done) {
+                    Account.findOneAndUpdate(filterById, updateReference, done);
+                },
+                admin: function (done) {
 
-                    if (!results.user || !results.user.roles) {
-                        return done();
-                    }
-                    const { account } = results.user.roles;
-                    if (!account) {
-                        return done();
-                    }
-                    const update = {
-                        $set: {
-                            user: {
-                                id: results.user._id,
-                                name: request.payload.username
-                            }
-                        }
-                    };
-
-                    Account.findByIdAndUpdate(account.id, update, done);
-                }]
-            }, (err, results) => {
+                    Admin.findOneAndUpdate(filterById, updateReference, done);
+                }
+            }, (err, { user }) => {
 
                 if (err) {
                     return reply(err);
                 }
 
-                if (!results.user) {
+                if (!user) {
                     return reply(Boom.notFound('Document not found.'));
                 }
-                reply(results.user);
+
+                reply(user);
             });
         }
     });
