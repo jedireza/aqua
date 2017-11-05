@@ -399,7 +399,29 @@ internals.applyRoutes = function (server, next) {
                 fields: User.fieldsAdapter('username email roles')
             };
 
-            User.findByIdAndUpdate(id, update, findOptions, (err, user) => {
+            const filterById = {
+                'user.id': id
+            };
+
+            const updateReference = {
+                $set: {
+                    'user.name': request.payload.username
+                }
+            };
+            Async.auto({
+                user: function (done) {
+
+                    User.findByIdAndUpdate(id, update, findOptions, done);
+                },
+                account: function (done) {
+
+                    Account.findOneAndUpdate(filterById, updateReference, done);
+                },
+                admin: function (done) {
+
+                    Admin.findOneAndUpdate(filterById, updateReference, done);
+                }
+            }, (err, { user }) => {
 
                 if (err) {
                     return reply(err);
