@@ -291,10 +291,7 @@ internals.applyRoutes = function (server, next) {
 
             const updateReference = {
                 $set: {
-                    user: {
-                        id: request.params.id,
-                        name: request.payload.username
-                    }
+                    'user.name': request.payload.username
                 }
             };
             Async.auto({
