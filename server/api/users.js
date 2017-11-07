@@ -1,5 +1,6 @@
 'use strict';
 const AuthPlugin = require('../auth');
+const Async = require('async');
 const Boom = require('boom');
 const EscapeRegExp = require('escape-string-regexp');
 const Joi = require('joi');
@@ -11,6 +12,8 @@ const internals = {};
 internals.applyRoutes = function (server, next) {
 
     const User = server.plugins['hapi-mongo-models'].User;
+    const Admin = server.plugins['hapi-mongo-models'].Admin;
+    const Account = server.plugins['hapi-mongo-models'].Account;
 
 
     server.route({
@@ -283,17 +286,40 @@ internals.applyRoutes = function (server, next) {
                 }
             };
 
-            User.findByIdAndUpdate(id, update, (err, user) => {
+            const filterById = {
+                'user.id': request.params.id
+            };
+
+            const updateReference = {
+                $set: {
+                    'user.name': request.payload.username
+                }
+            };
+
+            Async.auto({
+                user: function (done) {
+
+                    User.findByIdAndUpdate(id, update, done);
+                },
+                account: function (done) {
+
+                    Account.findOneAndUpdate(filterById, updateReference, done);
+                },
+                admin: function (done) {
+
+                    Admin.findOneAndUpdate(filterById, updateReference, done);
+                }
+            }, (err, results) => {
 
                 if (err) {
                     return reply(err);
                 }
 
-                if (!user) {
+                if (!results.user) {
                     return reply(Boom.notFound('Document not found.'));
                 }
 
-                reply(user);
+                reply(results.user);
             });
         }
     });
@@ -375,13 +401,36 @@ internals.applyRoutes = function (server, next) {
                 fields: User.fieldsAdapter('username email roles')
             };
 
-            User.findByIdAndUpdate(id, update, findOptions, (err, user) => {
+            const filterById = {
+                'user.id': id
+            };
+
+            const updateReference = {
+                $set: {
+                    'user.name': request.payload.username
+                }
+            };
+
+            Async.auto({
+                user: function (done) {
+
+                    User.findByIdAndUpdate(id, update, findOptions, done);
+                },
+                account: function (done) {
+
+                    Account.findOneAndUpdate(filterById, updateReference, done);
+                },
+                admin: function (done) {
+
+                    Admin.findOneAndUpdate(filterById, updateReference, done);
+                }
+            }, (err, results) => {
 
                 if (err) {
                     return reply(err);
                 }
 
-                reply(user);
+                reply(results.user);
             });
         }
     });
