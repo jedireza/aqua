@@ -307,17 +307,17 @@ internals.applyRoutes = function (server, next) {
 
                     Admin.findOneAndUpdate(filterById, updateReference, done);
                 }
-            }, (err, { user }) => {
+            }, (err, results) => {
 
                 if (err) {
                     return reply(err);
                 }
 
-                if (!user) {
+                if (!results.user) {
                     return reply(Boom.notFound('Document not found.'));
                 }
 
-                reply(user);
+                reply(results.user);
             });
         }
     });
@@ -421,13 +421,13 @@ internals.applyRoutes = function (server, next) {
 
                     Admin.findOneAndUpdate(filterById, updateReference, done);
                 }
-            }, (err, { user }) => {
+            }, (err, results) => {
 
                 if (err) {
                     return reply(err);
                 }
 
-                reply(user);
+                reply(results.user);
             });
         }
     });
