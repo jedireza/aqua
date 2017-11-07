@@ -12,6 +12,7 @@ const internals = {};
 internals.applyRoutes = function (server, next) {
 
     const User = server.plugins['hapi-mongo-models'].User;
+
     const Admin = server.plugins['hapi-mongo-models'].Admin;
     const Account = server.plugins['hapi-mongo-models'].Account;
 
@@ -294,6 +295,7 @@ internals.applyRoutes = function (server, next) {
                     'user.name': request.payload.username
                 }
             };
+
             Async.auto({
                 user: function (done) {
 
@@ -408,6 +410,7 @@ internals.applyRoutes = function (server, next) {
                     'user.name': request.payload.username
                 }
             };
+
             Async.auto({
                 user: function (done) {
 
