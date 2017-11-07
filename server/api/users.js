@@ -12,9 +12,9 @@ const internals = {};
 internals.applyRoutes = function (server, next) {
 
     const User = server.plugins['hapi-mongo-models'].User;
-
     const Admin = server.plugins['hapi-mongo-models'].Admin;
     const Account = server.plugins['hapi-mongo-models'].Account;
+
 
     server.route({
         method: 'GET',
