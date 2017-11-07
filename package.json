@@ -14,7 +14,7 @@
   "author": "Reza Akhavan <jedireza@gmail.com> (http://reza.akhavan.me/)",
   "license": "MIT",
   "engines": {
-    "node": ">=8.1.4"
+    "node": "8.x.x"
   },
   "dependencies": {
     "async": "2.x.x",
