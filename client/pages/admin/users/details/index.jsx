@@ -22,12 +22,12 @@ class DetailsPage extends React.Component {
 
         super(props);
 
-        Actions.getDetails(this.props.match.params.id);
-
         this.state = Store.getState();
     }
 
     componentDidMount() {
+
+        Actions.getDetails(this.props.match.params.id);
 
         this.unsubscribeStore = Store.subscribe(this.onStoreChange.bind(this));
     }
