@@ -11,7 +11,7 @@ Node conventions that I missed.
 
 All feedback is welcome.
 
-Finally a huge thank you to [Reza Akhava](https://twitter.com/jedireza) for  [Aqua](https://jedireza.github.io/aqua/).
+Finally a huge thank you to [Reza Akhavan](https://twitter.com/jedireza) for  [Aqua](https://jedireza.github.io/aqua/).
 
 
 [![Build Status](https://travis-ci.org/jimlowrey/aqua-sql.svg?branch=master)](https://travis-ci.org/jimlowrey/aqua-sql)
