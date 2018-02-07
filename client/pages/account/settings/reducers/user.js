@@ -1,72 +1,59 @@
 'use strict';
 const Constants = require('../constants');
-const ObjectAssign = require('object-assign');
-const ParseValidation = require('../../../../helpers/parse-validation');
 
 
 const initialState = {
+    data: {
+        email: '',
+        username: ''
+    },
     hydrated: false,
     loading: false,
-    showSaveSuccess: false,
-    error: undefined,
-    hasError: {},
-    help: {},
-    username: '',
-    email: ''
+    showSaveSuccess: false
 };
 const reducer = function (state = initialState, action) {
 
+    if (action.type === Constants.RESET_STORE) {
+        return Object.assign({}, initialState);
+    }
+
     if (action.type === Constants.GET_USER) {
-        return ObjectAssign({}, state, {
+        return Object.assign({}, state, {
             loading: true,
             hydrated: false
         });
     }
 
     if (action.type === Constants.GET_USER_RESPONSE) {
-        const validation = ParseValidation(action.response);
+        const responseData = action.data || {};
 
-        return ObjectAssign({}, state, {
+        return Object.assign({}, state, {
+            data: Object.assign({}, state.data, responseData),
             loading: false,
             hydrated: true,
-            error: validation.error,
-            hasError: validation.hasError,
-            help: validation.help,
-            username: action.response.username,
-            email: action.response.email
+            validation: action.validation
         });
     }
 
     if (action.type === Constants.SAVE_USER) {
-        return ObjectAssign({}, state, {
+        return Object.assign({}, state, {
             loading: true,
-            username: action.request.data.username,
-            email: action.request.data.email
+            data: {
+                username: action.request.data.username,
+                email: action.request.data.email
+            }
         });
     }
 
     if (action.type === Constants.SAVE_USER_RESPONSE) {
-        const validation = ParseValidation(action.response);
+        const responseData = action.data || {};
 
-        const stateUpdates = {
+        return Object.assign({}, state, {
+            data: Object.assign({}, state.data, responseData),
+            hydrated: true,
             loading: false,
-            showSaveSuccess: !action.err,
-            error: validation.error,
-            hasError: validation.hasError,
-            help: validation.help
-        };
-
-        if (action.response.hasOwnProperty('username')) {
-            stateUpdates.username = action.response.username;
-            stateUpdates.email = action.response.email;
-        }
-
-        return ObjectAssign({}, state, stateUpdates);
-    }
-
-    if (action.type === Constants.HIDE_USER_SAVE_SUCCESS) {
-        return ObjectAssign({}, state, {
-            showSaveSuccess: false
+            showSaveSuccess: Boolean(action.error) === false,
+            validation: action.validation
         });
     }
 

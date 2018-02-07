@@ -1,6 +1,5 @@
 'use strict';
 const Actions = require('./actions');
-const Alert = require('../../../components/alert.jsx');
 const Button = require('../../../components/form/button.jsx');
 const ControlGroup = require('../../../components/form/control-group.jsx');
 const LinkState = require('../../../helpers/link-state');
@@ -11,17 +10,21 @@ const TextControl = require('../../../components/form/text-control.jsx');
 
 
 const propTypes = {
-    error: PropTypes.string,
-    hasError: PropTypes.object,
-    help: PropTypes.object,
+    data: PropTypes.shape({
+        name: PropTypes.shape({
+            first: PropTypes.string,
+            middle: PropTypes.string,
+            last: PropTypes.string
+        })
+    }),
     hydrated: PropTypes.bool,
     loading: PropTypes.bool,
-    name: PropTypes.shape({
-        first: PropTypes.string,
-        middle: PropTypes.string,
-        last: PropTypes.string
-    }),
-    showSaveSuccess: PropTypes.bool
+    showSaveSuccess: PropTypes.bool,
+    validation: PropTypes.shape({
+        error: PropTypes.string,
+        hasError: PropTypes.object,
+        help: PropTypes.object
+    })
 };
 
 
@@ -30,16 +33,14 @@ class DetailsForm extends React.Component {
 
         super(props);
 
-        this.state = {
-            name: props.name
-        };
+        this.state = props.data;
     }
 
     componentWillReceiveProps(nextProps) {
 
-        this.setState({
-            name: nextProps.name
-        });
+        if (nextProps.hasOwnProperty('data')) {
+            this.setState(nextProps.data);
+        }
     }
 
     handleSubmit(event) {
@@ -65,24 +66,23 @@ class DetailsForm extends React.Component {
         const alerts = [];
 
         if (this.props.showSaveSuccess) {
-            alerts.push(<Alert
-                key="success"
-                type="success"
-                onClose={Actions.hideDetailsSaveSuccess}
-                message="Success. Changes have been saved."
-            />);
+            alerts.push(
+                <div key="success" className="alert alert-success">
+                    Success. Changes have been saved.
+                </div>
+            );
         }
 
-        if (this.props.error) {
-            alerts.push(<Alert
-                key="danger"
-                type="danger"
-                message={this.props.error}
-            />);
+        if (this.props.validation.error) {
+            alerts.push(
+                <div key="danger" className="alert alert-danger">
+                    {this.props.validation.error}
+                </div>
+            );
         }
 
         return (
-            <form onSubmit={this.handleSubmit.bind(this)}>
+            <form onSubmit={this.handleSubmit.bind(this)} method="post">
                 <fieldset>
                     <legend>Contact info</legend>
                     {alerts}
@@ -91,8 +91,8 @@ class DetailsForm extends React.Component {
                         label="First name"
                         value={this.state.name.first}
                         onChange={LinkState.bind(this)}
-                        hasError={this.props.hasError['name.first']}
-                        help={this.props.help['name.first']}
+                        hasError={this.props.validation.hasError['name.first']}
+                        help={this.props.validation.help['name.first']}
                         disabled={this.props.loading}
                     />
                     <TextControl
@@ -100,8 +100,8 @@ class DetailsForm extends React.Component {
                         label="Middle name"
                         value={this.state.name.middle}
                         onChange={LinkState.bind(this)}
-                        hasError={this.props.hasError['name.middle']}
-                        help={this.props.help['name.middle']}
+                        hasError={this.props.validation.hasError['name.middle']}
+                        help={this.props.validation.help['name.middle']}
                         disabled={this.props.loading}
                     />
                     <TextControl
@@ -109,8 +109,8 @@ class DetailsForm extends React.Component {
                         label="Last name"
                         value={this.state.name.last}
                         onChange={LinkState.bind(this)}
-                        hasError={this.props.hasError['name.last']}
-                        help={this.props.help['name.last']}
+                        hasError={this.props.validation.hasError['name.last']}
+                        help={this.props.validation.help['name.last']}
                         disabled={this.props.loading}
                     />
                     <ControlGroup hideLabel={true} hideHelp={true}>

@@ -1,22 +1,15 @@
 'use strict';
-const Boom = require('boom');
+const Session = require('../models/session');
 
 
-const internals = {};
-
-
-internals.applyRoutes = function (server, next) {
-
-    const Session = server.plugins['hapi-mongo-models'].Session;
-
+const register = function (server, serverOptions) {
 
     server.route({
         method: 'DELETE',
-        path: '/logout',
-        config: {
+        path: '/api/logout',
+        options: {
             auth: {
-                mode: 'try',
-                strategy: 'session'
+                mode: 'try'
             },
             plugins: {
                 'hapi-auth-cookie': {
@@ -24,41 +17,30 @@ internals.applyRoutes = function (server, next) {
                 }
             }
         },
-        handler: function (request, reply) {
+        handler: function (request, h) {
 
-            const credentials = request.auth.credentials || { session: {} };
-            const session = credentials.session || {};
+            request.cookieAuth.clear();
 
-            Session.findByIdAndDelete(session._id, (err, sessionDoc) => {
+            const credentials = request.auth.credentials;
 
-                if (err) {
-                    return reply(err);
-                }
+            if (!credentials) {
+                return { message: 'Success.' };
+            }
 
-                if (!sessionDoc) {
-                    return reply(Boom.notFound('Document not found.'));
-                }
+            Session.findByIdAndDelete(credentials.session._id);
 
-                request.cookieAuth.clear();
-
-                reply({ success: true });
-            });
+            return { message: 'Success.' };
         }
     });
-
-
-    next();
 };
 
 
-exports.register = function (server, options, next) {
-
-    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
-
-    next();
-};
-
-
-exports.register.attributes = {
-    name: 'logout'
+module.exports = {
+    name: 'api-logout',
+    dependencies: [
+        'auth',
+        'hapi-auth-cookie',
+        'hapi-mongo-models'
+    ],
+    register
 };

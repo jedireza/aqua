@@ -1,71 +1,63 @@
 'use strict';
 const Constants = require('../constants');
-const ObjectAssign = require('object-assign');
-const ParseValidation = require('../../../../helpers/parse-validation');
 
 
 const initialState = {
+    data: {
+        name: {
+            first: '',
+            last: '',
+            middle: ''
+        }
+    },
     hydrated: false,
     loading: false,
     showSaveSuccess: false,
-    error: undefined,
-    hasError: {},
-    help: {},
-    name: {
-        first: '',
-        middle: '',
-        last: ''
+    validation: {
+        error: undefined,
+        hasError: {},
+        help: {}
     }
 };
 const reducer = function (state = initialState, action) {
 
+    if (action.type === Constants.RESET_STORE) {
+        return Object.assign({}, initialState);
+    }
+
     if (action.type === Constants.GET_DETAILS) {
-        return ObjectAssign({}, state, {
+        return Object.assign({}, state, {
             loading: true,
             hydrated: false
         });
     }
 
     if (action.type === Constants.GET_DETAILS_RESPONSE) {
-        const validation = ParseValidation(action.response);
+        const responseData = action.data || {};
 
-        return ObjectAssign({}, state, {
-            loading: false,
+        return Object.assign({}, state, {
+            data: Object.assign({}, state.data, responseData),
             hydrated: true,
-            error: validation.error,
-            hasError: validation.hasError,
-            help: validation.help,
-            name: action.response.name
+            loading: false,
+            validation: action.validation
         });
     }
 
     if (action.type === Constants.SAVE_DETAILS) {
-        return ObjectAssign({}, state, {
-            loading: true,
-            name: action.request.data.name
+        return Object.assign({}, state, {
+            data: Object.assign({}, state.data, action.request.data),
+            loading: true
         });
     }
 
     if (action.type === Constants.SAVE_DETAILS_RESPONSE) {
-        const validation = ParseValidation(action.response);
-        const stateUpdates = {
+        const responseData = action.data || {};
+
+        return Object.assign({}, state, {
+            data: Object.assign({}, state.data, responseData),
             loading: false,
-            showSaveSuccess: !action.err,
-            error: validation.error,
-            hasError: validation.hasError,
-            help: validation.help
-        };
-
-        if (action.response.hasOwnProperty('name')) {
-            stateUpdates.name = action.response.name;
-        }
-
-        return ObjectAssign({}, state, stateUpdates);
-    }
-
-    if (action.type === Constants.HIDE_DETAILS_SAVE_SUCCESS) {
-        return ObjectAssign({}, state, {
-            showSaveSuccess: false
+            showSaveSuccess: Boolean(action.error) === false,
+            validation: action.validation
         });
     }
 

@@ -1,6 +1,9 @@
 'use strict';
+const Boom = require('boom');
 const Confidence = require('confidence');
 const Config = require('./config.js');
+const HapiReactViews = require('hapi-react-views');
+const Path = require('path');
 
 
 const criteria = {
@@ -9,20 +12,26 @@ const criteria = {
 
 
 const manifest = {
-    $meta: 'This file defines the plot device.',
+    $meta: 'This file configures the server.',
     server: {
-        debug: {
-            request: ['error']
-        },
-        connections: {
-            routes: {
-                security: true
-            }
-        }
-    },
-    connections: [{
         port: Config.get('/port/web'),
-        labels: ['web'],
+        routes: {
+            security: true,
+            validate: {
+                failAction: (request, h, err) => {
+
+                    request.log(['error', 'validation'], err.details);
+
+                    const source = err.output.payload.validation.source;
+                    const message = `Invalid input (request ${source})`;
+                    const badRequest = Boom.badRequest(message);
+
+                    badRequest.output.payload.validation = err.details;
+
+                    throw badRequest;
+                }
+            }
+        },
         state: {
             isHttpOnly: false,
             isSecure: {
@@ -31,147 +40,134 @@ const manifest = {
                 $default: false
             }
         }
-    }],
-    registrations: [
-        {
-            plugin: 'inert'
-        },
-        {
-            plugin: 'hapi-auth-cookie'
-        },
-        {
-            plugin: {
-                register: 'crumb',
+    },
+    register: {
+        plugins: [
+            {
+                plugin: 'good',
+                options: {
+                    reporters: {
+                        myConsoleReporter: [
+                            {
+                                module: 'good-squeeze',
+                                name: 'Squeeze',
+                                args: [{
+                                    error: '*',
+                                    log: '*',
+                                    request: '*',
+                                    response:'*'
+                                }]
+                            },
+                            {
+                                module: 'good-console',
+                                args: [{
+                                    color: {
+                                        $filter: 'env',
+                                        production: false,
+                                        $default: true
+                                    }
+                                }]
+                            },
+                            'stdout'
+                        ]
+                    }
+                }
+            },
+            {
+                plugin: 'inert'
+            },
+            {
+                plugin: 'hapi-auth-cookie'
+            },
+            {
+                plugin: 'hapi-remote-address'
+            },
+            {
+                plugin: 'crumb',
                 options: {
                     restful: true
                 }
-            }
-        },
-        {
-            plugin: 'vision'
-        },
-        {
-            plugin: {
-                register: 'visionary',
+            },
+            {
+                plugin: 'vision',
                 options: {
-                    engines: { jsx: 'hapi-react-views' },
+                    engines: {
+                        jsx: HapiReactViews
+                    },
                     compileOptions: {
-                        removeCacheRegExp: '.jsx'
+                        removeCacheRegExp: '.jsx$',
+                        layoutPath: Path.join(process.cwd(), './server/web/layouts')
                     },
                     relativeTo: __dirname,
                     path: './server/web'
                 }
-            }
-        },
-        {
-            plugin: {
-                register: 'hapi-mongo-models',
+            },
+            {
+                plugin: 'hapi-mongo-models',
                 options: {
                     mongodb: Config.get('/hapiMongoModels/mongodb'),
-                    models: {
-                        Account: './server/models/account',
-                        AdminGroup: './server/models/admin-group',
-                        Admin: './server/models/admin',
-                        AuthAttempt: './server/models/auth-attempt',
-                        Session: './server/models/session',
-                        Status: './server/models/status',
-                        User: './server/models/user'
-                    },
+                    models: [
+                        Path.resolve(__dirname, './server/models/account'),
+                        Path.resolve(__dirname, './server/models/admin-group'),
+                        Path.resolve(__dirname, './server/models/admin'),
+                        Path.resolve(__dirname, './server/models/auth-attempt'),
+                        Path.resolve(__dirname, './server/models/session'),
+                        Path.resolve(__dirname, './server/models/status'),
+                        Path.resolve(__dirname, './server/models/user')
+                    ],
                     autoIndex: Config.get('/hapiMongoModels/autoIndex')
                 }
+            },
+            {
+                plugin: './server/auth'
+            },
+            {
+                plugin: './server/api/accounts'
+            },
+            {
+                plugin: './server/api/admin-groups'
+            },
+            {
+                plugin: './server/api/admins'
+            },
+            {
+                plugin: './server/api/contact'
+            },
+            {
+                plugin: './server/api/login'
+            },
+            {
+                plugin: './server/api/logout'
+            },
+            {
+                plugin: './server/api/main'
+            },
+            {
+                plugin: './server/api/sessions'
+            },
+            {
+                plugin: './server/api/signup'
+            },
+            {
+                plugin: './server/api/statuses'
+            },
+            {
+                plugin: './server/api/users'
+            },
+            {
+                plugin: './server/web/account'
+            },
+            {
+                plugin: './server/web/admin'
+            },
+            {
+                plugin: './server/web/main'
+            },
+            {
+                plugin: './server/web/public'
             }
-        },
-        {
-            plugin: './server/auth'
-        },
-        {
-            plugin: './server/mailer'
-        },
-        {
-            plugin: './server/api/accounts',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/admin-groups',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/admins',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/auth-attempts',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/contact',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/index',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/login',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/logout',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/sessions',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/signup',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/statuses',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/api/users',
-            options: {
-                routes: { prefix: '/api' }
-            }
-        },
-        {
-            plugin: './server/web/account'
-        },
-        {
-            plugin: './server/web/admin'
-        },
-        {
-            plugin: './server/web/main'
-        },
-        {
-            plugin: './server/web/public'
-        }
-    ]
+        ]
+    }
 };
 
 

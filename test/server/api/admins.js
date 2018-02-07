@@ -1,955 +1,558 @@
 'use strict';
-const AdminPlugin = require('../../../server/api/admins');
-const AuthPlugin = require('../../../server/auth');
-const AuthenticatedUser = require('../fixtures/credentials-admin');
+const Admin = require('../../../server/models/admin');
+const Admins = require('../../../server/api/admins');
+const Auth = require('../../../server/auth');
 const Code = require('code');
-const Config = require('../../../config');
+const Fixtures = require('../fixtures');
 const Hapi = require('hapi');
-const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
-const MakeMockModel = require('../fixtures/make-mock-model');
 const Manifest = require('../../../manifest');
-const Path = require('path');
-const Proxyquire = require('proxyquire');
+const User = require('../../../server/models/user');
 
 
 const lab = exports.lab = Lab.script();
-let request;
 let server;
-let stub;
+let rootCredentials;
 
 
-lab.before((done) => {
+lab.before(async () => {
 
-    stub = {
-        Admin: MakeMockModel(),
-        User: MakeMockModel()
-    };
+    server = Hapi.Server();
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/admin')] = stub.Admin;
-    proxy[Path.join(process.cwd(), './server/models/user')] = stub.User;
+    const plugins = Manifest.get('/register/plugins')
+        .filter((entry) => Admins.dependencies.includes(entry.plugin))
+        .map((entry) => {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            entry.plugin = require(entry.plugin);
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+            return entry;
+        });
 
-                return true;
-            }
+    plugins.push(Auth);
+    plugins.push(Admins);
 
-            return false;
-        })[0].plugin.options
-    };
+    await server.register(plugins);
+    await server.start();
+    await Fixtures.Db.removeAllData();
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, AdminPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
-
-        if (err) {
-            return done(err);
-        }
-
-        server.initialize(done);
-    });
+    [rootCredentials] = await Promise.all([
+        Fixtures.Creds.createRootAdminUser(),
+        Fixtures.Creds.createAdminUser('Ren Hoek', 'ren', 'baddog', 'ren@stimpy.show')
+    ]);
 });
 
 
-lab.after((done) => {
+lab.after(async () => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
-    done();
+    await Fixtures.Db.removeAllData();
+    await server.stop();
 });
 
 
-lab.experiment('Admins Plugin Result List', () => {
+lab.experiment('GET /api/admins', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'GET',
-            url: '/admins',
-            credentials: AuthenticatedUser
+            url: '/api/admins',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when paged find fails', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Admin.pagedFind = function () {
+        const response = await server.inject(request);
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('paged find failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an array of documents successfully', (done) => {
-
-        stub.Admin.pagedFind = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { data: [{}, {}, {}] });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.data).to.be.an.array();
-            Code.expect(response.result.data[0]).to.be.an.object();
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an array of documents successfully (using filters)', (done) => {
-
-        stub.Admin.pagedFind = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { data: [{}, {}, {}] });
-        };
-
-        request.url += '?username=ren';
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.data).to.be.an.array();
-            Code.expect(response.result.data[0]).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result.data).to.be.an.array();
+        Code.expect(response.result.pages).to.be.an.object();
+        Code.expect(response.result.items).to.be.an.object();
     });
 });
 
 
-lab.experiment('Admins Plugin Read', () => {
+lab.experiment('POST /api/admins', () => {
 
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'GET',
-            url: '/admins/93EP150D35',
-            credentials: AuthenticatedUser
-        };
-
-        done();
-    });
+    let request;
 
 
-    lab.test('it returns an error when find by id fails', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns a not found when find by id misses', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns a document successfully', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback(null, { _id: '93EP150D35' });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Admins Plugin Create', () => {
-
-    lab.beforeEach((done) => {
+    lab.beforeEach(() => {
 
         request = {
             method: 'POST',
-            url: '/admins',
-            payload: {
-                name: 'Toast Man'
-            },
-            credentials: AuthenticatedUser
+            url: '/api/admins',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when create fails', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Admin.create = function (name, callback) {
-
-            callback(Error('create failed'));
+        request.payload = {
+            name: 'Steve'
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it creates a document successfully', (done) => {
-
-        stub.Admin.create = function (name, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.and.object();
+        Code.expect(response.result.name).to.be.and.object();
+        Code.expect(response.result.name.first).to.equal('Steve');
     });
 });
 
 
-lab.experiment('Admins Plugin Update', () => {
+lab.experiment('GET /api/admins/{id}', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
-            method: 'PUT',
-            url: '/admins/93EP150D35',
-            payload: {
-                name: {
-                    first: 'Ren',
-                    middle: '',
-                    last: 'Höek'
-                }
-            },
-            credentials: AuthenticatedUser
+            method: 'GET',
+            url: '/api/admins/{id}',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when update fails', (done) => {
+    lab.test('it returns HTTP 404 when `Admin.findById` misses', async () => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
 
-            callback(Error('update failed'));
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
     });
 
 
-    lab.test('it returns not found when find by id misses', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
+        const admin = await Admin.create('Steve');
 
-            callback(null, undefined);
-        };
+        request.url = request.url.replace(/{id}/, admin._id);
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it updates a document successfully', (done) => {
-
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Steve');
     });
 });
 
 
-lab.experiment('Admins Plugin Update Permissions', () => {
+lab.experiment('PUT /api/admins/{id}', () => {
 
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'PUT',
-            url: '/admins/93EP150D35/permissions',
-            payload: {
-                permissions: { SPACE_RACE: true }
-            },
-            credentials: AuthenticatedUser
-        };
-
-        done();
-    });
+    let request;
 
 
-    lab.test('it returns an error when update fails', (done) => {
-
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it updates a document successfully', (done) => {
-
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Admins Plugin Update Groups', () => {
-
-    lab.beforeEach((done) => {
+    lab.beforeEach(() => {
 
         request = {
             method: 'PUT',
-            url: '/admins/93EP150D35/groups',
-            payload: {
-                groups: { sales: 'Sales' }
-            },
-            credentials: AuthenticatedUser
+            url: '/api/admins/{id}',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when update fails', (done) => {
+    lab.test('it returns HTTP 404 when `Admin.findByIdAndUpdate` misses', async () => {
 
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it updates a document successfully', (done) => {
-
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Admins Plugin Link User', () => {
-
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'PUT',
-            url: '/admins/93EP150D35/user',
-            payload: {
-                username: 'ren'
-            },
-            credentials: AuthenticatedUser
-        };
-
-        done();
-    });
-
-
-    lab.test('it returns an error when (Admin) find by id fails', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns not found when (Admin) find by id misses', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when (User) find by username fails', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback(null, {});
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            callback(Error('find by username failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns not found when (User) find by username misses', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback(null, {});
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it returns conflict when an admin role already exists', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback(null, {});
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            const user = {
-                roles: {
-                    admin: {
-                        id: '535H0W35',
-                        name: 'Stimpson J Cat'
-                    }
-                }
-            };
-
-            callback(null, user);
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(409);
-            done();
-        });
-    });
-
-
-    lab.test('it returns conflict when the admin is linked to another user', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            const admin = {
-                _id: 'DUD3N0T1T',
-                user: {
-                    id: '535H0W35',
-                    name: 'ren'
-                }
-            };
-
-            callback(null, admin);
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            const user = {
-                _id: 'N0T1TDUD3',
-                roles: {
-                    admin: {
-                        id: '93EP150D35',
-                        name: 'Ren Höek'
-                    }
-                }
-            };
-
-            callback(null, user);
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(409);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when find by id and update fails', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            const admin = {
-                _id: '93EP150D35',
-                name: {
-                    first: 'Ren',
-                    last: 'Höek'
-                }
-            };
-
-            callback(null, admin);
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            const user = {
-                _id: '535H0W35',
-                username: 'ren'
-            };
-
-            callback(null, user);
-        };
-
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it successfuly links an admin and user', (done) => {
-
-        const admin = {
-            _id: '93EP150D35',
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload =  {
             name: {
-                first: 'Ren',
-                last: 'Höek'
+                first: 'Stephen',
+                middle: '',
+                last: 'Colbert'
             }
         };
-        const user = {
-            _id: '535H0W35',
-            username: 'ren',
-            roles: {}
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const admin = await Admin.create('Steve');
+
+        request.url = request.url.replace(/{id}/, admin._id);
+        request.payload =  {
+            name: {
+                first: 'Stephen',
+                middle: '',
+                last: 'Colbert'
+            }
         };
 
-        stub.Admin.findById = function (id, callback) {
+        const response = await server.inject(request);
 
-            callback(null, admin);
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            callback(null, user);
-        };
-
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, admin);
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, user);
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Stephen');
+        Code.expect(response.result.name.middle).to.equal('');
+        Code.expect(response.result.name.last).to.equal('Colbert');
     });
 });
 
 
-lab.experiment('Admins Plugin Unlink User', () => {
+lab.experiment('DELETE /api/admins/{id}', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'DELETE',
-            url: '/admins/93EP150D35/user',
-            credentials: AuthenticatedUser
+            url: '/api/admins/{id}',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when (Admin) find by id fails', (done) => {
+    lab.test('it returns HTTP 404 when `Admin.findByIdAndDelete` misses', async () => {
 
-        stub.Admin.findById = function (id, callback) {
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
 
-            callback(Error('find by id failed'));
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
     });
 
 
-    lab.test('it returns not found when (Admin) find by id misses', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Admin.findById = function (id, callback) {
+        const admin = await Admin.create('Steve');
 
-            callback();
-        };
+        request.url = request.url.replace(/{id}/, admin._id);
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it returns early admin is void of a user', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
-    });
-
-
-    lab.test('it returns early admin is void of a user.id', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback(null, { user: {} });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when (User) find by id fails', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            const admin = {
-                user: {
-                    id: '93EP150D35',
-                    name: 'ren'
-                }
-            };
-
-            callback(null, admin);
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns not found when (User) find by username misses', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            const admin = {
-                user: {
-                    id: '93EP150D35',
-                    name: 'ren'
-                }
-            };
-
-            callback(null, admin);
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when find by id and update fails', (done) => {
-
-        stub.Admin.findById = function (id, callback) {
-
-            const admin = {
-                _id: '93EP150D35',
-                user: {
-                    id: '535H0W35',
-                    name: 'ren'
-                }
-            };
-
-            callback(null, admin);
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            const user = {
-                _id: '535H0W35',
-                roles: {
-                    admin: {
-                        id: '93EP150D35',
-                        name: 'Ren Höek'
-                    }
-                }
-            };
-
-            callback(null, user);
-        };
-
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it successfully unlinks an admin from a user', (done) => {
-
-        const user = {
-            _id: '535H0W35',
-            roles: {
-                admin: {
-                    id: '93EP150D35',
-                    name: 'Ren Höek'
-                }
-            }
-        };
-        const admin = {
-            _id: '93EP150D35',
-            user: {
-                id: '535H0W35',
-                name: 'ren'
-            }
-        };
-
-        stub.Admin.findById = function (id, callback) {
-
-            callback(null, admin);
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            callback(null, user);
-        };
-
-        stub.Admin.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, admin);
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, user);
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.message).to.match(/success/i);
     });
 });
 
 
-lab.experiment('Admins Plugin Delete', () => {
+lab.experiment('PUT /api/admins/{id}/groups', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'PUT',
+            url: '/api/admins/{id}/groups',
+            credentials: rootCredentials
+        };
+    });
+
+
+    lab.test('it returns HTTP 404 when `Admin.findByIdAndUpdate` misses', async () => {
+
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload =  {
+            groups: {
+                sales: 'Sales',
+                support: 'Support'
+            }
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const admin = await Admin.create('Group Membership');
+
+        request.url = request.url.replace(/{id}/, admin._id);
+        request.payload =  {
+            groups: {
+                sales: 'Sales',
+                support: 'Support'
+            }
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Group');
+        Code.expect(response.result.name.last).to.equal('Membership');
+        Code.expect(response.result.groups).to.be.an.object();
+        Code.expect(response.result.groups.sales).to.equal('Sales');
+        Code.expect(response.result.groups.support).to.equal('Support');
+    });
+});
+
+
+lab.experiment('PUT /api/admins/{id}/permissions', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'PUT',
+            url: '/api/admins/{id}/permissions',
+            credentials: rootCredentials
+        };
+    });
+
+
+    lab.test('it returns HTTP 404 when `Admin.findByIdAndUpdate` misses', async () => {
+
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload =  {
+            permissions: {
+                CAN_CREATE_ACCOUNTS: true,
+                CAN_DELETE_ACCOUNTS: false
+            }
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const admin = await Admin.create('Granular Permisssions');
+
+        request.url = request.url.replace(/{id}/, admin._id);
+        request.payload =  {
+            permissions: {
+                CAN_CREATE_ACCOUNTS: true,
+                CAN_DELETE_ACCOUNTS: false
+            }
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Granular');
+        Code.expect(response.result.name.last).to.equal('Permisssions');
+        Code.expect(response.result.permissions).to.be.an.object();
+        Code.expect(response.result.permissions.CAN_CREATE_ACCOUNTS).to.be.true();
+        Code.expect(response.result.permissions.CAN_DELETE_ACCOUNTS).to.be.false();
+    });
+});
+
+
+lab.experiment('PUT /api/admins/{id}/user', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'PUT',
+            url: '/api/admins/{id}/user',
+            credentials: rootCredentials
+        };
+    });
+
+
+    lab.test('it returns HTTP 404 when `Admin.findById` misses', async () => {
+
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload = {
+            username: 'colbert'
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 404 when `User.findByUsername` misses', async () => {
+
+        const admin = await Admin.create('Stephen Colbert');
+
+        request.url = request.url.replace(/{id}/, admin._id);
+        request.payload = {
+            username: 'colbert'
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 409 when the user is linked to another admin', async () => {
+
+        const { roles: { admin: adminA } } = await Fixtures.Creds.createAdminUser(
+            'Trevor Noah', 'trevor', 'haha', 'trevor@daily.show'
+        );
+
+        const { user: userB } = await Fixtures.Creds.createAdminUser(
+            'Jon Stewart', 'jon', 'stew', 'jon@daily.show'
+        );
+
+        request.url = request.url.replace(/{id}/, adminA._id);
+        request.payload = {
+            username: userB.username
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(409);
+        Code.expect(response.result.message).to.match(/linked to an admin/i);
+    });
+
+
+    lab.test('it returns HTTP 409 when the admin is currently linked to user', async () => {
+
+        const user = await User.create('hay', 'st4ck', 'hay@stimpy.show');
+        const { roles: { admin: admin } } = await Fixtures.Creds.createAdminUser(
+            'Mr Horse', 'mrh', 'negh', 'mrh@stimpy.show'
+        );
+
+        request.url = request.url.replace(/{id}/, admin._id);
+        request.payload = {
+            username: user.username
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(409);
+        Code.expect(response.result.message).to.match(/linked to a user/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const admin = await Admin.create('Rand Rando');
+        const user = await User.create('random', 'passw0rd', 'random@user.gov');
+
+        request.url = request.url.replace(/{id}/, admin._id);
+        request.payload = {
+            username: user.username
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Rand');
+        Code.expect(response.result.name.last).to.equal('Rando');
+        Code.expect(response.result.user).to.be.an.object();
+        Code.expect(response.result.user.name).to.equal('random');
+    });
+});
+
+
+lab.experiment('DELETE /api/admins/{id}/user', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'DELETE',
-            url: '/admins/93EP150D35',
-            credentials: AuthenticatedUser
+            url: '/api/admins/{id}/user',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when delete by id fails', (done) => {
+    lab.test('it returns HTTP 404 when `Admin.findById` misses', async () => {
 
-        stub.Admin.findByIdAndDelete = function (id, callback) {
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
 
-            callback(Error('delete by id failed'));
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
     });
 
 
-    lab.test('it returns a not found when delete by id misses', (done) => {
+    lab.test('it returns HTTP 200 when `admin.user` is not present', async () => {
 
-        stub.Admin.findByIdAndDelete = function (id, callback) {
+        const admin = await Admin.create('Randomoni Randomie');
 
-            callback(null, undefined);
-        };
+        request.url = request.url.replace(/{id}/, admin._id);
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Randomoni');
+        Code.expect(response.result.name.last).to.equal('Randomie');
     });
 
 
-    lab.test('it deletes a document successfully', (done) => {
+    lab.test('it returns HTTP 404 when `User.findById` misses', async () => {
 
-        stub.Admin.findByIdAndDelete = function (id, callback) {
+        const { roles: { admin: admin }, user } = await Fixtures.Creds.createAdminUser(
+            'Lil Horse', 'lilh', 'negh', 'lilh@stimpy.show'
+        );
 
-            callback(null, 1);
-        };
+        await User.findByIdAndDelete(user._id);
 
-        server.inject(request, (response) => {
+        request.url = request.url.replace(/{id}/, admin._id);
 
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.success).to.be.true();
+        const response = await server.inject(request);
 
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is good', async () => {
+
+        const { roles: { admin: admin }, user } = await Fixtures.Creds.createAdminUser(
+            'Jr Horse', 'jrh', 'negh', 'jrh@stimpy.show'
+        );
+
+        request.url = request.url.replace(/{id}/, admin._id);
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Jr');
+        Code.expect(response.result.name.last).to.equal('Horse');
+        Code.expect(response.result.user).to.not.exist();
+
+        const user_ = await User.findByIdAndDelete(user._id);
+
+        Code.expect(user_).to.be.an.object();
+        Code.expect(user_.roles).to.be.an.object();
+        Code.expect(user_.roles.admin).to.not.exist();
     });
 });

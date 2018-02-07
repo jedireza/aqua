@@ -1,75 +1,54 @@
 'use strict';
-const Async = require('async');
+const Assert = require('assert');
 const Config = require('../../config');
 const Joi = require('joi');
 const MongoModels = require('mongo-models');
+const NewDate = require('joistick/new-date');
+
+
+const schema = Joi.object({
+    _id: Joi.object(),
+    ip: Joi.string().required(),
+    timeCreated: Joi.date().default(NewDate(), 'time of creation'),
+    username: Joi.string().required()
+});
 
 
 class AuthAttempt extends MongoModels {
-    static create(ip, username, callback) {
+    static async abuseDetected(ip, username) {
 
-        const document = {
-            ip,
-            username: username.toLowerCase(),
-            time: new Date()
-        };
+        Assert.ok(ip, 'Missing ip argument.');
+        Assert.ok(username, 'Missing username argument.');
 
-        this.insertOne(document, (err, docs) => {
+        const [countByIp, countByIpAndUser] = await Promise.all([
+            this.count({ ip }),
+            this.count({ ip, username })
+        ]);
+        const config = Config.get('/authAttempts');
+        const ipLimitReached = countByIp >= config.forIp;
+        const ipUserLimitReached = countByIpAndUser >= config.forIpAndUser;
 
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, docs[0]);
-        });
+        return ipLimitReached || ipUserLimitReached;
     }
 
-    static abuseDetected(ip, username, callback) {
+    static async create(ip, username) {
 
-        const self = this;
+        Assert.ok(ip, 'Missing ip argument.');
+        Assert.ok(username, 'Missing username argument.');
 
-        Async.auto({
-            abusiveIpCount: function (done) {
-
-                const query = { ip };
-                self.count(query, done);
-            },
-            abusiveIpUserCount: function (done) {
-
-                const query = {
-                    ip,
-                    username: username.toLowerCase()
-                };
-
-                self.count(query, done);
-            }
-        }, (err, results) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            const authAttemptsConfig = Config.get('/authAttempts');
-            const ipLimitReached = results.abusiveIpCount >= authAttemptsConfig.forIp;
-            const ipUserLimitReached = results.abusiveIpUserCount >= authAttemptsConfig.forIpAndUser;
-
-            callback(null, ipLimitReached || ipUserLimitReached);
+        const document = new this({
+            ip,
+            username
         });
+        const authAttempts = await this.insertOne(document);
+
+        return authAttempts[0];
     }
 }
 
 
-AuthAttempt.collection = 'authAttempts';
-
-
-AuthAttempt.schema = Joi.object({
-    _id: Joi.object(),
-    username: Joi.string().lowercase().required(),
-    ip: Joi.string().required(),
-    time: Joi.date().required()
-});
-
-
+AuthAttempt.collectionName = 'authAttempts';
+AuthAttempt.schema = schema;
 AuthAttempt.indexes = [
     { key: { ip: 1, username: 1 } },
     { key: { username: 1 } }

@@ -5,7 +5,7 @@ const Qs = require('qs');
 const Xhr = require('xhr');
 
 
-const jsonFetch = function (options, callback) {
+const jsonFetch = function (options) {
 
     const cookies = Cookie.parse(document.cookie);
     const config = {
@@ -29,37 +29,54 @@ const jsonFetch = function (options, callback) {
         config.body = JSON.stringify(options.data);
     }
 
-    Xhr(config, (err, response, body) => {
+    return new Promise((resolve, reject) => {
 
-        if (err) {
-            return callback(err);
-        }
+        Xhr(config, (err, response, body) => {
 
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-            if (response.headers.hasOwnProperty('x-auth-required')) {
-                if (window.location.pathname === '/login') {
-                    return callback(Error('Auth required.'));
+            if (err) {
+                return reject(err);
+            }
+
+            const xhrState = { err, response, body };
+
+            if (/application\/json/.test(response.headers['content-type'])) {
+                try {
+                    body = JSON.parse(body);
+
+                    xhrState.body = body;
+                }
+                catch (parseError) {
+                    parseError.xhrState = xhrState;
+
+                    return reject(parseError);
+                }
+            }
+
+            if (response.statusCode >= 200 && response.statusCode < 300) {
+                if (response.headers.hasOwnProperty('x-auth-required')) {
+                    if (window.location.pathname === '/login') {
+                        return reject(Error('Auth required.'));
+                    }
+
+                    let returnUrl = window.location.pathname;
+
+                    if (window.location.search.length > 0) {
+                        returnUrl += window.location.search;
+                    }
+
+                    returnUrl = encodeURIComponent(returnUrl);
+
+                    window.location.href = `/login?returnUrl=${returnUrl}`;
+
+                    return resolve(body);
                 }
 
-                let returnUrl = window.location.pathname;
-
-                if (window.location.search.length > 0) {
-                    returnUrl += window.location.search;
-                }
-
-                returnUrl = encodeURIComponent(returnUrl);
-
-                window.location.href = `/login?returnUrl=${returnUrl}`;
+                resolve(body);
             }
             else {
-                callback(null, JSON.parse(body));
+                reject(body);
             }
-        }
-        else {
-            const httpErr = new Error(response.rawRequest.statusText);
-
-            callback(httpErr, JSON.parse(body));
-        }
+        });
     });
 };
 

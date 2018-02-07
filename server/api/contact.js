@@ -1,17 +1,17 @@
 'use strict';
 const Config = require('../../config');
 const Joi = require('joi');
+const Mailer = require('../mailer');
+const SerializeError = require('serialize-error');
 
 
-const internals = {};
-
-
-internals.applyRoutes = function (server, next) {
+const register = function (server, serverOptions) {
 
     server.route({
         method: 'POST',
-        path: '/contact',
-        config: {
+        path: '/api/contact',
+        options: {
+            auth: false,
             validate: {
                 payload: {
                     name: Joi.string().required(),
@@ -20,9 +20,8 @@ internals.applyRoutes = function (server, next) {
                 }
             }
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
-            const mailer = server.plugins.mailer;
             const emailOptions = {
                 subject: Config.get('/projectName') + ' contact form',
                 to: Config.get('/system/toAddress'),
@@ -31,32 +30,22 @@ internals.applyRoutes = function (server, next) {
                     address: request.payload.email
                 }
             };
-            const template = 'contact';
 
-            mailer.sendEmail(emailOptions, template, request.payload, (err, info) => {
+            try {
+                await Mailer.sendEmail(emailOptions, 'contact', request.payload);
+            }
+            catch (err) {
+                request.log(['mailer', 'error'], SerializeError(err));
+            }
 
-                if (err) {
-                    return reply(err);
-                }
-
-                reply({ success: true });
-            });
+            return { message: 'Success.' };
         }
     });
-
-
-    next();
 };
 
 
-exports.register = function (server, options, next) {
-
-    server.dependency('mailer', internals.applyRoutes);
-
-    next();
-};
-
-
-exports.register.attributes = {
-    name: 'contact'
+module.exports = {
+    name: 'api-contact',
+    dependencies: [],
+    register
 };

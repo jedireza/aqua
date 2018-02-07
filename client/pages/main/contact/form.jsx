@@ -1,6 +1,5 @@
 'use strict';
 const Actions = require('./actions');
-const Alert = require('../../../components/alert.jsx');
 const Button = require('../../../components/form/button.jsx');
 const ControlGroup = require('../../../components/form/control-group.jsx');
 const React = require('react');
@@ -31,6 +30,8 @@ class Form extends React.Component {
     componentWillUnmount() {
 
         this.unsubscribeStore();
+
+        Actions.resetStore();
     }
 
     onStoreChange() {
@@ -52,19 +53,22 @@ class Form extends React.Component {
 
     render() {
 
-        let alert = [];
+        const alerts = [];
 
         if (this.state.success) {
-            alert = <Alert
-                type="success"
-                message="Success. We have received your message."
-            />;
+            alerts.push(
+                <div key="success" className="alert alert-success">
+                    Success. We have received your message.
+                </div>
+            );
         }
-        else if (this.state.error) {
-            alert = <Alert
-                type="danger"
-                message={this.state.error}
-            />;
+
+        if (this.state.validation.error) {
+            alerts.push(
+                <div key="danger" className="alert alert-danger">
+                    {this.state.validation.error}
+                </div>
+            );
         }
 
         let formElements;
@@ -75,16 +79,16 @@ class Form extends React.Component {
                     ref={(c) => (this.input.name = c)}
                     name="name"
                     label="Your name"
-                    hasError={this.state.hasError.name}
-                    help={this.state.help.name}
+                    hasError={this.state.validation.hasError.name}
+                    help={this.state.validation.help.name}
                     disabled={this.state.loading}
                 />
                 <TextControl
                     ref={(c) => (this.input.email = c)}
                     name="email"
                     label="Your email"
-                    hasError={this.state.hasError.email}
-                    help={this.state.help.email}
+                    hasError={this.state.validation.hasError.email}
+                    help={this.state.validation.help.email}
                     disabled={this.state.loading}
                 />
                 <TextareaControl
@@ -92,8 +96,8 @@ class Form extends React.Component {
                     name="message"
                     label="Message"
                     rows="5"
-                    hasError={this.state.hasError.message}
-                    help={this.state.help.message}
+                    hasError={this.state.validation.hasError.message}
+                    help={this.state.validation.help.message}
                     disabled={this.state.loading}
                 />
                 <ControlGroup hideLabel={true} hideHelp={true}>
@@ -112,8 +116,8 @@ class Form extends React.Component {
         return (
             <section>
                 <h1 className="page-header">Send a message</h1>
-                <form onSubmit={this.handleSubmit.bind(this)}>
-                    {alert}
+                <form onSubmit={this.handleSubmit.bind(this)} method="post">
+                    {alerts}
                     {formElements}
                 </form>
             </section>

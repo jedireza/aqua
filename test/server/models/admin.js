@@ -1,404 +1,201 @@
 'use strict';
-const Async = require('async');
+const Admin = require('../../../server/models/admin');
+const AdminGroup = require('../../../server/models/admin-group');
 const Code = require('code');
 const Config = require('../../../config');
+const Fixtures = require('../fixtures');
 const Lab = require('lab');
-const Proxyquire = require('proxyquire');
+const User = require('../../../server/models/user');
 
 
 const lab = exports.lab = Lab.script();
-const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
-const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
-const stub = {
-    AdminGroup: {}
-};
-const Admin = Proxyquire('../../../server/models/admin', {
-    './admin-group': stub.AdminGroup
-});
-const AdminGroup = require('../../../server/models/admin-group');
+const config = Config.get('/hapiMongoModels/mongodb');
 
 
-lab.experiment('Admin Class Methods', () => {
+lab.experiment('Admin Model', () => {
 
-    lab.before((done) => {
+    lab.before(async () => {
 
-        Admin.connect(mongoUri, mongoOptions, (err, db) => {
-
-            done(err);
-        });
+        await Admin.connect(config.connection, config.options);
+        await Fixtures.Db.removeAllData();
     });
 
 
-    lab.after((done) => {
+    lab.after(async () => {
 
-        Admin.deleteMany({}, (err, count) => {
+        await Fixtures.Db.removeAllData();
 
-            Admin.disconnect();
-
-            done(err);
-        });
+        Admin.disconnect();
     });
 
 
-    lab.test('it returns a new instance when create succeeds', (done) => {
+    lab.test('it parses names into name fields', () => {
 
-        Admin.create('Ren Höek', (err, result) => {
+        const justFirst = Admin.nameAdapter('Steve');
 
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.instanceOf(Admin);
+        Code.expect(justFirst).to.be.an.object();
+        Code.expect(justFirst.first).to.equal('Steve');
+        Code.expect(justFirst.middle).to.equal('');
+        Code.expect(justFirst.last).to.equal('');
 
-            done();
-        });
+        const firstAndLast = Admin.nameAdapter('Ren Höek');
+
+        Code.expect(firstAndLast).to.be.an.object();
+        Code.expect(firstAndLast.first).to.equal('Ren');
+        Code.expect(firstAndLast.middle).to.equal('');
+        Code.expect(firstAndLast.last).to.equal('Höek');
+
+        const withMiddle = Admin.nameAdapter('Stimpson J Cat');
+
+        Code.expect(withMiddle).to.be.an.object();
+        Code.expect(withMiddle.first).to.equal('Stimpson');
+        Code.expect(withMiddle.middle).to.equal('J');
+        Code.expect(withMiddle.last).to.equal('Cat');
     });
 
 
-    lab.test('it correctly sets the middle name when create is called', (done) => {
+    lab.test('it parses returns a full name', async () => {
 
-        Admin.create('Stimpson J Cat', (err, admin) => {
+        const admin = await Admin.create('Stan');
+        let name = admin.fullName();
 
-            Code.expect(err).to.not.exist();
-            Code.expect(admin).to.be.an.instanceOf(Admin);
-            Code.expect(admin.name.middle).to.equal('J');
+        Code.expect(name).to.equal('Stan');
 
-            done();
-        });
+        admin.name = Admin.nameAdapter('Ren Höek');
+
+        name = admin.fullName();
+
+        Code.expect(name).to.equal('Ren Höek');
     });
 
 
-    lab.test('it returns an error when create fails', (done) => {
+    lab.test('it returns a new instance when create succeeds', async () => {
 
-        const realInsertOne = Admin.insertOne;
-        Admin.insertOne = function () {
+        const admin = await Admin.create('Ren Höek');
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('insert failed'));
-        };
-
-        Admin.create('Stimpy Cat', (err, result) => {
-
-            Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            Admin.insertOne = realInsertOne;
-
-            done();
-        });
+        Code.expect(admin).to.be.an.instanceOf(Admin);
     });
 
 
-    lab.test('it returns a result when finding by username', (done) => {
+    lab.test('it returns an instance when finding by username', async () => {
 
-        Async.auto({
-            admin: function (cb) {
-
-                Admin.create('Ren Höek', cb);
-            },
-            adminUpdated: ['admin', function (results, cb) {
-
-                const fieldsToUpdate = {
-                    $set: {
-                        user: {
-                            id: '95EP150D35',
-                            name: 'ren'
-                        }
-                    }
-                };
-
-                Admin.findByIdAndUpdate(results.admin._id, fieldsToUpdate, cb);
-            }]
-        }, (err, results) => {
-
-            if (err) {
-                return done(err);
-            }
-
-            Admin.findByUsername('ren', (err, admin) => {
-
-                Code.expect(err).to.not.exist();
-                Code.expect(admin).to.be.an.instanceOf(Admin);
-
-                done();
-            });
-        });
-    });
-});
-
-
-lab.experiment('Admin Instance Methods', () => {
-
-    lab.before((done) => {
-
-        Admin.connect(mongoUri, mongoOptions, (err, db) => {
-
-            done(err);
-        });
-    });
-
-
-    lab.after((done) => {
-
-        Admin.deleteMany({}, (err, result) => {
-
-            Admin.disconnect();
-
-            done(err);
-        });
-    });
-
-
-    lab.test('it returns false when groups are not found', (done) => {
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
+        const document = new Admin({
+            name: Admin.nameAdapter('Stimpson J Cat'),
+            user: {
+                id: '95EP150D35',
+                name: 'stimpy'
             }
         });
+
+        await Admin.insertOne(document);
+
+        const account = await Admin.findByUsername('stimpy');
+
+        Code.expect(account).to.be.an.instanceOf(Admin);
+    });
+
+
+    lab.test('it returns false when checking for membership when groups are missing', async () => {
+
+        const admin = await Admin.create('Ren Höek');
 
         Code.expect(admin.isMemberOf('sales')).to.equal(false);
-
-        done();
     });
 
 
-    lab.test('it returns boolean values for set group memberships', (done) => {
+    lab.test('it returns false when permissions are missing', async () => {
 
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                sales: 'Sales',
-                support: 'Support'
-            }
-        });
+        const admin = await Admin.create('Ren Höek');
+        const hasPermission = await admin.hasPermissionTo('SPACE_MADNESS');
 
-        Code.expect(admin.isMemberOf('sales')).to.equal(true);
-        Code.expect(admin.isMemberOf('support')).to.equal(true);
-
-        done();
+        Code.expect(hasPermission).to.equal(false);
     });
 
 
-    lab.test('it exits early when hydrating groups where groups are missing', (done) => {
+    lab.test('it returns boolean values when the permission exists on the admin', async () => {
 
         const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            }
-        });
-
-        admin.hydrateGroups((err) => {
-
-            Code.expect(err).to.not.exist();
-
-            done();
-        });
-    });
-
-
-    lab.test('it exits early when hydrating groups where hydrated groups exist', (done) => {
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                sales: 'Sales'
-            },
-            _groups: {
-                sales: new AdminGroup({
-                    _id: 'sales',
-                    name: 'Sales',
-                    permissions: {
-                        SPACE_MADNESS: true,
-                        UNTAMED_WORLD: false
-                    }
-                })
-            }
-        });
-
-        admin.hydrateGroups((err) => {
-
-            Code.expect(err).to.not.exist();
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when hydrating groups and find by id fails', (done) => {
-
-        const realFindById = stub.AdminGroup.findById;
-        stub.AdminGroup.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                sales: 'Sales'
-            }
-        });
-
-        admin.hydrateGroups((err) => {
-
-            Code.expect(err).to.be.an.object();
-
-            stub.AdminGroup.findById = realFindById;
-
-            done();
-        });
-    });
-
-
-    lab.test('it successfully hydrates groups', (done) => {
-
-        const realFindById = stub.AdminGroup.findById;
-        stub.AdminGroup.findById = function (id, callback) {
-
-            const group = new AdminGroup({
-                _id: 'sales',
-                name: 'Sales',
-                permissions: {
-                    SPACE_MADNESS: true,
-                    UNTAMED_WORLD: false
-                }
-            });
-
-            callback(null, group);
-        };
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                sales: 'Sales'
-            }
-        });
-
-        admin.hydrateGroups((err) => {
-
-            Code.expect(err).to.not.exist();
-
-            stub.AdminGroup.findById = realFindById;
-
-            done();
-        });
-    });
-
-
-    lab.test('it exits early when the permission exists on the admin', (done) => {
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
+            name: Admin.nameAdapter('Ren Höek'),
             permissions: {
                 SPACE_MADNESS: true,
                 UNTAMED_WORLD: false
             }
         });
+        const hasPermission = await admin.hasPermissionTo('SPACE_MADNESS');
 
-        admin.hasPermissionTo('SPACE_MADNESS', (err, permit) => {
-
-            Code.expect(err).to.not.exist();
-            Code.expect(permit).to.equal(true);
-
-            done();
-        });
+        Code.expect(hasPermission).to.equal(true);
     });
 
 
-    lab.test('it returns an error when checking permission and hydrating groups fails', (done) => {
+    lab.test('it returns boolean values when permission exits on the admin group', async () => {
 
-        const realHydrateGroups = Admin.prototype.hydrateGroups;
-        Admin.prototype.hydrateGroups = function (callback) {
+        // create groups
 
-            callback(Error('hydrate groups failed'));
-        };
-
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
-            groups: {
-                sales: 'Sales'
+        const salesGroup = new AdminGroup({
+            _id: 'sales',
+            name: 'Sales',
+            permissions: {
+                UNTAMED_WORLD: false,
+                WORLD_UNTAMED: true
+            }
+        });
+        const supportGroup = new AdminGroup({
+            _id: 'support',
+            name: 'Support',
+            permissions: {
+                SPACE_MADNESS: true,
+                MADNESS_SPACE: false
             }
         });
 
-        admin.hasPermissionTo('SPACE_MADNESS', (err) => {
+        await AdminGroup.insertMany([salesGroup, supportGroup]);
 
-            Code.expect(err).to.be.an.object();
+        // admin without group membership
 
-            Admin.prototype.hydrateGroups = realHydrateGroups;
-
-            done();
+        const documentA = new Admin({
+            name: Admin.nameAdapter('Ren Höek')
         });
-    });
+        const testA1 = await documentA.hasPermissionTo('SPACE_MADNESS');
 
+        Code.expect(testA1).to.equal(false);
 
-    lab.test('it returns correct permission from hydrated group permissions', (done) => {
+        const testA2 = await documentA.hasPermissionTo('UNTAMED_WORLD');
 
-        const admin = new Admin({
-            name: {
-                first: 'Ren',
-                last: 'Höek'
-            },
+        Code.expect(testA2).to.equal(false);
+
+        // admin with group membership
+
+        const documentB = new Admin({
+            name: Admin.nameAdapter('Ren B Höek'),
             groups: {
                 sales: 'Sales',
                 support: 'Support'
             }
         });
 
-        admin._groups = {
-            sales: new AdminGroup({
-                _id: 'sales',
-                name: 'Sales',
-                permissions: {
-                    UNTAMED_WORLD: false,
-                    WORLD_UNTAMED: true
-                }
-            }),
-            support: new AdminGroup({
-                _id: 'support',
-                name: 'Support',
-                permissions: {
-                    SPACE_MADNESS: true,
-                    MADNESS_SPACE: false
-                }
-            })
-        };
+        const testB1 = await documentB.hasPermissionTo('SPACE_MADNESS');
 
-        Async.auto({
-            test1: function (cb) {
+        Code.expect(testB1).to.equal(true);
 
-                admin.hasPermissionTo('SPACE_MADNESS', cb);
-            },
-            test2: function (cb) {
+        const testB2 = await documentB.hasPermissionTo('UNTAMED_WORLD');
 
-                admin.hasPermissionTo('UNTAMED_WORLD', cb);
-            }
-        }, (err, results) => {
+        Code.expect(testB2).to.equal(false);
+    });
 
-            Code.expect(err).to.not.exist();
-            Code.expect(results.test1).to.equal(true);
-            Code.expect(results.test2).to.equal(false);
 
-            done(err);
-        });
+    lab.test('it links and unlinks users', async () => {
+
+        let admin = await Admin.create('Guinea Pig');
+        const user = await User.create('guineapig', 'wheel', 'wood@chips.gov');
+
+        Code.expect(admin.user).to.not.exist();
+
+        admin = await admin.linkUser(`${user._id}`, user.username);
+
+        Code.expect(admin.user).to.be.an.object();
+
+        admin = await admin.unlinkUser();
+
+        Code.expect(admin.user).to.not.exist();
     });
 });

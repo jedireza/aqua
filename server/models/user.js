@@ -1,115 +1,111 @@
 'use strict';
 const Account = require('./account');
 const Admin = require('./admin');
-const Async = require('async');
+const Assert = require('assert');
 const Bcrypt = require('bcrypt');
 const Joi = require('joi');
 const MongoModels = require('mongo-models');
+const NewDate = require('joistick/new-date');
+
+
+const schema = Joi.object({
+    _id: Joi.object(),
+    email: Joi.string().email().lowercase().required(),
+    isActive: Joi.boolean().default(true),
+    password: Joi.string(),
+    resetPassword: Joi.object({
+        token: Joi.string().required(),
+        expires: Joi.date().required()
+    }),
+    roles: Joi.object({
+        admin: Joi.object({
+            id: Joi.string().required(),
+            name: Joi.string().required()
+        }),
+        account: Joi.object({
+            id: Joi.string().required(),
+            name: Joi.string().required()
+        })
+    }).default(),
+    timeCreated: Joi.date().default(NewDate(), 'time of creation'),
+    username: Joi.string().token().lowercase().required()
+});
 
 
 class User extends MongoModels {
-    static generatePasswordHash(password, callback) {
+    static async create(username, password, email) {
 
-        Async.auto({
-            salt: function (done) {
+        Assert.ok(username, 'Missing username argument.');
+        Assert.ok(password, 'Missing password argument.');
+        Assert.ok(email, 'Missing email argument.');
 
-                Bcrypt.genSalt(10, done);
-            },
-            hash: ['salt', function (results, done) {
-
-                Bcrypt.hash(password, results.salt, done);
-            }]
-        }, (err, results) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, {
-                password,
-                hash: results.hash
-            });
+        const passwordHash = await this.generatePasswordHash(password);
+        const document = new this({
+            email,
+            isActive: true,
+            password: passwordHash.hash,
+            username
         });
+        const users = await this.insertOne(document);
+
+        users[0].password = passwordHash.password;
+
+        return users[0];
     }
 
-    static create(username, password, email, callback) {
+    static async findByCredentials(username, password) {
 
-        const self = this;
+        Assert.ok(username, 'Missing username argument.');
+        Assert.ok(password, 'Missing password argument.');
 
-        Async.auto({
-            passwordHash: this.generatePasswordHash.bind(this, password),
-            newUser: ['passwordHash', function (results, done) {
+        const query = { isActive: true };
 
-                const document = {
-                    isActive: true,
-                    username: username.toLowerCase(),
-                    password: results.passwordHash.hash,
-                    email: email.toLowerCase(),
-                    timeCreated: new Date()
-                };
+        if (username.indexOf('@') > -1) {
+            query.email = username.toLowerCase();
+        }
+        else {
+            query.username = username.toLowerCase();
+        }
 
-                self.insertOne(document, done);
-            }]
-        }, (err, results) => {
+        const user = await this.findOne(query);
 
-            if (err) {
-                return callback(err);
-            }
+        if (!user) {
+            return;
+        }
 
-            results.newUser[0].password = results.passwordHash.password;
+        const passwordMatch = await Bcrypt.compare(password, user.password);
 
-            callback(null, results.newUser[0]);
-        });
+        if (passwordMatch) {
+            return user;
+        }
     }
 
-    static findByCredentials(username, password, callback) {
+    static findByEmail(email) {
 
-        const self = this;
+        Assert.ok(email, 'Missing email argument.');
 
-        Async.auto({
-            user: function (done) {
+        const query = { email: email.toLowerCase() };
 
-                const query = {
-                    isActive: true
-                };
-
-                if (username.indexOf('@') > -1) {
-                    query.email = username.toLowerCase();
-                }
-                else {
-                    query.username = username.toLowerCase();
-                }
-
-                self.findOne(query, done);
-            },
-            passwordMatch: ['user', function (results, done) {
-
-                if (!results.user) {
-                    return done(null, false);
-                }
-
-                const source = results.user.password;
-                Bcrypt.compare(password, source, done);
-            }]
-        }, (err, results) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            if (results.passwordMatch) {
-                return callback(null, results.user);
-            }
-
-            callback();
-        });
+        return this.findOne(query);
     }
 
-    static findByUsername(username, callback) {
+    static findByUsername(username) {
+
+        Assert.ok(username, 'Missing username argument.');
 
         const query = { username: username.toLowerCase() };
 
-        this.findOne(query, callback);
+        return this.findOne(query);
+    }
+
+    static async generatePasswordHash(password) {
+
+        Assert.ok(password, 'Missing password argument.');
+
+        const salt = await Bcrypt.genSalt(10);
+        const hash = await Bcrypt.hash(password, salt);
+
+        return { password, hash };
     }
 
     constructor(attrs) {
@@ -124,85 +120,87 @@ class User extends MongoModels {
 
     canPlayRole(role) {
 
-        if (!this.roles) {
-            return false;
-        }
+        Assert.ok(role, 'Missing role argument.');
 
         return this.roles.hasOwnProperty(role);
     }
 
-    hydrateRoles(callback) {
-
-        if (!this.roles) {
-            this._roles = {};
-            return callback(null, this._roles);
-        }
+    async hydrateRoles() {
 
         if (this._roles) {
-            return callback(null, this._roles);
+            return this._roles;
         }
 
-        const self = this;
-        const tasks = {};
+        this._roles = {};
 
         if (this.roles.account) {
-            tasks.account = function (done) {
-
-                Account.findById(self.roles.account.id, done);
-            };
+            this._roles.account = await Account.findById(this.roles.account.id);
         }
 
         if (this.roles.admin) {
-            tasks.admin = function (done) {
-
-                Admin.findById(self.roles.admin.id, done);
-            };
+            this._roles.admin = await Admin.findById(this.roles.admin.id);
         }
 
-        Async.auto(tasks, (err, results) => {
+        return this._roles;
+    }
 
-            if (err) {
-                return callback(err);
+    async linkAccount(id, name) {
+
+        Assert.ok(id, 'Missing id argument.');
+        Assert.ok(name, 'Missing name argument.');
+
+        const update = {
+            $set: {
+                'roles.account': { id, name }
             }
+        };
 
-            self._roles = results;
+        return await User.findByIdAndUpdate(this._id, update);
+    }
 
-            callback(null, self._roles);
-        });
+    async linkAdmin(id, name) {
+
+        Assert.ok(id, 'Missing id argument.');
+        Assert.ok(name, 'Missing name argument.');
+
+        const update = {
+            $set: {
+                'roles.admin': { id, name }
+            }
+        };
+
+        return await User.findByIdAndUpdate(this._id, update);
+    }
+
+    async unlinkAccount() {
+
+        const update = {
+            $unset: {
+                'roles.account': undefined
+            }
+        };
+
+        return await User.findByIdAndUpdate(this._id, update);
+    }
+
+    async unlinkAdmin() {
+
+        const update = {
+            $unset: {
+                'roles.admin': undefined
+            }
+        };
+
+        return await User.findByIdAndUpdate(this._id, update);
     }
 }
 
 
-User.collection = 'users';
-
-
-User.schema = Joi.object({
-    _id: Joi.object(),
-    isActive: Joi.boolean().default(true),
-    username: Joi.string().token().lowercase().required(),
-    password: Joi.string(),
-    email: Joi.string().email().lowercase().required(),
-    roles: Joi.object({
-        admin: Joi.object({
-            id: Joi.string().required(),
-            name: Joi.string().required()
-        }),
-        account: Joi.object({
-            id: Joi.string().required(),
-            name: Joi.string().required()
-        })
-    }),
-    resetPassword: Joi.object({
-        token: Joi.string().required(),
-        expires: Joi.date().required()
-    }),
-    timeCreated: Joi.date()
-});
-
-
+User.collectionName = 'users';
+User.schema = schema;
 User.indexes = [
-    { key: { username: 1, unique: 1 } },
-    { key: { email: 1, unique: 1 } }
+    { key: { username: 1 }, unique: true },
+    { key: { email: 1 }, unique: true }
 ];
 
 

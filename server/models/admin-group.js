@@ -1,28 +1,34 @@
 'use strict';
+const Assert = require('assert');
 const Joi = require('joi');
 const MongoModels = require('mongo-models');
 const Slug = require('slug');
 
 
-class AdminGroup extends MongoModels {
-    static create(name, callback) {
+const schema = Joi.object({
+    _id: Joi.string(),
+    name: Joi.string().required(),
+    permissions: Joi.object().description('{ permission: boolean, ... }')
+});
 
-        const document = {
+
+class AdminGroup extends MongoModels {
+    static async create(name) {
+
+        Assert.ok(name, 'Missing name argument.');
+
+        const document = new this({
             _id: Slug(name).toLowerCase(),
             name
-        };
-
-        this.insertOne(document, (err, docs) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, docs[0]);
         });
+        const groups = await this.insertOne(document);
+
+        return groups[0];
     }
 
     hasPermissionTo(permission) {
+
+        Assert.ok(permission, 'Missing permission argument.');
 
         if (this.permissions && this.permissions.hasOwnProperty(permission)) {
             return this.permissions[permission];
@@ -33,17 +39,9 @@ class AdminGroup extends MongoModels {
 }
 
 
-AdminGroup.collection = 'adminGroups';
-
-
 AdminGroup._idClass = String;
-
-
-AdminGroup.schema = Joi.object({
-    _id: Joi.string(),
-    name: Joi.string().required(),
-    permissions: Joi.object().description('{ permission: boolean, ... }')
-});
+AdminGroup.collectionName = 'adminGroups';
+AdminGroup.schema = schema;
 
 
 module.exports = AdminGroup;

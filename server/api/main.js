@@ -5,22 +5,22 @@ const register = function (server, serverOptions) {
 
     server.route({
         method: 'GET',
-        path: '/public/{param*}',
+        path: '/api',
         options: {
             auth: false
         },
-        handler: {
-            directory: {
-                path: 'public',
-                listing: false
-            }
+        handler: function (request, h) {
+
+            return {
+                message: 'Welcome to the API.'
+            };
         }
     });
 };
 
 
 module.exports = {
-    name: 'web-public',
+    name: 'api-main',
     dependencies: [],
     register
 };

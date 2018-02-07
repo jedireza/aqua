@@ -1,68 +1,39 @@
 'use strict';
 const Code = require('code');
 const Config = require('../../../config');
+const Fixtures = require('../fixtures');
 const Lab = require('lab');
 const Status = require('../../../server/models/status');
 
 
 const lab = exports.lab = Lab.script();
-const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
-const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
+const config = Config.get('/hapiMongoModels/mongodb');
 
 
-lab.experiment('Status Class Methods', () => {
+lab.experiment('Status Model', () => {
 
-    lab.before((done) => {
+    lab.before(async () => {
 
-        Status.connect(mongoUri, mongoOptions, (err, db) => {
-
-            done(err);
-        });
+        await Status.connect(config.connection, config.options);
+        await Fixtures.Db.removeAllData();
     });
 
 
-    lab.after((done) => {
+    lab.after(async () => {
 
-        Status.deleteMany({}, (err, count) => {
+        await Fixtures.Db.removeAllData();
 
-            Status.disconnect();
-
-            done(err);
-        });
+        Status.disconnect();
     });
 
 
-    lab.test('it returns a new instance when create succeeds', (done) => {
+    lab.test('it returns a new instance when create succeeds', async () => {
 
-        Status.create('Order', 'Complete', (err, result) => {
+        const status = await Status.create('Order', 'Complete');
 
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.instanceOf(Status);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when create fails', (done) => {
-
-        const realInsertOne = Status.insertOne;
-        Status.insertOne = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('insert failed'));
-        };
-
-        Status.create('Order', 'Fulfilled', (err, result) => {
-
-            Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            Status.insertOne = realInsertOne;
-
-            done();
-        });
+        Code.expect(status).to.be.an.instanceOf(Status);
+        Code.expect(status._id).to.equal('order-complete');
+        Code.expect(status.name).to.equal('Complete');
+        Code.expect(status.pivot).to.equal('Order');
     });
 });

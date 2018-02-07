@@ -6,21 +6,26 @@ const Store = require('./store');
 
 
 class Actions {
-    static sendRequest(data) {
+    static resetStore() {
 
-        ApiActions.post(
+        Store.dispatch({ type: Constants.RESET_STORE });
+    }
+
+    static async sendRequest(data) {
+
+        const response = await ApiActions.post(
             '/api/signup',
             data,
             Store,
             Constants.REGISTER,
             Constants.REGISTER_RESPONSE,
-            (err, response) => {
-
-                if (!err) {
-                    window.location.href = '/account';
-                }
-            }
         );
+
+        if (response.error) {
+            return;
+        }
+
+        window.location.href = '/account';
     }
 };
 

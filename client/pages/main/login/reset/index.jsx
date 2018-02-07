@@ -39,6 +39,8 @@ class ResetPage extends React.Component {
     componentWillUnmount() {
 
         this.unsubscribeStore();
+
+        Actions.resetStore();
     }
 
     onStoreChange() {
@@ -63,18 +65,22 @@ class ResetPage extends React.Component {
         const alerts = [];
 
         if (this.state.success) {
-            alerts.push(<div key="success">
-                <div className="alert alert-success">
-                    Your password has been reset. Please login to confirm.
+            alerts.push(
+                <div key="success">
+                    <div className="alert alert-success">
+                        Your password has been reset. Please login to confirm.
+                    </div>
+                    <Link to="/login" className="btn btn-link">Back to login</Link>
                 </div>
-                <Link to="/login" className="btn btn-link">Back to login</Link>
-            </div>);
+            );
         }
 
-        if (this.state.error) {
-            alerts.push(<div key="danger" className="alert alert-danger">
-                {this.state.error}
-            </div>);
+        if (this.state.validation.error) {
+            alerts.push(
+                <div key="danger" className="alert alert-danger">
+                    {this.state.validation.error}
+                </div>
+            );
         }
 
         let formElements;
@@ -86,24 +92,24 @@ class ResetPage extends React.Component {
                     name="password"
                     label="New password"
                     type="password"
-                    hasError={this.state.hasError.password}
-                    help={this.state.help.password}
+                    hasError={this.state.validation.hasError.password}
+                    help={this.state.validation.help.password}
                     disabled={this.state.loading}
                 />
                 <TextControl
                     name="_key"
                     label="Key"
-                    hasError={this.state.hasError.key}
+                    hasError={this.state.validation.hasError.key}
+                    help={this.state.validation.help.key}
                     value={this.props.match.params.key}
-                    help={this.state.help.key}
                     disabled={true}
                 />
                 <TextControl
                     name="_email"
                     label="Email"
-                    hasError={this.state.hasError.email}
+                    hasError={this.state.validation.hasError.email}
+                    help={this.state.validation.help.email}
                     value={this.props.match.params.email}
-                    help={this.state.help.email}
                     disabled={true}
                 />
                 <ControlGroup hideLabel={true} hideHelp={true}>
@@ -129,7 +135,7 @@ class ResetPage extends React.Component {
                     <h1 className="page-header">Reset your password</h1>
                     <div className="row">
                         <div className="col-sm-6">
-                            <form onSubmit={this.handleSubmit.bind(this)}>
+                            <form onSubmit={this.handleSubmit.bind(this)} method="post">
                                 {alerts}
                                 {formElements}
                             </form>

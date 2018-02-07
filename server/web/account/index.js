@@ -1,39 +1,32 @@
 'use strict';
 
 
-const internals = {};
-
-
-internals.applyRoutes = function (server, next) {
+const register = function (server, serverOptions) {
 
     server.route({
         method: 'GET',
         path: '/account/{glob*}',
-        config: {
+        options: {
             auth: {
                 strategy: 'session',
                 scope: 'account'
             }
         },
-        handler: function (request, reply) {
+        handler: function (request, h) {
 
-            reply.view('account/index');
+            return h.view('account/index');
         }
     });
-
-
-    next();
 };
 
 
-exports.register = function (server, options, next) {
-
-    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
-
-    next();
-};
-
-
-exports.register.attributes = {
-    name: 'web/account'
+module.exports = {
+    name: 'web-account',
+    dependencies: [
+        'auth',
+        'hapi-auth-cookie',
+        'hapi-mongo-models',
+        'vision'
+    ],
+    register
 };

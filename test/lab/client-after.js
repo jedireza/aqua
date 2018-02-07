@@ -5,15 +5,16 @@ const Lab = require('lab');
 const lab = exports.lab = Lab.script();
 
 
-lab.test('it cleans up those globals', (done) => {
+lab.experiment('Client After Procedure', () => {
 
-    global.window && global.window.close();
+    lab.test('it cleans up those globals', () => {
 
-    delete global['__core-js_shared__'];
-    delete global.document;
-    delete global.window;
-    delete global.navigator;
-    delete global.errors;
+        global.window && global.window.close();
 
-    done();
+        delete global['__core-js_shared__'];
+        delete global.document;
+        delete global.window;
+        delete global.navigator;
+        delete global.errors;
+    });
 });

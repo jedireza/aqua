@@ -5,9 +5,10 @@ const Lab = require('lab');
 const lab = exports.lab = Lab.script();
 
 
-lab.test('it cleans up those globals', (done) => {
+lab.experiment('Server After Procedure', () => {
 
-    delete global['__core-js_shared__'];
+    lab.test('it cleans up those globals', () => {
 
-    done();
+        delete global['__core-js_shared__'];
+    });
 });

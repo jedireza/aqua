@@ -27,13 +27,6 @@ class Actions {
         );
     }
 
-    static hideDetailsSaveSuccess() {
-
-        Store.dispatch({
-            type: Constants.HIDE_DETAILS_SAVE_SUCCESS
-        });
-    }
-
     static getUser() {
 
         ApiActions.get(
@@ -56,11 +49,9 @@ class Actions {
         );
     }
 
-    static hideUserSaveSuccess() {
+    static resetStore() {
 
-        Store.dispatch({
-            type: Constants.HIDE_USER_SAVE_SUCCESS
-        });
+        Store.dispatch({ type: Constants.RESET_STORE });
     }
 
     static savePassword(data) {
@@ -68,9 +59,11 @@ class Actions {
         if (data.password !== data.passwordConfirm) {
             return Store.dispatch({
                 type: Constants.SAVE_PASSWORD_RESPONSE,
-                err: new Error('password mismatch'),
-                response: {
-                    message: 'Passwords do not match.'
+                error: new Error('password mismatch'),
+                validation: {
+                    error: 'Paswords did not match.',
+                    hasError: {},
+                    help:  {}
                 }
             });
         }
@@ -84,13 +77,6 @@ class Actions {
             Constants.SAVE_PASSWORD,
             Constants.SAVE_PASSWORD_RESPONSE
         );
-    }
-
-    static hidePasswordSaveSuccess() {
-
-        Store.dispatch({
-            type: Constants.HIDE_PASSWORD_SAVE_SUCCESS
-        });
     }
 }
 

@@ -11,7 +11,7 @@ const criteria = {
 
 
 const config = {
-    $meta: 'This file configures the plot device.',
+    $meta: 'This file configures app settings.',
     projectName: 'Aqua',
     port: {
         web: {
@@ -38,11 +38,18 @@ const config = {
     },
     hapiMongoModels: {
         mongodb: {
-            uri: {
-                $filter: 'env',
-                production: process.env.MONGODB_URI,
-                test: 'mongodb://localhost:27017/aqua-test',
-                $default: 'mongodb://localhost:27017/aqua'
+            connection: {
+                uri: {
+                    $filter: 'env',
+                    production: process.env.MONGODB_URI,
+                    $default: 'mongodb://localhost:27017/'
+                },
+                db: {
+                    $filter: 'env',
+                    production: process.env.MONGODB_DB_NAME,
+                    test: 'aqua-test',
+                    $default: 'aqua'
+                }
             }
         },
         autoIndex: true

@@ -12,5 +12,6 @@ module.exports = FluxConstant.set([
     'LOGOUT',
     'LOGOUT_RESPONSE',
     'RESET',
-    'RESET_RESPONSE'
+    'RESET_RESPONSE',
+    'RESET_STORE'
 ]);

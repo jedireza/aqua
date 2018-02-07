@@ -1,119 +1,69 @@
 'use strict';
 const Code = require('code');
 const Config = require('../../config');
-const Hapi = require('hapi');
 const Lab = require('lab');
-const Proxyquire = require('proxyquire');
+const Mailer = require('../../server/mailer');
 
 
 const lab = exports.lab = Lab.script();
-const stub = {
-    fs: {},
-    nodemailer: {
-        createTransport: function (smtp) {
-
-            return {
-                use: function () {
-
-                    return;
-                },
-                sendMail: function (options, callback) {
-
-                    return callback(null, {});
-                }
-            };
-        }
-    }
-};
-const MailerPlugin = Proxyquire('../../server/mailer', {
-    'fs': stub.fs,
-    'nodemailer': stub.nodemailer
-});
 
 
-lab.experiment('Mailer Plugin', () => {
+lab.experiment('Mailer', () => {
 
-    let server;
+    const Mailer_transport = Mailer.transport;
 
 
-    lab.before((done) => {
+    lab.afterEach(() => {
 
-        server = new Hapi.Server();
-        server.connection({ port: Config.get('/port/web') });
-        server.register(MailerPlugin, (err) => {
+        Mailer.transport = Mailer_transport;
+    });
 
-            if (err) {
-                return done(err);
+
+    lab.test('it populates the template cache on first render', async () => {
+
+        const context = { username: 'ren', email: 'ren@stimpy.show' };
+        const content = await Mailer.renderTemplate('welcome', context);
+
+        Code.expect(content).to.match(/ren@stimpy.show/i);
+    });
+
+
+    lab.test('it uses the template cache on subsequent renders', async () => {
+
+        const context = { username: 'stimpy', email: 'stimpy@ren.show' };
+        const content = await Mailer.renderTemplate('welcome', context);
+
+        Code.expect(content).to.match(/stimpy@ren.show/i);
+    });
+
+
+    lab.test('it sends the email through the the transport', async () => {
+
+        Mailer.transport = {
+            sendMail: function (options) {
+
+                Code.expect(options).to.be.an.object();
+                Code.expect(options.from).to.equal(Config.get('/system/fromAddress'));
+                Code.expect(options.cc).to.be.an.object();
+                Code.expect(options.cc.email).to.equal('stimpy@ren.show');
+
+                return { wasSent: true };
             }
-
-            done();
-        });
-    });
-
-
-    lab.test('it successfuly registers itself', (done) => {
-
-        Code.expect(server.plugins.mailer).to.be.an.object();
-        Code.expect(server.plugins.mailer.sendEmail).to.be.a.function();
-
-        done();
-    });
-
-
-    lab.test('it returns error when read file fails', (done) => {
-
-        const realReadFile = stub.fs.readFile;
-        stub.fs.readFile = function (path, options, callback) {
-
-            return callback(Error('read file failed'));
         };
 
-        server.plugins.mailer.sendEmail({}, 'path', {}, (err, info) => {
-
-            stub.fs.readFile = realReadFile;
-            Code.expect(err).to.be.an.object();
-
-            done();
-        });
-    });
-
-
-    lab.test('it sends an email', (done) => {
-
-        const realReadFile = stub.fs.readFile;
-        stub.fs.readFile = function (path, options, callback) {
-
-            return callback(null, '');
+        const context = { username: 'stimpy', email: 'stimpy@ren.show' };
+        const content = await Mailer.renderTemplate('welcome', context);
+        const options = {
+            cc: {
+                name: 'Stimpson J Cat',
+                email: 'stimpy@ren.show'
+            }
         };
 
-        server.plugins.mailer.sendEmail({}, 'path', {}, (err, info) => {
+        const info = await Mailer.sendEmail(options, 'welcome', context);
 
-            Code.expect(err).to.not.exist();
-            Code.expect(info).to.be.an.object();
-
-            stub.fs.readFile = realReadFile;
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns early with the template is cached', (done) => {
-
-        const realReadFile = stub.fs.readFile;
-        stub.fs.readFile = function (path, options, callback) {
-
-            return callback(null, '');
-        };
-
-        server.plugins.mailer.sendEmail({}, 'path', {}, (err, info) => {
-
-            Code.expect(err).to.not.exist();
-            Code.expect(info).to.be.an.object();
-
-            stub.fs.readFile = realReadFile;
-
-            done();
-        });
+        Code.expect(info).to.be.an.object();
+        Code.expect(info.wasSent).to.equal(true);
+        Code.expect(content).to.match(/stimpy@ren.show/i);
     });
 });

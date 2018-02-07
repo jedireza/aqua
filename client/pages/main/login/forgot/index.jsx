@@ -35,6 +35,8 @@ class ForgotPage extends React.Component {
     componentWillUnmount() {
 
         this.unsubscribeStore();
+
+        Actions.resetStore();
     }
 
     onStoreChange() {
@@ -57,18 +59,23 @@ class ForgotPage extends React.Component {
         const alerts = [];
 
         if (this.state.success) {
-            alerts.push(<div key="success">
-                <div className="alert alert-success">
-                    If an account matched that address, an email will be sent with instructions.
+            alerts.push(
+                <div key="success">
+                    <div className="alert alert-success">
+                        If an account matched that address, an email will be
+                        sent with instructions.
+                    </div>
+                    <Link to="/login" className="btn btn-link">Back to login</Link>
                 </div>
-                <Link to="/login" className="btn btn-link">Back to login</Link>
-            </div>);
+            );
         }
 
-        if (this.state.error) {
-            alerts.push(<div key="danger" className="alert alert-danger">
-                {this.state.error}
-            </div>);
+        if (this.state.validation.error) {
+            alerts.push(
+                <div key="danger" className="alert alert-danger">
+                    {this.state.validation.error}
+                </div>
+            );
         }
 
         let formElements;
@@ -79,8 +86,8 @@ class ForgotPage extends React.Component {
                     ref={(c) => (this.input.email = c)}
                     name="email"
                     label="What's your email?"
-                    hasError={this.state.hasError.email}
-                    help={this.state.help.email}
+                    hasError={this.state.validation.hasError.email}
+                    help={this.state.validation.help.email}
                     disabled={this.state.loading}
                 />
                 <ControlGroup hideLabel={true} hideHelp={true}>
@@ -106,7 +113,7 @@ class ForgotPage extends React.Component {
                     <h1 className="page-header">Forgot your password?</h1>
                     <div className="row">
                         <div className="col-sm-6">
-                            <form onSubmit={this.handleSubmit.bind(this)}>
+                            <form onSubmit={this.handleSubmit.bind(this)} method="post">
                                 {alerts}
                                 {formElements}
                             </form>

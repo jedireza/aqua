@@ -1,43 +1,38 @@
 'use strict';
+const Assert = require('assert');
 const Joi = require('joi');
 const MongoModels = require('mongo-models');
 const Slug = require('slug');
 
 
+const schema = Joi.object({
+    _id: Joi.string(),
+    name: Joi.string().required(),
+    pivot: Joi.string().required()
+});
+
+
 class Status extends MongoModels {
-    static create(pivot, name, callback) {
+    static async create(pivot, name) {
 
-        const document = {
-            _id: Slug(pivot + ' ' + name).toLowerCase(),
-            pivot,
-            name
-        };
+        Assert.ok(pivot, 'Missing pivot argument.');
+        Assert.ok(name, 'Missing name argument.');
 
-        this.insertOne(document, (err, docs) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, docs[0]);
+        const document = new this({
+            _id: Slug(`${pivot}-${name}`).toLowerCase(),
+            name,
+            pivot
         });
+        const statuses = await this.insertOne(document);
+
+        return statuses[0];
     }
 }
 
 
-Status.collection = 'statuses';
-
-
 Status._idClass = String;
-
-
-Status.schema = Joi.object({
-    _id: Joi.string(),
-    pivot: Joi.string().required(),
-    name: Joi.string().required()
-});
-
-
+Status.collectionName = 'statuses';
+Status.schema = schema;
 Status.indexes = [
     { key: { pivot: 1 } },
     { key: { name: 1 } }

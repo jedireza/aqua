@@ -7,7 +7,7 @@ const ReactDOM = require('react-dom');
 const Page = {
     blastoff: function () {
 
-        this.mainElement = ReactDOM.render(
+        this.mainElement = ReactDOM.hydrate(
             App,
             window.document.getElementById('app-mount')
         );

@@ -42,27 +42,26 @@ class Actions {
         });
     }
 
-    static createNew(data, history) {
+    static async createNew(data, history) {
 
-        ApiActions.post(
+        const response = await ApiActions.post(
             '/api/accounts',
             data,
             Store,
             Constants.CREATE_NEW,
-            Constants.CREATE_NEW_RESPONSE,
-            (err, response) => {
-
-                if (!err) {
-                    this.hideCreateNew();
-
-                    const path = `/admin/accounts/${response._id}`;
-
-                    history.push(path);
-
-                    window.scrollTo(0, 0);
-                }
-            }
+            Constants.CREATE_NEW_RESPONSE
         );
+
+        if (response.error) {
+            console.error(response.error);
+            return;
+        }
+
+        this.hideCreateNew();
+
+        history.push(`/admin/accounts/${response.body._id}`);
+
+        window.scrollTo(0, 0);
     }
 }
 

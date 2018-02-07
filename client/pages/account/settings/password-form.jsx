@@ -1,6 +1,5 @@
 'use strict';
 const Actions = require('./actions');
-const Alert = require('../../../components/alert.jsx');
 const Button = require('../../../components/form/button.jsx');
 const ControlGroup = require('../../../components/form/control-group.jsx');
 const LinkState = require('../../../helpers/link-state');
@@ -11,13 +10,17 @@ const TextControl = require('../../../components/form/text-control.jsx');
 
 
 const propTypes = {
-    error: PropTypes.string,
-    hasError: PropTypes.object,
-    help: PropTypes.object,
+    data: PropTypes.shape({
+        password: PropTypes.string,
+        passwordConfirm: PropTypes.string
+    }),
     loading: PropTypes.bool,
-    password: PropTypes.string,
-    passwordConfirm: PropTypes.string,
-    showSaveSuccess: PropTypes.bool
+    showSaveSuccess: PropTypes.bool,
+    validation: PropTypes.shape({
+        error: PropTypes.string,
+        hasError: PropTypes.object,
+        help: PropTypes.object
+    })
 };
 
 
@@ -26,18 +29,14 @@ class PasswordForm extends React.Component {
 
         super(props);
 
-        this.state = {
-            password: props.password,
-            passwordConfirm: props.passwordConfirm
-        };
+        this.state = props.data;
     }
 
     componentWillReceiveProps(nextProps) {
 
-        this.setState({
-            password: nextProps.password,
-            passwordConfirm: nextProps.passwordConfirm
-        });
+        if (nextProps.hasOwnProperty('data')) {
+            this.setState(nextProps.data);
+        }
     }
 
     handleSubmit(event) {
@@ -56,24 +55,23 @@ class PasswordForm extends React.Component {
         const alerts = [];
 
         if (this.props.showSaveSuccess) {
-            alerts.push(<Alert
-                key="success"
-                type="success"
-                onClose={Actions.hidePasswordSaveSuccess}
-                message="Success. Changes have been saved."
-            />);
+            alerts.push(
+                <div key="success" className="alert alert-success">
+                    Success. Changes have been saved.
+                </div>
+            );
         }
 
-        if (this.props.error) {
-            alerts.push(<Alert
-                key="danger"
-                type="danger"
-                message={this.props.error}
-            />);
+        if (this.props.validation.error) {
+            alerts.push(
+                <div key="danger" className="alert alert-danger">
+                    {this.props.validation.error}
+                </div>
+            );
         }
 
         return (
-            <form onSubmit={this.handleSubmit.bind(this)}>
+            <form onSubmit={this.handleSubmit.bind(this)} method="post">
                 <fieldset>
                     <legend>Password</legend>
                     {alerts}
@@ -83,8 +81,8 @@ class PasswordForm extends React.Component {
                         label="New password"
                         value={this.state.password}
                         onChange={LinkState.bind(this)}
-                        hasError={this.props.hasError.password}
-                        help={this.props.help.password}
+                        hasError={this.props.validation.hasError.password}
+                        help={this.props.validation.help.password}
                         disabled={this.props.loading}
                     />
                     <TextControl
@@ -93,8 +91,8 @@ class PasswordForm extends React.Component {
                         label="Confirm new password"
                         value={this.state.passwordConfirm}
                         onChange={LinkState.bind(this)}
-                        hasError={this.props.hasError.passwordConfirm}
-                        help={this.props.help.passwordConfirm}
+                        hasError={this.props.validation.hasError.passwordConfirm}
+                        help={this.props.validation.help.passwordConfirm}
                         disabled={this.props.loading}
                     />
                     <ControlGroup hideLabel={true} hideHelp={true}>

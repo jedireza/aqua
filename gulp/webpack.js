@@ -38,9 +38,9 @@ Gulp.task('webpack', (callback) => {
     const config = {
         watch: global.isWatching,
         entry: {
-            account: './client/pages/account/index',
-            admin: './client/pages/admin/index',
-            main: './client/pages/main/index'
+            account: ['babel-polyfill', './client/pages/account/index'],
+            admin: ['babel-polyfill', './client/pages/admin/index'],
+            main: ['babel-polyfill', './client/pages/main/index']
         },
         output: {
             path: Path.resolve(__dirname, '../public/pages'),
@@ -57,7 +57,7 @@ Gulp.task('webpack', (callback) => {
                 ],
                 loader: 'babel-loader',
                 query: {
-                    presets: ['react', 'es2015']
+                    presets: ['react', 'env']
                 }
             }]
         },

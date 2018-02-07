@@ -1,6 +1,5 @@
 'use strict';
 const Actions = require('./actions');
-const Alert = require('../../../components/alert.jsx');
 const Button = require('../../../components/form/button.jsx');
 const ControlGroup = require('../../../components/form/control-group.jsx');
 const LinkState = require('../../../helpers/link-state');
@@ -11,14 +10,18 @@ const TextControl = require('../../../components/form/text-control.jsx');
 
 
 const propTypes = {
-    email: PropTypes.string,
-    error: PropTypes.string,
-    hasError: PropTypes.object,
-    help: PropTypes.object,
+    data: PropTypes.shape({
+        email: PropTypes.string,
+        username: PropTypes.string
+    }),
     hydrated: PropTypes.bool,
     loading: PropTypes.bool,
     showSaveSuccess: PropTypes.bool,
-    username: PropTypes.string
+    validation: PropTypes.shape({
+        error: PropTypes.string,
+        hasError: PropTypes.object,
+        help: PropTypes.object
+    })
 };
 
 
@@ -27,18 +30,14 @@ class UserForm extends React.Component {
 
         super(props);
 
-        this.state = {
-            username: props.username,
-            email: props.email
-        };
+        this.state = props.data;
     }
 
     componentWillReceiveProps(nextProps) {
 
-        this.setState({
-            username: nextProps.username,
-            email: nextProps.email
-        });
+        if (nextProps.hasOwnProperty('data')) {
+            this.setState(nextProps.data);
+        }
     }
 
     handleSubmit(event) {
@@ -65,24 +64,23 @@ class UserForm extends React.Component {
         const alerts = [];
 
         if (this.props.showSaveSuccess) {
-            alerts.push(<Alert
-                key="success"
-                type="success"
-                onClose={Actions.hideUserSaveSuccess}
-                message="Success. Changes have been saved."
-            />);
+            alerts.push(
+                <div key="success" className="alert alert-success">
+                    Success. Changes have been saved.
+                </div>
+            );
         }
 
-        if (this.props.error) {
-            alerts.push(<Alert
-                key="danger"
-                type="danger"
-                message={this.props.error}
-            />);
+        if (this.props.validation.error) {
+            alerts.push(
+                <div key="danger" className="alert alert-danger">
+                    {this.props.validation.error}
+                </div>
+            );
         }
 
         return (
-            <form onSubmit={this.handleSubmit.bind(this)}>
+            <form onSubmit={this.handleSubmit.bind(this)} method="post">
                 <fieldset>
                     <legend>Identity</legend>
                     {alerts}
@@ -91,8 +89,8 @@ class UserForm extends React.Component {
                         label="Username"
                         value={this.state.username}
                         onChange={LinkState.bind(this)}
-                        hasError={this.props.hasError.username}
-                        help={this.props.help.username}
+                        hasError={this.props.validation.hasError.username}
+                        help={this.props.validation.help.username}
                         disabled={this.props.loading}
                     />
                     <TextControl
@@ -100,8 +98,8 @@ class UserForm extends React.Component {
                         label="Email"
                         value={this.state.email}
                         onChange={LinkState.bind(this)}
-                        hasError={this.props.hasError.email}
-                        help={this.props.help.email}
+                        hasError={this.props.validation.hasError.email}
+                        help={this.props.validation.help.email}
                         disabled={this.props.loading}
                     />
                     <ControlGroup hideLabel={true} hideHelp={true}>

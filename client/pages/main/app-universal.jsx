@@ -30,8 +30,8 @@ const AppUniversal = function () {
                 <Route path="/contact" exact component={Contact} />
                 <Route path="/login" exact component={Login} />
                 <Route path="/login/forgot" exact component={LoginForgot} />
-                <Route path="/login/reset/:email/:key" component={LoginReset} />
                 <Route path="/login/logout" exact component={LoginLogout} />
+                <Route path="/login/reset/:email/:key" component={LoginReset} />
                 <Route path="/signup" exact component={Signup} />
 
                 <RouteRedirect from="/moved" to="/" code={301} />

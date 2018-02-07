@@ -1,172 +1,109 @@
 'use strict';
-const Async = require('async');
+const Account = require('./server/models/account');
+const Admin = require('./server/models/admin');
+const AdminGroup = require('./server/models/admin-group');
+const AuthAttempt = require('./server/models/auth-attempt');
 const MongoModels = require('mongo-models');
-const Mongodb = require('mongodb');
 const Promptly = require('promptly');
+const Session = require('./server/models/session');
+const Status = require('./server/models/status');
+const User = require('./server/models/user');
 
 
-Async.auto({
-    mongodbUri: (done) => {
+const main = async function () {
 
-        const options = {
-            default: 'mongodb://localhost:27017/aqua'
-        };
+    let options = {};
 
-        Promptly.prompt(`MongoDB URI: (${options.default})`, options, done);
-    },
-    testMongo: ['mongodbUri', (results, done) => {
+    // get mongodb connection info
 
-        Mongodb.MongoClient.connect(results.mongodbUri, {}, (err, db) => {
+    options = {
+        default: 'mongodb://localhost:27017/'
+    };
+    const mongodbUri = await Promptly.prompt(`MongoDB URI: (${options.default})`, options);
 
-            if (err) {
-                console.error('Failed to connect to Mongodb.');
-                return done(err);
-            }
+    options = {
+        default: 'aqua'
+    };
+    const mongodbName = await Promptly.prompt(`MongoDB name: (${options.default})`, options);
 
-            db.close();
-            done(null, true);
-        });
-    }],
-    rootEmail: ['testMongo', (results, done) => {
+    // connect to db
 
-        Promptly.prompt('Root user email:', done);
-    }],
-    rootPassword: ['rootEmail', (results, done) => {
+    const db = await MongoModels.connect({ uri: mongodbUri, db: mongodbName });
 
-        Promptly.password('Root user password:', done);
-    }],
-    setupRootUser: ['rootPassword', (results, done) => {
-
-        const Account = require('./server/models/account');
-        const AdminGroup = require('./server/models/admin-group');
-        const Admin = require('./server/models/admin');
-        const AuthAttempt = require('./server/models/auth-attempt');
-        const Session = require('./server/models/session');
-        const Status = require('./server/models/status');
-        const User = require('./server/models/user');
-
-        Async.auto({
-            connect: function (done) {
-
-                MongoModels.connect(results.mongodbUri, {}, done);
-            },
-            clean: ['connect', (dbResults, done) => {
-
-                Async.parallel([
-                    Account.deleteMany.bind(Account, {}),
-                    AdminGroup.deleteMany.bind(AdminGroup, {}),
-                    Admin.deleteMany.bind(Admin, {}),
-                    AuthAttempt.deleteMany.bind(AuthAttempt, {}),
-                    Session.deleteMany.bind(Session, {}),
-                    Status.deleteMany.bind(Status, {}),
-                    User.deleteMany.bind(User, {})
-                ], done);
-            }],
-            adminGroup: ['clean', function (dbResults, done) {
-
-                AdminGroup.create('Root', done);
-            }],
-            admin: ['clean', function (dbResults, done) {
-
-                const document = {
-                    _id: Admin.ObjectId('111111111111111111111111'),
-                    name: {
-                        first: 'Root',
-                        middle: '',
-                        last: 'Admin'
-                    },
-                    timeCreated: new Date()
-                };
-
-                Admin.insertOne(document, (err, docs) => {
-
-                    done(err, docs && docs[0]);
-                });
-            }],
-            user: ['clean', function (dbResults, done) {
-
-                Async.auto({
-                    passwordHash: User.generatePasswordHash.bind(this, results.rootPassword)
-                }, (err, passResults) => {
-
-                    if (err) {
-                        return done(err);
-                    }
-
-                    const document = {
-                        _id: Admin.ObjectId('000000000000000000000000'),
-                        isActive: true,
-                        username: 'root',
-                        password: passResults.passwordHash.hash,
-                        email: results.rootEmail.toLowerCase(),
-                        timeCreated: new Date()
-                    };
-
-                    User.insertOne(document, (err, docs) => {
-
-                        done(err, docs && docs[0]);
-                    });
-                });
-            }],
-            adminMembership: ['admin', function (dbResults, done) {
-
-                const id = dbResults.admin._id.toString();
-                const update = {
-                    $set: {
-                        groups: {
-                            root: 'Root'
-                        }
-                    }
-                };
-
-                Admin.findByIdAndUpdate(id, update, done);
-            }],
-            linkUser: ['admin', 'user', function (dbResults, done) {
-
-                const id = dbResults.user._id.toString();
-                const update = {
-                    $set: {
-                        'roles.admin': {
-                            id: dbResults.admin._id.toString(),
-                            name: 'Root Admin'
-                        }
-                    }
-                };
-
-                User.findByIdAndUpdate(id, update, done);
-            }],
-            linkAdmin: ['admin', 'user', function (dbResults, done) {
-
-                const id = dbResults.admin._id.toString();
-                const update = {
-                    $set: {
-                        user: {
-                            id: dbResults.user._id.toString(),
-                            name: 'root'
-                        }
-                    }
-                };
-
-                Admin.findByIdAndUpdate(id, update, done);
-            }]
-        }, (err, dbResults) => {
-
-            if (err) {
-                console.error('Failed to setup root user.');
-                return done(err);
-            }
-
-            done(null, true);
-        });
-    }]
-}, (err, results) => {
-
-    if (err) {
-        console.error('Setup failed.');
-        console.error(err);
-        return process.exit(1);
+    if (!db) {
+        throw Error('Could not connect to MongoDB.');
     }
 
-    console.log('Setup complete.');
+    // get root user creds
+
+    const rootEmail = await Promptly.prompt('Root user email:');
+    const rootPassword = await Promptly.password('Root user password:');
+
+    // clear tables
+
+    await Promise.all([
+        Account.deleteMany({}),
+        AdminGroup.deleteMany({}),
+        Admin.deleteMany({}),
+        AuthAttempt.deleteMany({}),
+        Session.deleteMany({}),
+        Status.deleteMany({}),
+        User.deleteMany({})
+    ]);
+
+    // setup root group
+
+    await AdminGroup.create('Root');
+
+    // setup root admin and user
+
+    await Admin.insertOne(new Admin({
+        _id: Admin.ObjectId('111111111111111111111111'),
+        groups: {
+            root: 'Root'
+        },
+        name: {
+            first: 'Root',
+            middle: '',
+            last: 'Admin'
+        },
+        user: {
+            id: '000000000000000000000000',
+            name: 'root'
+        }
+    }));
+
+    const passwordHash = await User.generatePasswordHash(rootPassword);
+
+    await User.insertOne(new User({
+        _id: User.ObjectId('000000000000000000000000'),
+        email: rootEmail.toLowerCase(),
+        password: passwordHash.hash,
+        roles: {
+            admin: {
+                id: '111111111111111111111111',
+                name: 'Root Admin'
+            }
+        },
+        username: 'root'
+    }));
+
+    // all done
+
+    MongoModels.disconnect();
+
+    console.log('First time setup complete.');
+
     process.exit(0);
+};
+
+
+main().catch((err) => {
+
+    console.log('First time setup failed.');
+    console.error(err);
+
+    MongoModels.disconnect();
+
+    process.exit(1);
 });

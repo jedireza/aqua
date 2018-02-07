@@ -1,434 +1,287 @@
 'use strict';
-const AdminGroupsPlugin = require('../../../server/api/admin-groups');
-const AuthPlugin = require('../../../server/auth');
-const AuthenticatedUser = require('../fixtures/credentials-admin');
+const AdminGroup = require('../../../server/models/admin-group');
+const AdminGroups = require('../../../server/api/admin-groups');
+const Auth = require('../../../server/auth');
 const Code = require('code');
-const Config = require('../../../config');
+const Fixtures = require('../fixtures');
 const Hapi = require('hapi');
-const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
-const MakeMockModel = require('../fixtures/make-mock-model');
 const Manifest = require('../../../manifest');
-const Path = require('path');
-const Proxyquire = require('proxyquire');
 
 
 const lab = exports.lab = Lab.script();
-let request;
 let server;
-let stub;
+let rootCredentials;
 
 
-lab.before((done) => {
+lab.before(async () => {
 
-    stub = {
-        AdminGroup: MakeMockModel()
-    };
+    server = Hapi.Server();
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/admin-group')] = stub.AdminGroup;
+    const plugins = Manifest.get('/register/plugins')
+        .filter((entry) => AdminGroups.dependencies.includes(entry.plugin))
+        .map((entry) => {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            entry.plugin = require(entry.plugin);
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+            return entry;
+        });
 
-                return true;
-            }
+    plugins.push(Auth);
+    plugins.push(AdminGroups);
 
-            return false;
-        })[0].plugin.options
-    };
+    await server.register(plugins);
+    await server.start();
+    await Fixtures.Db.removeAllData();
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, AdminGroupsPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
-
-        if (err) {
-            return done(err);
-        }
-
-        server.initialize(done);
-    });
+    rootCredentials = await Fixtures.Creds.createRootAdminUser();
 });
 
 
-lab.after((done) => {
+lab.after(async () => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
-    done();
+    await Fixtures.Db.removeAllData();
+    await server.stop();
 });
 
 
-lab.experiment('Admin Groups Plugin Result List', () => {
+lab.experiment('GET /api/admin-groups', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'GET',
-            url: '/admin-groups',
-            credentials: AuthenticatedUser
+            url: '/api/admin-groups',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when paged find fails', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.AdminGroup.pagedFind = function () {
+        const response = await server.inject(request);
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('paged find failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an array of documents successfully', (done) => {
-
-        stub.AdminGroup.pagedFind = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { data: [{}, {}, {}] });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.data).to.be.an.array();
-            Code.expect(response.result.data[0]).to.be.an.object();
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an array of documents successfully (using filters)', (done) => {
-
-        stub.AdminGroup.pagedFind = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { data: [{}, {}, {}] });
-        };
-
-        request.url += '?name=ren';
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.data).to.be.an.array();
-            Code.expect(response.result.data[0]).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result.data).to.be.an.array();
+        Code.expect(response.result.pages).to.be.an.object();
+        Code.expect(response.result.items).to.be.an.object();
     });
 });
 
 
-lab.experiment('Admin Groups Plugin Read', () => {
+lab.experiment('POST /api/admin-groups', () => {
 
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'GET',
-            url: '/admin-groups/93EP150D35',
-            credentials: AuthenticatedUser
-        };
-
-        done();
-    });
+    let request;
 
 
-    lab.test('it returns an error when find by id fails', (done) => {
-
-        stub.AdminGroup.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns a not found when find by id misses', (done) => {
-
-        stub.AdminGroup.findById = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns a document successfully', (done) => {
-
-        stub.AdminGroup.findById = function (id, callback) {
-
-            callback(null, { _id: '93EP150D35' });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Admin Groups Plugin Create', () => {
-
-    lab.beforeEach((done) => {
+    lab.beforeEach(() => {
 
         request = {
             method: 'POST',
-            url: '/admin-groups',
-            payload: {
-                name: 'Sales'
-            },
-            credentials: AuthenticatedUser
+            url: '/api/admin-groups',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when create fails', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.AdminGroup.create = function (name, callback) {
-
-            callback(Error('create failed'));
+        request.payload = {
+            name: 'Sales'
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it creates a document successfully', (done) => {
-
-        stub.AdminGroup.create = function (name, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.and.object();
+        Code.expect(response.result.name).to.be.equal('Sales');
     });
 });
 
 
-lab.experiment('Admin Groups Plugin Update', () => {
+lab.experiment('GET /api/admin-groups/{id}', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'GET',
+            url: '/api/admin-groups/{id}',
+            credentials: rootCredentials
+        };
+    });
+
+
+    lab.test('it returns HTTP 404 when `AdminGroup.findById` misses', async () => {
+
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const adminGroup = await AdminGroup.create('Support');
+
+        request.url = request.url.replace(/{id}/, adminGroup._id);
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.equal('Support');
+    });
+});
+
+
+lab.experiment('PUT /api/admin-groups/{id}', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'PUT',
-            url: '/admin-groups/sales',
-            payload: {
-                name: 'Salez'
-            },
-            credentials: AuthenticatedUser
+            url: '/api/admin-groups/{id}',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when update fails', (done) => {
+    lab.test('it returns HTTP 404 when `AdminGroup.findByIdAndUpdate` misses', async () => {
 
-        stub.AdminGroup.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('update failed'));
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload =  {
+            name: 'Wrecking Crew'
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
     });
 
 
-    lab.test('it returns not found when find by id misses', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.AdminGroup.findByIdAndUpdate = function (id, update, callback) {
+        const adminGroup = await AdminGroup.create('Shipping');
 
-            callback(null, undefined);
+        request.url = request.url.replace(/{id}/, adminGroup._id);
+        request.payload =  {
+            name: 'Fulfillment'
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it updates a document successfully', (done) => {
-
-        stub.AdminGroup.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.equal('Fulfillment');
     });
 });
 
 
-lab.experiment('Admin Groups Plugin Update Permissions', () => {
+lab.experiment('DELETE /api/admin-groups/{id}', () => {
 
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'PUT',
-            url: '/admin-groups/sales/permissions',
-            payload: {
-                permissions: { SPACE_RACE: true }
-            },
-            credentials: AuthenticatedUser
-        };
-
-        done();
-    });
+    let request;
 
 
-    lab.test('it returns an error when update fails', (done) => {
-
-        stub.AdminGroup.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it updates a document successfully', (done) => {
-
-        stub.AdminGroup.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Admin Groups Plugin Delete', () => {
-
-    lab.beforeEach((done) => {
+    lab.beforeEach(() => {
 
         request = {
             method: 'DELETE',
-            url: '/admin-groups/93EP150D35',
-            credentials: AuthenticatedUser
+            url: '/api/admin-groups/{id}',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when delete by id fails', (done) => {
+    lab.test('it returns HTTP 404 when `AdminGroup.findByIdAndDelete` misses', async () => {
 
-        stub.AdminGroup.findByIdAndDelete = function (id, callback) {
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
 
-            callback(Error('delete by id failed'));
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
     });
 
 
-    lab.test('it returns a not found when delete by id misses', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.AdminGroup.findByIdAndDelete = function (id, callback) {
+        const adminGroup = await AdminGroup.create('Steve');
 
-            callback(null, undefined);
+        request.url = request.url.replace(/{id}/, adminGroup._id);
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.message).to.match(/success/i);
+    });
+});
+
+
+lab.experiment('PUT /api/admin-groups/{id}/permissions', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'PUT',
+            url: '/api/admin-groups/{id}/permissions',
+            credentials: rootCredentials
         };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
-
-            done();
-        });
     });
 
 
-    lab.test('it deletes a document successfully', (done) => {
+    lab.test('it returns HTTP 404 when `AdminGroup.findByIdAndUpdate` misses', async () => {
 
-        stub.AdminGroup.findByIdAndDelete = function (id, callback) {
-
-            callback(null, 1);
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload =  {
+            permissions: {
+                CAN_CREATE_ACCOUNTS: true,
+                CAN_DELETE_ACCOUNTS: false
+            }
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.success).to.be.true();
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
 
-            done();
-        });
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const adminGroup = await AdminGroup.create('Executive');
+
+        request.url = request.url.replace(/{id}/, adminGroup._id);
+        request.payload =  {
+            permissions: {
+                CAN_CREATE_ACCOUNTS: true,
+                CAN_DELETE_ACCOUNTS: false
+            }
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.equal('Executive');
+        Code.expect(response.result.permissions).to.be.an.object();
+        Code.expect(response.result.permissions.CAN_CREATE_ACCOUNTS).to.be.true();
+        Code.expect(response.result.permissions.CAN_DELETE_ACCOUNTS).to.be.false();
     });
 });

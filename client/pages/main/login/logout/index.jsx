@@ -29,6 +29,8 @@ class LogoutPage extends React.Component {
     componentWillUnmount() {
 
         this.unsubscribeStore();
+
+        Actions.resetStore();
     }
 
     onStoreChange() {
@@ -41,14 +43,18 @@ class LogoutPage extends React.Component {
         const alerts = [];
 
         if (this.state.success) {
-            alerts.push(<div key="success" className="alert alert-success">
-                Logout successful.
-            </div>);
+            alerts.push(
+                <div key="success" className="alert alert-success">
+                    Logout successful.
+                </div>
+            );
         }
-        else if (this.state.error) {
-            alerts.push(<div key="danger" className="alert alert-warning">
-                {this.state.error}
-            </div>);
+        else if (this.state.validation.error) {
+            alerts.push(
+                <div key="danger" className="alert alert-warning">
+                    {this.state.validation.error}
+                </div>
+            );
         }
 
         return (

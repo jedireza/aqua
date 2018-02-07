@@ -5,69 +5,47 @@ const Handlebars = require('handlebars');
 const Hoek = require('hoek');
 const Markdown = require('nodemailer-markdown').markdown;
 const Nodemailer = require('nodemailer');
+const Path = require('path');
+const Util = require('util');
 
 
-const internals = {};
+const readFile = Util.promisify(Fs.readFile);
 
 
-internals.transport = Nodemailer.createTransport(Config.get('/nodemailer'));
-internals.transport.use('compile', Markdown({ useEmbeddedImages: true }));
+class Mailer {
+    static async renderTemplate(signature, context) {
 
+        if (this.templateCache[signature]) {
+            return this.templateCache[signature](context);
+        }
 
-internals.templateCache = {};
+        const filePath = Path.resolve(__dirname, `./emails/${signature}.hbs.md`);
+        const options = { encoding: 'utf-8' };
+        const source = await readFile(filePath, options);
 
+        this.templateCache[signature] = Handlebars.compile(source);
 
-internals.renderTemplate = function (signature, context, callback) {
-
-    if (internals.templateCache[signature]) {
-        return callback(null, internals.templateCache[signature](context));
+        return this.templateCache[signature](context);
     }
 
-    const filePath = __dirname + '/emails/' + signature + '.hbs.md';
-    const options = { encoding: 'utf-8' };
 
-    Fs.readFile(filePath, options, (err, source) => {
+    static async sendEmail(options, template, context) {
 
-        if (err) {
-            return callback(err);
-        }
-
-        internals.templateCache[signature] = Handlebars.compile(source);
-        callback(null, internals.templateCache[signature](context));
-    });
-};
-
-
-internals.sendEmail = function (options, template, context, callback) {
-
-    internals.renderTemplate(template, context, (err, content) => {
-
-        if (err) {
-            return callback(err);
-        }
+        const content = await this.renderTemplate(template, context);
 
         options = Hoek.applyToDefaults(options, {
             from: Config.get('/system/fromAddress'),
             markdown: content
         });
 
-        internals.transport.sendMail(options, callback);
-    });
-};
+        return await this.transport.sendMail(options);
+    }
+}
 
 
-exports.register = function (server, options, next) {
-
-    server.expose('sendEmail', internals.sendEmail);
-    server.expose('transport', internals.transport);
-
-    next();
-};
+Mailer.templateCache = {};
+Mailer.transport = Nodemailer.createTransport(Config.get('/nodemailer'));
+Mailer.transport.use('compile', Markdown({ useEmbeddedImages: true }));
 
 
-exports.sendEmail = internals.sendEmail;
-
-
-exports.register.attributes = {
-    name: 'mailer'
-};
+module.exports = Mailer;

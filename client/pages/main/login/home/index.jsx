@@ -19,13 +19,13 @@ class LoginPage extends React.Component {
 
         super(props);
 
-        Actions.getUserCreds();
-
         this.input = {};
         this.state = Store.getState();
     }
 
     componentDidMount() {
+
+        Actions.getUserCreds();
 
         this.unsubscribeStore = Store.subscribe(this.onStoreChange.bind(this));
 
@@ -37,6 +37,8 @@ class LoginPage extends React.Component {
     componentWillUnmount() {
 
         this.unsubscribeStore();
+
+        Actions.resetStore();
     }
 
     onStoreChange() {
@@ -60,50 +62,58 @@ class LoginPage extends React.Component {
         const alerts = [];
 
         if (this.state.success) {
-            alerts.push(<div key="success" className="alert alert-success">
-                Success. Redirecting...
-            </div>);
+            alerts.push(
+                <div key="success" className="alert alert-success">
+                    Success. Redirecting...
+                </div>
+            );
         }
 
-        if (this.state.error) {
-            alerts.push(<div key="danger" className="alert alert-danger">
-                {this.state.error}
-            </div>);
+        if (this.state.validation.error) {
+            alerts.push(
+                <div key="danger" className="alert alert-danger">
+                    {this.state.validation.error}
+                </div>
+            );
         }
 
         let formElements;
 
         if (!this.state.success) {
-            formElements = <fieldset>
-                <TextControl
-                    ref={(c) => (this.input.username = c)}
-                    name="username"
-                    label="Username or email"
-                    hasError={this.state.hasError.username}
-                    help={this.state.help.username}
-                    disabled={this.state.loading}
-                />
-                <TextControl
-                    ref={(c) => (this.input.password = c)}
-                    name="password"
-                    label="Password"
-                    type="password"
-                    hasError={this.state.hasError.password}
-                    help={this.state.help.password}
-                    disabled={this.state.loading}
-                />
-                <ControlGroup hideLabel={true} hideHelp={true}>
-                    <Button
-                        type="submit"
-                        inputClasses={{ 'btn-primary': true }}
-                        disabled={this.state.loading}>
+            formElements = (
+                <fieldset>
+                    <TextControl
+                        ref={(c) => (this.input.username = c)}
+                        name="username"
+                        label="Username or email"
+                        hasError={this.state.validation.hasError.username}
+                        help={this.state.validation.help.username}
+                        disabled={this.state.loading}
+                    />
+                    <TextControl
+                        ref={(c) => (this.input.password = c)}
+                        name="password"
+                        label="Password"
+                        type="password"
+                        hasError={this.state.validation.hasError.password}
+                        help={this.state.validation.help.password}
+                        disabled={this.state.loading}
+                    />
+                    <ControlGroup hideLabel={true} hideHelp={true}>
+                        <Button
+                            type="submit"
+                            inputClasses={{ 'btn-primary': true }}
+                            disabled={this.state.loading}>
 
-                        Sign in
-                        <Spinner space="left" show={this.state.loading} />
-                    </Button>
-                    <Link to="/login/forgot" className="btn btn-link">Forgot your password?</Link>
-                </ControlGroup>
-            </fieldset>;
+                            Sign in
+                            <Spinner space="left" show={this.state.loading} />
+                        </Button>
+                        <Link to="/login/forgot" className="btn btn-link">
+                            Forgot your password?
+                        </Link>
+                    </ControlGroup>
+                </fieldset>
+            );
         }
 
         return (
@@ -115,7 +125,7 @@ class LoginPage extends React.Component {
                     <h1 className="page-header">Sign in</h1>
                     <div className="row">
                         <div className="col-sm-6">
-                            <form onSubmit={this.handleSubmit.bind(this)}>
+                            <form onSubmit={this.handleSubmit.bind(this)} method="post">
                                 {alerts}
                                 {formElements}
                             </form>

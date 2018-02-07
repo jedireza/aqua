@@ -1,51 +1,57 @@
 'use strict';
 const JsonFetch = require('../helpers/json-fetch');
+const ServerValidation = require('../helpers/server-validation');
 
 
 class Actions {
-    static get(url, query, store, typeReq, typeRes, callback) {
+    static get(url, query, store, requestType, responseType) {
 
         const request = { method: 'GET', url, query };
-        this.makeRequest(request, store, typeReq, typeRes, callback);
+
+        return this.makeRequest(request, store, requestType, responseType);
     }
 
-    static put(url, data, store, typeReq, typeRes, callback) {
+    static put(url, data, store, requestType, responseType) {
 
         const request = { method: 'PUT', url, data };
-        this.makeRequest(request, store, typeReq, typeRes, callback);
+
+        return this.makeRequest(request, store, requestType, responseType);
     }
 
-    static post(url, data, store, typeReq, typeRes, callback) {
+    static post(url, data, store, requestType, responseType) {
 
         const request = { method: 'POST', url, data };
-        this.makeRequest(request, store, typeReq, typeRes, callback);
+
+        return this.makeRequest(request, store, requestType, responseType);
     }
 
-    static delete(url, query, store, typeReq, typeRes, callback) {
+    static delete(url, query, store, requestType, responseType) {
 
         const request = { method: 'DELETE', url, query };
-        this.makeRequest(request, store, typeReq, typeRes, callback);
+
+        return this.makeRequest(request, store, requestType, responseType);
     }
 
-    static makeRequest(request, store, typeReq, typeRes, callback) {
+    static async makeRequest(request, store, requestType, responseType) {
 
-        store.dispatch({
-            type: typeReq,
-            request
-        });
+        store.dispatch({ type: requestType, request });
 
-        JsonFetch(request, (err, response) => {
+        const responseAction = { type: responseType };
 
-            store.dispatch({
-                type: typeRes,
-                err,
-                response
-            });
+        try {
+            responseAction.data = await JsonFetch(request);
+        }
+        catch (error) {
+            console.warn(`API: ${request.method} ${request.url}:`, error);
 
-            if (callback) {
-                callback(err, response);
-            }
-        });
+            responseAction.error = error;
+        }
+
+        responseAction.validation = ServerValidation(responseAction.error);
+
+        store.dispatch(responseAction);
+
+        return responseAction;
     }
 }
 

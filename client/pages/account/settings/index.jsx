@@ -12,13 +12,13 @@ class SettingsPage extends React.Component {
 
         super(props);
 
-        Actions.getDetails();
-        Actions.getUser();
-
         this.state = Store.getState();
     }
 
     componentDidMount() {
+
+        Actions.getDetails();
+        Actions.getUser();
 
         this.unsubscribeStore = Store.subscribe(this.onStoreChange.bind(this));
     }
@@ -26,6 +26,8 @@ class SettingsPage extends React.Component {
     componentWillUnmount() {
 
         this.unsubscribeStore();
+
+        Actions.resetStore();
     }
 
     onStoreChange() {

@@ -1,385 +1,235 @@
 'use strict';
-const AuthPlugin = require('../../../server/auth');
-const AuthenticatedUser = require('../fixtures/credentials-admin');
+const Auth = require('../../../server/auth');
 const Code = require('code');
-const Config = require('../../../config');
+const Fixtures = require('../fixtures');
 const Hapi = require('hapi');
-const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
-const MakeMockModel = require('../fixtures/make-mock-model');
 const Manifest = require('../../../manifest');
-const Path = require('path');
-const Proxyquire = require('proxyquire');
-const StatusesPlugin = require('../../../server/api/statuses');
+const Status = require('../../../server/models/status');
+const Statuses = require('../../../server/api/statuses');
 
 
 const lab = exports.lab = Lab.script();
-let request;
 let server;
-let stub;
+let rootCredentials;
 
 
-lab.before((done) => {
+lab.before(async () => {
 
-    stub = {
-        Status: MakeMockModel()
-    };
+    server = Hapi.Server();
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/status')] = stub.Status;
+    const plugins = Manifest.get('/register/plugins')
+        .filter((entry) => Statuses.dependencies.includes(entry.plugin))
+        .map((entry) => {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            entry.plugin = require(entry.plugin);
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+            return entry;
+        });
 
-                return true;
-            }
+    plugins.push(Auth);
+    plugins.push(Statuses);
 
-            return false;
-        })[0].plugin.options
-    };
+    await server.register(plugins);
+    await server.start();
+    await Fixtures.Db.removeAllData();
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, StatusesPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
-
-        if (err) {
-            return done(err);
-        }
-
-        server.initialize(done);
-    });
+    rootCredentials = await Fixtures.Creds.createRootAdminUser();
 });
 
 
-lab.after((done) => {
+lab.after(async () => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
-    done();
+    await Fixtures.Db.removeAllData();
+    await server.stop();
 });
 
 
-lab.experiment('Statuses Plugin Result List', () => {
+lab.experiment('GET /api/statuses', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'GET',
-            url: '/statuses',
-            credentials: AuthenticatedUser
+            url: '/api/statuses',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when paged find fails', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Status.pagedFind = function () {
+        const response = await server.inject(request);
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('paged find failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an array of documents successfully', (done) => {
-
-        stub.Status.pagedFind = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { data: [{}, {}, {}] });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.data).to.be.an.array();
-            Code.expect(response.result.data[0]).to.be.an.object();
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an array of documents successfully (using filters)', (done) => {
-
-        stub.Status.pagedFind = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { data: [{}, {}, {}] });
-        };
-
-        request.url += '?pivot=Account&name=Happy';
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.data).to.be.an.array();
-            Code.expect(response.result.data[0]).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result.data).to.be.an.array();
+        Code.expect(response.result.pages).to.be.an.object();
+        Code.expect(response.result.items).to.be.an.object();
     });
 });
 
 
-lab.experiment('Statuses Plugin Read', () => {
+lab.experiment('POST /api/statuses', () => {
 
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'GET',
-            url: '/statuses/93EP150D35',
-            credentials: AuthenticatedUser
-        };
-
-        done();
-    });
+    let request;
 
 
-    lab.test('it returns an error when find by id fails', (done) => {
-
-        stub.Status.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns a not found when find by id misses', (done) => {
-
-        stub.Status.findById = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns a document successfully', (done) => {
-
-        stub.Status.findById = function (id, callback) {
-
-            callback(null, { _id: '93EP150D35' });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Statuses Plugin Create', () => {
-
-    lab.beforeEach((done) => {
+    lab.beforeEach(() => {
 
         request = {
             method: 'POST',
-            url: '/statuses',
-            payload: {
-                pivot: 'Account',
-                name: 'Happy'
-            },
-            credentials: AuthenticatedUser
+            url: '/api/statuses',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when create fails', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Status.create = function (pivot, name, callback) {
-
-            callback(Error('create failed'));
+        request.payload = {
+            name: 'Happy',
+            pivot: 'Account'
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it creates a document successfully', (done) => {
-
-        stub.Status.create = function (pivot, name, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.and.object();
+        Code.expect(response.result.name).to.be.equal('Happy');
+        Code.expect(response.result.pivot).to.be.equal('Account');
     });
 });
 
 
-lab.experiment('Statuses Plugin Update', () => {
+lab.experiment('GET /api/statuses/{id}', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'GET',
+            url: '/api/statuses/{id}',
+            credentials: rootCredentials
+        };
+    });
+
+
+    lab.test('it returns HTTP 404 when `Status.findById` misses', async () => {
+
+        request.url = request.url.replace(/{id}/, 'missing-status');
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const status = await Status.create('Account', 'Sad');
+
+        request.url = request.url.replace(/{id}/, status._id);
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.equal('Sad');
+        Code.expect(response.result.pivot).to.equal('Account');
+    });
+});
+
+
+lab.experiment('PUT /api/statuses/{id}', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'PUT',
-            url: '/statuses/account-happy',
-            payload: {
-                name: 'Happy'
-            },
-            credentials: AuthenticatedUser
+            url: '/api/statuses/{id}',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when update fails', (done) => {
+    lab.test('it returns HTTP 404 when `Status.findByIdAndUpdate` misses', async () => {
 
-        stub.Status.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('update failed'));
+        request.url = request.url.replace(/{id}/, 'account-emojiface');
+        request.payload =  {
+            name: 'Wrecking Crew'
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
     });
 
 
-    lab.test('it returns not found when find by id misses', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Status.findByIdAndUpdate = function (id, update, callback) {
+        const status = await Status.create('Admin', 'Cold');
 
-            callback(null, undefined);
+        request.url = request.url.replace(/{id}/, status._id);
+        request.payload =  {
+            name: 'Hot'
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it updates a document successfully', (done) => {
-
-        stub.Status.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.equal('Hot');
+        Code.expect(response.result.pivot).to.equal('Admin');
     });
 });
 
 
-lab.experiment('Statuses Plugin Delete', () => {
+lab.experiment('DELETE /api/statuses/{id}', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'DELETE',
-            url: '/statuses/93EP150D35',
-            credentials: AuthenticatedUser
+            url: '/api/statuses/{id}',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when delete by id fails', (done) => {
+    lab.test('it returns HTTP 404 when `Status.findByIdAndDelete` misses', async () => {
 
-        stub.Status.findByIdAndDelete = function (id, callback) {
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
 
-            callback(Error('delete by id failed'));
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
     });
 
 
-    lab.test('it returns a not found when delete by id misses', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Status.findByIdAndDelete = function (id, callback) {
+        const status = await Status.create('Account', 'Above');
 
-            callback(null, undefined);
-        };
+        request.url = request.url.replace(/{id}/, status._id);
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
-
-            done();
-        });
-    });
-
-
-    lab.test('it deletes a document successfully', (done) => {
-
-        stub.Status.findByIdAndDelete = function (id, callback) {
-
-            callback(null, 1);
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.success).to.be.true();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.message).to.match(/success/i);
     });
 });

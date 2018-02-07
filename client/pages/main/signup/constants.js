@@ -4,5 +4,6 @@ const FluxConstant = require('flux-constant');
 
 module.exports = FluxConstant.set([
     'REGISTER',
-    'REGISTER_RESPONSE'
+    'REGISTER_RESPONSE',
+    'RESET_STORE'
 ]);

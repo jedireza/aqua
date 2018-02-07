@@ -1,9 +1,0 @@
-{
-  "extends": [
-    "eslint-config-hapi",
-    "plugin:react/recommended"
-  ],
-  "plugins": [
-    "react"
-  ]
-}

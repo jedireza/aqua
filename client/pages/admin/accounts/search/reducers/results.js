@@ -24,9 +24,9 @@ const reducer = function (state = initialState, action) {
         return ObjectAssign({}, state, {
             hydrated: true,
             loading: false,
-            data: action.response.data,
-            pages: action.response.pages,
-            items: action.response.items
+            data: action.body.data,
+            pages: action.body.pages,
+            items: action.body.items
         });
     }
 

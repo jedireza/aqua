@@ -9,7 +9,7 @@ const internals = {};
 const StaticRouter = ReactRouter.StaticRouter;
 
 
-internals.routeHandler = function (request, reply) {
+internals.routeHandler = function (request, h) {
 
     const routerState = {};
     const routerProps = {
@@ -23,14 +23,15 @@ internals.routeHandler = function (request, reply) {
     const helmet = ReactHelmet.Helmet.renderStatic(); // leaks if not called after render
 
     if (routerState.url) {
-        return reply().redirect(routerState.url).code(routerState.code);
+        return h.redirect(routerState.url).code(routerState.code);
     }
 
-    const response = reply.view('main/index', {
+    const content = h.view('main/index', {
         helmet,
         markup,
         state: request.app.state
     });
+    const response = h.response(content);
 
     if (routerState.code) {
         response.code(routerState.code);
@@ -42,14 +43,19 @@ internals.routeHandler = function (request, reply) {
             response.header(key, request.app.headers[key]);
         });
     }
+
+    return response;
 };
 
 
-internals.applyRoutes = function (server, next) {
+const register = function (server, options) {
 
     server.route({
         method: 'GET',
         path: '/{glob*}',
+        options: {
+            auth: false
+        },
         handler: internals.routeHandler
     });
 
@@ -57,10 +63,9 @@ internals.applyRoutes = function (server, next) {
     server.route({
         method: 'GET',
         path: '/login/{glob*}',
-        config: {
+        options: {
             auth: {
-                mode: 'try',
-                strategy: 'session'
+                mode: 'try'
             },
             plugins: {
                 'hapi-auth-cookie': {
@@ -68,16 +73,16 @@ internals.applyRoutes = function (server, next) {
                 }
             }
         },
-        handler: function (request, reply) {
+        handler: function (request, h) {
 
             if (request.params.glob !== 'logout' &&
                 request.auth.isAuthenticated) {
 
                 if (request.auth.credentials.user.roles.admin) {
-                    return reply.redirect('/admin');
+                    return h.redirect('/admin');
                 }
 
-                return reply.redirect('/account');
+                return h.redirect('/account');
             }
 
             if (!request.auth.isAuthenticated) {
@@ -86,23 +91,19 @@ internals.applyRoutes = function (server, next) {
                 };
             }
 
-            internals.routeHandler(request, reply);
+            return internals.routeHandler(request, h);
         }
     });
-
-
-    next();
 };
 
 
-exports.register = function (server, options, next) {
-
-    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
-
-    next();
-};
-
-
-exports.register.attributes = {
-    name: 'web/main'
+module.exports = {
+    name: 'web-main',
+    dependencies: [
+        'auth',
+        'hapi-auth-cookie',
+        'hapi-mongo-models',
+        'vision'
+    ],
+    register
 };

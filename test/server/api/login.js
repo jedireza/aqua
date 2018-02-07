@@ -1,507 +1,236 @@
 'use strict';
+const Auth = require('../../../server/auth');
 const AuthAttempt = require('../../../server/models/auth-attempt');
-const AuthPlugin = require('../../../server/auth');
-const Bcrypt = require('bcrypt');
 const Code = require('code');
-const Config = require('../../../config');
+const Fixtures = require('../fixtures');
 const Hapi = require('hapi');
-const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
-const LoginPlugin = require('../../../server/api/login');
-const MailerPlugin = require('../../../server/mailer');
-const MakeMockModel = require('../fixtures/make-mock-model');
+const Login = require('../../../server/api/login');
+const Mailer = require('../../../server/mailer');
 const Manifest = require('../../../manifest');
-const Path = require('path');
-const Proxyquire = require('proxyquire');
-const Session = require('../../../server/models/session');
 const User = require('../../../server/models/user');
 
 
 const lab = exports.lab = Lab.script();
-let request;
 let server;
-let stub;
 
 
-lab.before((done) => {
+lab.before(async () => {
 
-    stub = {
-        AuthAttempt: MakeMockModel(),
-        Session: MakeMockModel(),
-        User: MakeMockModel()
-    };
+    server = Hapi.Server();
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/auth-attempt')] = stub.AuthAttempt;
-    proxy[Path.join(process.cwd(), './server/models/session')] = stub.Session;
-    proxy[Path.join(process.cwd(), './server/models/user')] = stub.User;
+    const plugins = Manifest.get('/register/plugins')
+        .filter((entry) => Login.dependencies.includes(entry.plugin))
+        .map((entry) => {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            entry.plugin = require(entry.plugin);
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+            return entry;
+        });
 
-                return true;
-            }
+    plugins.push(Auth);
+    plugins.push(Login);
 
-            return false;
-        })[0].plugin.options
-    };
+    await server.register(plugins);
+    await server.start();
+    await Fixtures.Db.removeAllData();
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, MailerPlugin, LoginPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
-
-        if (err) {
-            return done(err);
-        }
-
-        server.initialize(done);
-    });
+    await User.create('ren', 'baddog', 'ren@stimpy.show');
 });
 
 
-lab.after((done) => {
+lab.after(async () => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
-    done();
+    await Fixtures.Db.removeAllData();
+    await server.stop();
 });
 
 
-lab.experiment('Login Plugin (Create Session)', () => {
+lab.experiment('POST /api/login', () => {
 
-    lab.beforeEach((done) => {
+    const AuthAttempt_abuseDetected = AuthAttempt.abuseDetected;
+    const User_findByCredentials = User.findByCredentials;
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'POST',
-            url: '/login',
+            url: '/api/login',
             payload: {
                 username: 'ren',
                 password: 'baddog'
             }
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when detecting abuse fails', (done) => {
+    lab.afterEach(() => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
-
-            callback(Error('abuse detection failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        AuthAttempt.abuseDetected = AuthAttempt_abuseDetected;
+        User.findByCredentials = User_findByCredentials;
     });
 
 
-    lab.test('it returns early when abuse is detected', (done) => {
+    lab.test('it returns HTTP 400 when login abuse is detected', async () => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
+        AuthAttempt.abuseDetected = () => true;
 
-            callback(null, true);
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(400);
-            Code.expect(response.result.message).to.match(/maximum number of auth attempts reached/i);
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(400);
+        Code.expect(response.result.message)
+            .to.match(/maximum number of auth attempts reached/i);
     });
 
 
-    lab.test('it returns an error when find by credentials fails', (done) => {
+    lab.test('it returns HTTP 400 when a user is not found', async () => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
+        User.findByCredentials = () => undefined;
 
-            callback(null, false);
-        };
+        const response = await server.inject(request);
 
-        stub.User.findByCredentials = function (username, password, callback) {
-
-            callback(Error('find by credentials failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(400);
+        Code.expect(response.result.message)
+            .to.match(/credentials are invalid or account is inactive/i);
     });
 
 
-    lab.test('it returns an error when creating a new auth attempt fails', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
+        const response = await server.inject(request);
 
-            callback(null, false);
-        };
-
-        stub.AuthAttempt.create = function (ip, username, callback) {
-
-            callback(Error('create auth attempt failed'));
-        };
-
-        stub.User.findByCredentials = function (username, password, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns early after creating a new auth attempt', (done) => {
-
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
-
-            callback(null, false);
-        };
-
-        stub.AuthAttempt.create = function (ip, username, callback) {
-
-            callback(null, new AuthAttempt({}));
-        };
-
-        stub.User.findByCredentials = function (username, password, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(400);
-            Code.expect(response.result.message).to.match(/username and password combination not found/i);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when creating a new session fails', (done) => {
-
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
-
-            callback(null, false);
-        };
-
-        stub.AuthAttempt.create = function (ip, username, callback) {
-
-            callback(null, new AuthAttempt({}));
-        };
-
-        stub.User.findByCredentials = function (username, password, callback) {
-
-            callback(null, new User({ _id: '1D', username: 'ren' }));
-        };
-
-        stub.Session.create = function (username, callback) {
-
-            callback(Error('create session failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns a session successfully', (done) => {
-
-        stub.AuthAttempt.abuseDetected = function (ip, username, callback) {
-
-            callback(null, false);
-        };
-
-        stub.AuthAttempt.create = function (ip, username, callback) {
-
-            callback(null, new AuthAttempt({}));
-        };
-
-        stub.User.findByCredentials = function (username, password, callback) {
-
-            callback(null, new User({ _id: '1D', username: 'ren' }));
-        };
-
-        stub.Session.create = function (username, callback) {
-
-            callback(null, new Session({ _id: '2D', userId: '1D' }));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.user).to.be.an.object();
+        Code.expect(response.result.session).to.be.an.object();
     });
 });
 
 
-lab.experiment('Login Plugin Forgot Password', () => {
+lab.experiment('POST /api/login/forgot', () => {
 
-    lab.beforeEach((done) => {
+    const Mailer_sendEmail = Mailer.sendEmail;
+    const User_findOne = User.findOne;
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'POST',
-            url: '/login/forgot',
+            url: '/api/login/forgot',
             payload: {
                 email: 'ren@stimpy.show'
             }
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when find one fails', (done) => {
+    lab.afterEach(() => {
 
-        stub.User.findOne = function (conditions, callback) {
-
-            callback(Error('find one failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Mailer.sendEmail = Mailer_sendEmail;
+        User.findOne = User_findOne;
     });
 
 
-    lab.test('it returns early when find one misses', (done) => {
+    lab.test('it returns HTTP 200 when the user query misses', async () => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = () => undefined;
 
-            callback();
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result.message).to.match(/success/i);
     });
 
 
-    lab.test('it returns an error if any critical step fails', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.User.findOne = function (conditions, callback) {
+        Mailer.sendEmail = () => undefined;
 
-            const user = {
-                _id: 'BL4M0'
-            };
+        const response = await server.inject(request);
 
-            callback(null, user);
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it succussfully sends a reset password request', (done) => {
-
-        stub.User.findOne = function (conditions, callback) {
-
-            const user = {
-                _id: 'BL4M0'
-            };
-
-            callback(null, user);
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        const realSendEmail = server.plugins.mailer.sendEmail;
-        server.plugins.mailer.sendEmail = function (options, template, context, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-
-            server.plugins.mailer.sendEmail = realSendEmail;
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result.message).to.match(/success/i);
     });
 });
 
 
-lab.experiment('Login Plugin Reset Password', () => {
+lab.experiment('POST /api/login/reset', () => {
 
-    lab.beforeEach((done) => {
+    const User_findOne = User.findOne;
+    const Mailer_sendEmail = Mailer.sendEmail;
+    let request;
+    let key;
+
+
+    lab.before(async () => {
+
+        Mailer.sendEmail = (_, __, context) => {
+
+            key = context.key;
+        };
+
+        await server.inject({
+            method: 'POST',
+            url: '/api/login/forgot',
+            payload: {
+                email: 'ren@stimpy.show'
+            }
+        });
+    });
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'POST',
-            url: '/login/reset',
+            url: '/api/login/reset',
             payload: {
-                key: 'abcdefgh-ijkl-mnop-qrst-uvwxyz123456',
                 email: 'ren@stimpy.show',
-                password: 'letmein'
+                key,
+                password: 'badcat'
             }
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when find one fails', (done) => {
+    lab.afterEach(() => {
 
-        stub.User.findOne = function (conditions, callback) {
-
-            callback(Error('find one failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Mailer.sendEmail = Mailer_sendEmail;
+        User.findOne = User_findOne;
     });
 
 
-    lab.test('it returns a bad request when find one misses', (done) => {
+    lab.test('it returns HTTP 400 when the user query misses', async () => {
 
-        stub.User.findOne = function (conditions, callback) {
+        User.findOne = () => undefined;
 
-            callback();
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(400);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(400);
+        Code.expect(response.result.message).to.match(/invalid email or key/i);
     });
 
 
-    lab.test('it returns an error if any critical step fails', (done) => {
+    lab.test('it returns HTTP 400 when the key match misses', async () => {
 
-        stub.User.findOne = function (conditions, callback) {
+        request.payload.key += 'poison';
 
-            const user = {
-                _id: 'BL4M0',
-                resetPassword: {
-                    token: 'O0HL4L4'
-                }
-            };
+        const response = await server.inject(request);
 
-            callback(null, user);
-        };
-
-        const realBcryptCompare = Bcrypt.compare;
-        Bcrypt.compare = function (key, token, callback) {
-
-            callback(Error('compare failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-
-            Bcrypt.compare = realBcryptCompare;
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(400);
+        Code.expect(response.result.message).to.match(/invalid email or key/i);
     });
 
 
-    lab.test('it returns a bad request if the key does not match', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.User.findOne = function (conditions, callback) {
+        const response = await server.inject(request);
 
-            const user = {
-                _id: 'BL4M0',
-                resetPassword: {
-                    token: 'O0HL4L4'
-                }
-            };
-
-            callback(null, user);
-        };
-
-        const realBcryptCompare = Bcrypt.compare;
-        Bcrypt.compare = function (key, token, callback) {
-
-            callback(null, false);
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(400);
-
-            Bcrypt.compare = realBcryptCompare;
-
-            done();
-        });
-    });
-
-
-    lab.test('it succussfully sets a password', (done) => {
-
-        stub.User.findOne = function (conditions, callback) {
-
-            const user = {
-                _id: 'BL4M0',
-                resetPassword: {
-                    token: 'O0HL4L4'
-                }
-            };
-
-            callback(null, user);
-        };
-
-        const realBcryptCompare = Bcrypt.compare;
-        Bcrypt.compare = function (key, token, callback) {
-
-            callback(null, true);
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-
-            Bcrypt.compare = realBcryptCompare;
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result.message).to.match(/success/i);
     });
 });

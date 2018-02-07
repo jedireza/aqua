@@ -1,215 +1,111 @@
 'use strict';
-const Async = require('async');
 const Code = require('code');
 const Config = require('../../../config');
+const Fixtures = require('../fixtures');
 const Lab = require('lab');
-const Proxyquire = require('proxyquire');
+const Session = require('../../../server/models/session');
 
 
 const lab = exports.lab = Lab.script();
-const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
-const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
-const stub = {
-    bcrypt: {}
-};
-const Session = Proxyquire('../../../server/models/session', { bcrypt: stub.bcrypt });
+const config = Config.get('/hapiMongoModels/mongodb');
 
 
-lab.experiment('Session Class Methods', () => {
+lab.experiment('Session Model', () => {
 
-    lab.before((done) => {
+    lab.before(async () => {
 
-        Session.connect(mongoUri, mongoOptions, (err, db) => {
-
-            done(err);
-        });
+        await Session.connect(config.connection, config.options);
+        await Fixtures.Db.removeAllData();
     });
 
 
-    lab.after((done) => {
+    lab.after(async () => {
 
-        Session.deleteMany({}, (err, count) => {
+        await Fixtures.Db.removeAllData();
 
-            Session.disconnect();
-
-            done(err);
-        });
+        Session.disconnect();
     });
 
 
-    lab.test('it creates a key hash combination', (done) => {
+    lab.test('it returns a new instance when create succeeds', async () => {
 
-        Session.generateKeyHash((err, result) => {
+        const session = await Session.create('ren', 'ip', 'userAgent');
 
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.object();
-            Code.expect(result.key).to.be.a.string();
-            Code.expect(result.hash).to.be.a.string();
-
-            done();
-        });
+        Code.expect(session).to.be.an.instanceOf(Session);
     });
 
 
-    lab.test('it returns an error when key hash fails', (done) => {
+    lab.test('it returns undefined when finding by credentials session misses', async () => {
 
-        const realGenSalt = stub.bcrypt.genSalt;
-        stub.bcrypt.genSalt = function (rounds, callback) {
+        const id = '555555555555555555555555';
+        const keyHash = await Session.generateKeyHash();
+        const session = await Session.findByCredentials(id, keyHash.key);
 
-            callback(Error('bcrypt failed'));
-        };
-
-        Session.generateKeyHash((err, result) => {
-
-            Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            stub.bcrypt.genSalt = realGenSalt;
-
-            done();
-        });
+        Code.expect(session).to.be.undefined();
     });
 
 
-    lab.test('it returns a new instance when create succeeds', (done) => {
+    lab.test('it returns undefined when finding by credentials session hits and key match misses', async () => {
 
-        Session.create('ren', (err, result) => {
+        const userId = '000000000000000000000000';
+        const ip = '127.0.0.1';
+        const userAgent = [
+            'Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us)',
+            ' AppleWebKit/531.21.10 (KHTML, like Gecko) Mobile/7B405'
+        ].join('');
+        const session = await Session.create(userId, ip, userAgent);
 
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.instanceOf(Session);
+        Code.expect(session).to.be.an.instanceOf(Session);
 
-            done();
-        });
-    });
+        const key = `${session.key}poison`;
+        const result = await Session.findByCredentials(session._id, key);
 
-    lab.test('it returns an error when create fails', (done) => {
-
-        const realInsertOne = Session.insertOne;
-        Session.insertOne = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('insert failed'));
-        };
-
-        Session.create('ren', (err, result) => {
-
-            Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            Session.insertOne = realInsertOne;
-
-            done();
-        });
+        Code.expect(result).to.be.undefined();
     });
 
 
-    lab.test('it returns a result when finding by credentials', (done) => {
+    lab.test('it returns a session instance when finding by credentials hits and key match hits', async () => {
 
-        Async.auto({
-            session: function (cb) {
+        const userId = '000000000000000000000000';
+        const ip = '127.0.0.1';
+        const userAgent = [
+            'Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us)',
+            ' AppleWebKit/531.21.10 (KHTML, like Gecko) Mobile/7B405'
+        ].join('');
+        const session = await Session.create(userId, ip, userAgent);
 
-                Session.create('1D', (err, result) => {
+        Code.expect(session).to.be.an.instanceOf(Session);
 
-                    Code.expect(err).to.not.exist();
-                    Code.expect(result).to.be.an.instanceOf(Session);
+        const key = session.key;
+        const result = await Session.findByCredentials(session._id, key);
 
-                    cb(null, result);
-                });
-            }
-        }, (err, results) => {
-
-            if (err) {
-                return done(err);
-            }
-
-            const id = results.session._id.toString();
-            const key = results.session.key;
-
-            Session.findByCredentials(id, key, (err, result) => {
-
-                Code.expect(err).to.not.exist();
-                Code.expect(result).to.be.an.instanceOf(Session);
-
-                done();
-            });
-        });
+        Code.expect(result).to.be.an.instanceOf(Session);
+        Code.expect(session._id).to.equal(result._id);
     });
 
 
-    lab.test('it returns nothing for find by credentials when key match fails', (done) => {
+    lab.test('it creates a key hash combination', async () => {
 
-        const realFindById = Session.findById;
-        Session.findById = function () {
+        const result = await Session.generateKeyHash();
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { _id: '2D', userId: '1D', key: 'letmein' });
-        };
-
-        const realCompare = stub.bcrypt.compare;
-        stub.bcrypt.compare = function (key, source, callback) {
-
-            callback(null, false);
-        };
-
-        Session.findByCredentials('2D', 'doorislocked', (err, result) => {
-
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.not.exist();
-
-            Session.findById = realFindById;
-            stub.bcrypt.compare = realCompare;
-
-            done();
-        });
+        Code.expect(result).to.be.an.object();
+        Code.expect(result.key).to.be.a.string();
+        Code.expect(result.hash).to.be.a.string();
     });
 
 
-    lab.test('it returns an error when finding by credentials fails', (done) => {
+    lab.test('it updates the last active time of an instance', async () => {
 
-        const realFindById = Session.findById;
-        Session.findById = function () {
+        const userId = '000000000000000000000000';
+        const ip = '127.0.0.1';
+        const userAgent = [
+            'Mozilla/5.0 (iPad; U; CPU OS 3_2_1 like Mac OS X; en-us)',
+            ' AppleWebKit/531.21.10 (KHTML, like Gecko) Mobile/7B405'
+        ].join('');
+        const session = await Session.create(userId, ip, userAgent);
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+        await session.updateLastActive();
 
-            callback(Error('find by id failed'));
-        };
-
-        Session.findByCredentials('2D', 'dog', (err, result) => {
-
-            Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            Session.findById = realFindById;
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns early when finding by credentials misses', (done) => {
-
-        const realFindById = Session.findById;
-        Session.findById = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback();
-        };
-
-        Session.findByCredentials('2D', 'dog', (err, result) => {
-
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.not.exist();
-
-            Session.findById = realFindById;
-
-            done();
-        });
+        Code.expect(session.lastActive).to.be.a.date();
     });
 });

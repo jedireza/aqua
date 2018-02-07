@@ -20,8 +20,8 @@ const propTypes = {
     size: PropTypes.string,
     value: PropTypes.oneOfType([
         PropTypes.bool,
-        PropTypes.string,
-        PropTypes.integer
+        PropTypes.number,
+        PropTypes.string
     ])
 };
 const defaultProps = {

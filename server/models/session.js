@@ -1,120 +1,91 @@
 'use strict';
-const Async = require('async');
+const Assert = require('assert');
 const Bcrypt = require('bcrypt');
 const Joi = require('joi');
 const MongoModels = require('mongo-models');
+const NewDate = require('joistick/new-date');
+const Useragent = require('useragent');
 const Uuid = require('uuid');
 
 
+const schema = Joi.object({
+    _id: Joi.object(),
+    browser: Joi.string().required(),
+    ip: Joi.string().required(),
+    key: Joi.string().required(),
+    lastActive: Joi.date().default(NewDate(), 'time of last activity'),
+    os: Joi.string().required(),
+    timeCreated: Joi.date().default(NewDate(), 'time of creation'),
+    userId: Joi.string().required()
+});
+
+
 class Session extends MongoModels {
-    static generateKeyHash(callback) {
+    static async create(userId, ip, userAgent) {
+
+        Assert.ok(userId, 'Missing userId argument.');
+        Assert.ok(ip, 'Missing ip argument.');
+        Assert.ok(userAgent, 'Missing userAgent argument.');
+
+        const keyHash = await this.generateKeyHash();
+        const agentInfo = Useragent.lookup(userAgent);
+        const browser = agentInfo.family;
+        const document = new this({
+            browser,
+            ip,
+            key: keyHash.hash,
+            os: agentInfo.os.toString(),
+            userId
+        });
+        const sessions = await this.insertOne(document);
+
+        sessions[0].key = keyHash.key;
+
+        return sessions[0];
+    }
+
+    static async findByCredentials(id, key) {
+
+        Assert.ok(id, 'Missing id argument.');
+        Assert.ok(key, 'Missing key argument.');
+
+        const session = await this.findById(id);
+
+        if (!session) {
+            return;
+        }
+
+        const keyMatch = await Bcrypt.compare(key, session.key);
+
+        if (keyMatch) {
+            return session;
+        }
+    }
+
+    static async generateKeyHash() {
 
         const key = Uuid.v4();
+        const salt = await Bcrypt.genSalt(10);
+        const hash = await Bcrypt.hash(key, salt);
 
-        Async.auto({
-            salt: function (done) {
-
-                Bcrypt.genSalt(10, done);
-            },
-            hash: ['salt', function (results, done) {
-
-                Bcrypt.hash(key, results.salt, done);
-            }]
-        }, (err, results) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, {
-                key,
-                hash: results.hash
-            });
-        });
+        return { key, hash };
     }
 
-    static create(userId, callback) {
+    async updateLastActive() {
 
-        const self = this;
-
-        Async.auto({
-            keyHash: this.generateKeyHash.bind(this),
-            newSession: ['keyHash', function (results, done) {
-
-                const document = {
-                    userId,
-                    key: results.keyHash.hash,
-                    time: new Date()
-                };
-
-                self.insertOne(document, done);
-            }],
-            clean: ['newSession', function (results, done) {
-
-                const query = {
-                    userId,
-                    key: { $ne: results.keyHash.hash }
-                };
-
-                self.deleteOne(query, done);
-            }]
-        }, (err, results) => {
-
-            if (err) {
-                return callback(err);
+        const update = {
+            $set: {
+                lastActive: new Date()
             }
+        };
 
-            results.newSession[0].key = results.keyHash.key;
-
-            callback(null, results.newSession[0]);
-        });
-    }
-
-    static findByCredentials(id, key, callback) {
-
-        const self = this;
-
-        Async.auto({
-            session: function (done) {
-
-                self.findById(id, done);
-            },
-            keyMatch: ['session', function (results, done) {
-
-                if (!results.session) {
-                    return done(null, false);
-                }
-
-                const source = results.session.key;
-                Bcrypt.compare(key, source, done);
-            }]
-        }, (err, results) => {
-
-            if (err) {
-                return callback(err);
-            }
-
-            if (results.keyMatch) {
-                return callback(null, results.session);
-            }
-
-            callback();
-        });
+        await Session.findByIdAndUpdate(this._id, update);
     }
 }
 
 
-Session.collection = 'sessions';
-
-
-Session.schema = Joi.object({
-    _id: Joi.object(),
-    userId: Joi.string().required(),
-    key: Joi.string().required(),
-    time: Joi.date().required()
-});
-
-
+Session.collectionName = 'sessions';
+Session.schema = schema;
 Session.indexes = [
     { key: { userId: 1 } }
 ];

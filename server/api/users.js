@@ -1,219 +1,129 @@
 'use strict';
-const AuthPlugin = require('../auth');
-const Async = require('async');
+const Admin = require('../models/admin');
+const Account = require('../models/account');
 const Boom = require('boom');
-const EscapeRegExp = require('escape-string-regexp');
 const Joi = require('joi');
+const Preware = require('../preware');
+const User = require('../models/user');
 
 
-const internals = {};
-
-
-internals.applyRoutes = function (server, next) {
-
-    const User = server.plugins['hapi-mongo-models'].User;
-    const Admin = server.plugins['hapi-mongo-models'].Admin;
-    const Account = server.plugins['hapi-mongo-models'].Account;
-
+const register = function (server, serverOptions) {
 
     server.route({
         method: 'GET',
-        path: '/users',
-        config: {
+        path: '/api/users',
+        options: {
             auth: {
-                strategy: 'session',
                 scope: 'admin'
             },
             validate: {
                 query: {
-                    username: Joi.string().allow(''),
-                    isActive: Joi.string().allow(''),
-                    role: Joi.string().allow(''),
-                    fields: Joi.string(),
                     sort: Joi.string().default('_id'),
                     limit: Joi.number().default(20),
                     page: Joi.number().default(1)
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                Preware.requireAdminGroup('root')
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
             const query = {};
-            if (request.query.username) {
-                query.username = new RegExp('^.*?' + EscapeRegExp(request.query.username) + '.*$', 'i');
-            }
-            if (request.query.isActive) {
-                query.isActive = request.query.isActive === 'true';
-            }
-            if (request.query.role) {
-                query['roles.' + request.query.role] = { $exists: true };
-            }
-            const fields = request.query.fields;
-            const sort = request.query.sort;
             const limit = request.query.limit;
             const page = request.query.page;
+            const options = {
+                sort: User.sortAdapter(request.query.sort)
+            };
 
-            User.pagedFind(query, fields, sort, limit, page, (err, results) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(results);
-            });
-        }
-    });
-
-
-    server.route({
-        method: 'GET',
-        path: '/users/{id}',
-        config: {
-            auth: {
-                strategy: 'session',
-                scope: 'admin'
-            },
-            pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
-            ]
-        },
-        handler: function (request, reply) {
-
-            User.findById(request.params.id, (err, user) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                if (!user) {
-                    return reply(Boom.notFound('Document not found.'));
-                }
-
-                reply(user);
-            });
-        }
-    });
-
-
-    server.route({
-        method: 'GET',
-        path: '/users/my',
-        config: {
-            auth: {
-                strategy: 'session',
-                scope: ['admin', 'account']
-            }
-        },
-        handler: function (request, reply) {
-
-            const id = request.auth.credentials.user._id.toString();
-            const fields = User.fieldsAdapter('username email roles');
-
-            User.findById(id, fields, (err, user) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                if (!user) {
-                    return reply(Boom.notFound('Document not found. That is strange.'));
-                }
-
-                reply(user);
-            });
+            return await User.pagedFind(query, page, limit, options);
         }
     });
 
 
     server.route({
         method: 'POST',
-        path: '/users',
-        config: {
+        path: '/api/users',
+        options: {
             auth: {
-                strategy: 'session',
                 scope: 'admin'
             },
             validate: {
                 payload: {
                     username: Joi.string().token().lowercase().required(),
-                    email: Joi.string().email().lowercase().required(),
-                    password: Joi.string().required()
+                    password: Joi.string().required(),
+                    email: Joi.string().email().lowercase().required()
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root'),
+                Preware.requireAdminGroup('root'),
                 {
                     assign: 'usernameCheck',
-                    method: function (request, reply) {
+                    method: async function (request, h) {
 
-                        const conditions = {
-                            username: request.payload.username
-                        };
+                        const user = await User.findByUsername(request.payload.username);
 
-                        User.findOne(conditions, (err, user) => {
+                        if (user) {
+                            throw Boom.conflict('Username already in use.');
+                        }
 
-                            if (err) {
-                                return reply(err);
-                            }
-
-                            if (user) {
-                                return reply(Boom.conflict('Username already in use.'));
-                            }
-
-                            reply(true);
-                        });
+                        return h.continue;
                     }
                 }, {
                     assign: 'emailCheck',
-                    method: function (request, reply) {
+                    method: async function (request, h) {
 
-                        const conditions = {
-                            email: request.payload.email
-                        };
+                        const user = await User.findByEmail(request.payload.email);
 
-                        User.findOne(conditions, (err, user) => {
+                        if (user) {
+                            throw Boom.conflict('Email already in use.');
+                        }
 
-                            if (err) {
-                                return reply(err);
-                            }
-
-                            if (user) {
-                                return reply(Boom.conflict('Email already in use.'));
-                            }
-
-                            reply(true);
-                        });
+                        return h.continue;
                     }
                 }
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
             const username = request.payload.username;
             const password = request.payload.password;
             const email = request.payload.email;
 
-            User.create(username, password, email, (err, user) => {
+            return await User.create(username, password, email);
+        }
+    });
 
-                if (err) {
-                    return reply(err);
-                }
 
-                reply(user);
-            });
+    server.route({
+        method: 'GET',
+        path: '/api/users/{id}',
+        options: {
+            auth: {
+                scope: 'admin'
+            },
+            pre: [
+                Preware.requireAdminGroup('root')
+            ]
+        },
+        handler: async function (request, h) {
+
+            const user = await User.findById(request.params.id);
+
+            if (!user) {
+                throw Boom.notFound('User not found.');
+            }
+
+            return user;
         }
     });
 
 
     server.route({
         method: 'PUT',
-        path: '/users/{id}',
-        config: {
+        path: '/api/users/{id}',
+        options: {
             auth: {
-                strategy: 'session',
                 scope: 'admin'
             },
             validate: {
@@ -227,110 +137,165 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root'),
+                Preware.requireAdminGroup('root'),
                 {
                     assign: 'usernameCheck',
-                    method: function (request, reply) {
+                    method: async function (request, h) {
 
                         const conditions = {
                             username: request.payload.username,
                             _id: { $ne: User._idClass(request.params.id) }
                         };
+                        const user = await User.findOne(conditions);
 
-                        User.findOne(conditions, (err, user) => {
+                        if (user) {
+                            throw Boom.conflict('Username already in use.');
+                        }
 
-                            if (err) {
-                                return reply(err);
-                            }
-
-                            if (user) {
-                                return reply(Boom.conflict('Username already in use.'));
-                            }
-
-                            reply(true);
-                        });
+                        return h.continue;
                     }
                 }, {
                     assign: 'emailCheck',
-                    method: function (request, reply) {
+                    method: async function (request, h) {
 
                         const conditions = {
                             email: request.payload.email,
                             _id: { $ne: User._idClass(request.params.id) }
                         };
+                        const user = await User.findOne(conditions);
 
-                        User.findOne(conditions, (err, user) => {
+                        if (user) {
+                            throw Boom.conflict('Email already in use.');
+                        }
 
-                            if (err) {
-                                return reply(err);
-                            }
-
-                            if (user) {
-                                return reply(Boom.conflict('Email already in use.'));
-                            }
-
-                            reply(true);
-                        });
+                        return h.continue;
                     }
                 }
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
-            const id = request.params.id;
-            const update = {
+            const updateUser = {
                 $set: {
                     isActive: request.payload.isActive,
                     username: request.payload.username,
                     email: request.payload.email
                 }
             };
-
-            const filterById = {
+            const queryByUserId = {
                 'user.id': request.params.id
             };
-
-            const updateReference = {
+            const updateRole = {
                 $set: {
                     'user.name': request.payload.username
                 }
             };
+            const user = await User.findByIdAndUpdate(request.params.id, updateUser);
 
-            Async.auto({
-                user: function (done) {
+            if (!user) {
+                throw Boom.notFound('User not found.');
+            }
 
-                    User.findByIdAndUpdate(id, update, done);
-                },
-                account: function (done) {
+            await Promise.all([
+                Account.findOneAndUpdate(queryByUserId, updateRole),
+                Admin.findOneAndUpdate(queryByUserId, updateRole)
+            ]);
 
-                    Account.findOneAndUpdate(filterById, updateReference, done);
-                },
-                admin: function (done) {
+            return user;
+        }
+    });
 
-                    Admin.findOneAndUpdate(filterById, updateReference, done);
+
+    server.route({
+        method: 'DELETE',
+        path: '/api/users/{id}',
+        options: {
+            auth: {
+                scope: 'admin'
+            },
+            validate: {
+                params: {
+                    id: Joi.string().invalid('000000000000000000000000')
                 }
-            }, (err, results) => {
+            },
+            pre: [
+                Preware.requireAdminGroup('root')
+            ]
+        },
+        handler: async function (request, h) {
 
-                if (err) {
-                    return reply(err);
-                }
+            const user = await User.findByIdAndDelete(request.params.id);
 
-                if (!results.user) {
-                    return reply(Boom.notFound('Document not found.'));
-                }
+            if (!user) {
+                throw Boom.notFound('User not found.');
+            }
 
-                reply(results.user);
-            });
+            return { message: 'Success.' };
         }
     });
 
 
     server.route({
         method: 'PUT',
-        path: '/users/my',
-        config: {
+        path: '/api/users/{id}/password',
+        options: {
             auth: {
-                strategy: 'session',
+                scope: 'admin'
+            },
+            validate: {
+                params: {
+                    id: Joi.string().invalid('000000000000000000000000')
+                },
+                payload: {
+                    password: Joi.string().required()
+                }
+            },
+            pre: [
+                Preware.requireAdminGroup('root')
+            ]
+        },
+        handler: async function (request, h) {
+
+            const password = await User.generatePasswordHash(request.payload.password);
+            const update = {
+                $set: {
+                    password: password.hash
+                }
+            };
+            const user = await User.findByIdAndUpdate(request.params.id, update);
+
+            if (!user) {
+                throw Boom.notFound('User not found.');
+            }
+
+            return user;
+        }
+    });
+
+
+    server.route({
+        method: 'GET',
+        path: '/api/users/my',
+        options: {
+            auth: {
+                scope: ['admin', 'account']
+            }
+        },
+        handler: async function (request, h) {
+
+            const id = request.auth.credentials.user._id;
+            const fields = User.fieldsAdapter('username email roles');
+
+            return await User.findById(id, fields);
+        }
+    });
+
+
+    server.route({
+        method: 'PUT',
+        path: '/api/users/my',
+        options: {
+            auth: {
                 scope: ['admin', 'account']
             },
             validate: {
@@ -340,58 +305,46 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureNotRoot,
+                Preware.requireNotRootUser,
                 {
                     assign: 'usernameCheck',
-                    method: function (request, reply) {
+                    method: async function (request, h) {
 
                         const conditions = {
                             username: request.payload.username,
                             _id: { $ne: request.auth.credentials.user._id }
                         };
+                        const user = await User.findOne(conditions);
 
-                        User.findOne(conditions, (err, user) => {
+                        if (user) {
+                            throw Boom.conflict('Username already in use.');
+                        }
 
-                            if (err) {
-                                return reply(err);
-                            }
-
-                            if (user) {
-                                return reply(Boom.conflict('Username already in use.'));
-                            }
-
-                            reply(true);
-                        });
+                        return h.continue;
                     }
                 }, {
                     assign: 'emailCheck',
-                    method: function (request, reply) {
+                    method: async function (request, h) {
 
                         const conditions = {
                             email: request.payload.email,
                             _id: { $ne: request.auth.credentials.user._id }
                         };
+                        const user = await User.findOne(conditions);
 
-                        User.findOne(conditions, (err, user) => {
+                        if (user) {
+                            throw Boom.conflict('Email already in use.');
+                        }
 
-                            if (err) {
-                                return reply(err);
-                            }
-
-                            if (user) {
-                                return reply(Boom.conflict('Email already in use.'));
-                            }
-
-                            reply(true);
-                        });
+                        return h.continue;
                     }
                 }
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
-            const id = request.auth.credentials.user._id.toString();
-            const update = {
+            const userId = `${request.auth.credentials.user._id}`;
+            const updateUser = {
                 $set: {
                     username: request.payload.username,
                     email: request.payload.email
@@ -400,103 +353,30 @@ internals.applyRoutes = function (server, next) {
             const findOptions = {
                 fields: User.fieldsAdapter('username email roles')
             };
-
-            const filterById = {
-                'user.id': id
+            const queryByUserId = {
+                'user.id': userId
             };
-
-            const updateReference = {
+            const updateRole = {
                 $set: {
                     'user.name': request.payload.username
                 }
             };
+            const [user] = await Promise.all([
+                User.findByIdAndUpdate(userId, updateUser, findOptions),
+                Account.findOneAndUpdate(queryByUserId, updateRole),
+                Admin.findOneAndUpdate(queryByUserId, updateRole)
+            ]);
 
-            Async.auto({
-                user: function (done) {
-
-                    User.findByIdAndUpdate(id, update, findOptions, done);
-                },
-                account: function (done) {
-
-                    Account.findOneAndUpdate(filterById, updateReference, done);
-                },
-                admin: function (done) {
-
-                    Admin.findOneAndUpdate(filterById, updateReference, done);
-                }
-            }, (err, results) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(results.user);
-            });
+            return user;
         }
     });
 
 
     server.route({
         method: 'PUT',
-        path: '/users/{id}/password',
-        config: {
+        path: '/api/users/my/password',
+        options: {
             auth: {
-                strategy: 'session',
-                scope: 'admin'
-            },
-            validate: {
-                params: {
-                    id: Joi.string().invalid('000000000000000000000000')
-                },
-                payload: {
-                    password: Joi.string().required()
-                }
-            },
-            pre: [
-                AuthPlugin.preware.ensureAdminGroup('root'),
-                {
-                    assign: 'password',
-                    method: function (request, reply) {
-
-                        User.generatePasswordHash(request.payload.password, (err, hash) => {
-
-                            if (err) {
-                                return reply(err);
-                            }
-
-                            reply(hash);
-                        });
-                    }
-                }
-            ]
-        },
-        handler: function (request, reply) {
-
-            const id = request.params.id;
-            const update = {
-                $set: {
-                    password: request.pre.password.hash
-                }
-            };
-
-            User.findByIdAndUpdate(id, update, (err, user) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(user);
-            });
-        }
-    });
-
-
-    server.route({
-        method: 'PUT',
-        path: '/users/my/password',
-        config: {
-            auth: {
-                strategy: 'session',
                 scope: ['admin', 'account']
             },
             validate: {
@@ -505,94 +385,34 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureNotRoot,
-                {
-                    assign: 'password',
-                    method: function (request, reply) {
-
-                        User.generatePasswordHash(request.payload.password, (err, hash) => {
-
-                            if (err) {
-                                return reply(err);
-                            }
-
-                            reply(hash);
-                        });
-                    }
-                }
+                Preware.requireNotRootUser
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
-            const id = request.auth.credentials.user._id.toString();
+            const userId = `${request.auth.credentials.user._id}`;
+            const password = await User.generatePasswordHash(request.payload.password);
             const update = {
                 $set: {
-                    password: request.pre.password.hash
+                    password: password.hash
                 }
             };
             const findOptions = {
                 fields: User.fieldsAdapter('username email')
             };
 
-            User.findByIdAndUpdate(id, update, findOptions, (err, user) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(user);
-            });
+            return await User.findByIdAndUpdate(userId, update, findOptions);
         }
     });
-
-
-    server.route({
-        method: 'DELETE',
-        path: '/users/{id}',
-        config: {
-            auth: {
-                strategy: 'session',
-                scope: 'admin'
-            },
-            validate: {
-                params: {
-                    id: Joi.string().invalid('000000000000000000000000')
-                }
-            },
-            pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
-            ]
-        },
-        handler: function (request, reply) {
-
-            User.findByIdAndDelete(request.params.id, (err, user) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                if (!user) {
-                    return reply(Boom.notFound('Document not found.'));
-                }
-
-                reply({ success: true });
-            });
-        }
-    });
-
-
-    next();
 };
 
 
-exports.register = function (server, options, next) {
-
-    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
-
-    next();
-};
-
-
-exports.register.attributes = {
-    name: 'users'
+module.exports = {
+    name: 'api-users',
+    dependencies: [
+        'auth',
+        'hapi-auth-cookie',
+        'hapi-mongo-models'
+    ],
+    register
 };

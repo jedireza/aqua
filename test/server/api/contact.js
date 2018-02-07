@@ -1,85 +1,64 @@
 'use strict';
 const Code = require('code');
-const Config = require('../../../config');
-const ContactPlugin = require('../../../server/api/contact');
+const Contact = require('../../../server/api/contact');
 const Hapi = require('hapi');
 const Lab = require('lab');
-const MailerPlugin = require('../../../server/mailer');
+const Mailer = require('../../../server/mailer');
 
 
 const lab = exports.lab = Lab.script();
-let request;
 let server;
 
 
-lab.beforeEach((done) => {
+lab.before(async () => {
 
-    const plugins = [MailerPlugin, ContactPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
+    server = Hapi.Server();
 
-        if (err) {
-            return done(err);
-        }
-
-        server.initialize(done);
-    });
+    await server.register(Contact);
+    await server.start();
 });
 
 
-lab.experiment('Contact Plugin', () => {
+lab.after(async () => {
 
-    lab.beforeEach((done) => {
+    await server.stop();
+});
+
+
+lab.experiment('POST /api/contact', () => {
+
+    const Mailer_sendEmail = Mailer.sendEmail;
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'POST',
-            url: '/contact',
-            payload: {
-                name: 'Toast Man',
-                email: 'mr@toast.show',
-                message: 'I love you man.'
-            }
+            url: '/api/contact'
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when send email fails', (done) => {
+    lab.afterEach(() => {
 
-        const realSendEmail = server.plugins.mailer.sendEmail;
-        server.plugins.mailer.sendEmail = function (options, template, context, callback) {
-
-            callback(Error('send email failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-
-            server.plugins.mailer.sendEmail = realSendEmail;
-
-            done();
-        });
+        Mailer.sendEmail = Mailer_sendEmail;
     });
 
 
-    lab.test('it returns success after sending an email', (done) => {
+    lab.test('it returns HTTP 200 when all is good', async () => {
 
-        const realSendEmail = server.plugins.mailer.sendEmail;
-        server.plugins.mailer.sendEmail = function (options, template, context, callback) {
+        Mailer.sendEmail = () => undefined;
 
-            callback(null, {});
+        request.payload = {
+            name: 'Foo Barzley',
+            email: 'foo@stimpy.show',
+            message: 'Hello. How are you?'
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(200);
-
-            server.plugins.mailer.sendEmail = realSendEmail;
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result.message).to.match(/success/i);
     });
 });

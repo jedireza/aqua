@@ -15,6 +15,11 @@ class Actions {
             Constants.SEND_MESSAGE_RESPONSE
         );
     }
+
+    static resetStore() {
+
+        Store.dispatch({ type: Constants.RESET_STORE });
+    }
 }
 
 

@@ -1,1112 +1,629 @@
 'use strict';
-const AccountPlugin = require('../../../server/api/accounts');
-const AuthPlugin = require('../../../server/auth');
-const AuthenticatedAccount = require('../fixtures/credentials-account');
-const AuthenticatedAdmin = require('../fixtures/credentials-admin');
+const Account = require('../../../server/models/account');
+const Accounts = require('../../../server/api/accounts');
+const Auth = require('../../../server/auth');
 const Code = require('code');
-const Config = require('../../../config');
+const Fixtures = require('../fixtures');
 const Hapi = require('hapi');
-const HapiAuth = require('hapi-auth-cookie');
 const Lab = require('lab');
-const MakeMockModel = require('../fixtures/make-mock-model');
 const Manifest = require('../../../manifest');
-const Path = require('path');
-const Proxyquire = require('proxyquire');
+const Status = require('../../../server/models/status');
+const User = require('../../../server/models/user');
 
 
 const lab = exports.lab = Lab.script();
-let request;
 let server;
-let stub;
+let rootCredentials;
+let adminCredentials;
+let accountCredentials;
 
 
-lab.before((done) => {
+lab.before(async () => {
 
-    stub = {
-        Account: MakeMockModel(),
-        Status: MakeMockModel(),
-        User: MakeMockModel()
-    };
+    server = Hapi.Server();
 
-    const proxy = {};
-    proxy[Path.join(process.cwd(), './server/models/account')] = stub.Account;
-    proxy[Path.join(process.cwd(), './server/models/status')] = stub.Status;
-    proxy[Path.join(process.cwd(), './server/models/user')] = stub.User;
+    const plugins = Manifest.get('/register/plugins')
+        .filter((entry) => Accounts.dependencies.includes(entry.plugin))
+        .map((entry) => {
 
-    const ModelsPlugin = {
-        register: Proxyquire('hapi-mongo-models', proxy),
-        options: Manifest.get('/registrations').filter((reg) => {
+            entry.plugin = require(entry.plugin);
 
-            if (reg.plugin &&
-                reg.plugin.register &&
-                reg.plugin.register === 'hapi-mongo-models') {
+            return entry;
+        });
 
-                return true;
-            }
+    plugins.push(Auth);
+    plugins.push(Accounts);
 
-            return false;
-        })[0].plugin.options
-    };
+    await server.register(plugins);
+    await server.start();
+    await Fixtures.Db.removeAllData();
 
-    const plugins = [HapiAuth, ModelsPlugin, AuthPlugin, AccountPlugin];
-    server = new Hapi.Server();
-    server.connection({ port: Config.get('/port/web') });
-    server.register(plugins, (err) => {
-
-        if (err) {
-            return done(err);
-        }
-
-        server.initialize(done);
-    });
+    [rootCredentials, adminCredentials, accountCredentials] = await Promise.all([
+        Fixtures.Creds.createRootAdminUser(),
+        Fixtures.Creds.createAdminUser('Ren Hoek', 'ren', 'baddog', 'ren@stimpy.show'),
+        Fixtures.Creds.createAccountUser('Stimpson Cat', 'stimpy', 'goodcat', 'stimpy@ren.show')
+    ]);
 });
 
 
-lab.after((done) => {
+lab.after(async () => {
 
-    server.plugins['hapi-mongo-models'].MongoModels.disconnect();
-    done();
+    await Fixtures.Db.removeAllData();
+    await server.stop();
 });
 
 
-lab.experiment('Accounts Plugin Result List', () => {
+lab.experiment('GET /api/accounts', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'GET',
-            url: '/accounts',
-            credentials: AuthenticatedAdmin
+            url: '/api/accounts',
+            credentials: adminCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when paged find fails', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Account.pagedFind = function () {
+        const response = await server.inject(request);
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('paged find failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an array of documents successfully', (done) => {
-
-        stub.Account.pagedFind = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { data: [{}, {}, {}] });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.data).to.be.an.array();
-            Code.expect(response.result.data[0]).to.be.an.object();
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an array of documents successfully (using filters)', (done) => {
-
-        stub.Account.pagedFind = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { data: [{}, {}, {}] });
-        };
-
-        request.url += '?username=ren';
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.data).to.be.an.array();
-            Code.expect(response.result.data[0]).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result.data).to.be.an.array();
+        Code.expect(response.result.pages).to.be.an.object();
+        Code.expect(response.result.items).to.be.an.object();
     });
 });
 
 
-lab.experiment('Accounts Plugin Read', () => {
+lab.experiment('POST /api/accounts', () => {
 
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'GET',
-            url: '/accounts/93EP150D35',
-            credentials: AuthenticatedAdmin
-        };
-
-        done();
-    });
+    let request;
 
 
-    lab.test('it returns an error when find by id fails', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns a not found when find by id misses', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns a document successfully', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            callback(null, { _id: '93EP150D35' });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Accounts Plugin (My) Read', () => {
-
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'GET',
-            url: '/accounts/my',
-            credentials: AuthenticatedAccount
-        };
-
-        done();
-    });
-
-
-    lab.test('it returns an error when find by id fails', (done) => {
-
-        stub.Account.findById = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns a not found when find by id misses', (done) => {
-
-        stub.Account.findById = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns a document successfully', (done) => {
-
-        stub.Account.findById = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, { _id: '93EP150D35' });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Accounts Plugin Create', () => {
-
-    lab.beforeEach((done) => {
+    lab.beforeEach(() => {
 
         request = {
             method: 'POST',
-            url: '/accounts',
-            payload: {
-                name: 'Muddy Mudskipper'
-            },
-            credentials: AuthenticatedAdmin
+            url: '/api/accounts',
+            credentials: adminCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when create fails', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Account.create = function (name, callback) {
-
-            callback(Error('create failed'));
+        request.payload = {
+            name: 'Steve'
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it creates a document successfully', (done) => {
-
-        stub.Account.create = function (name, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.and.object();
+        Code.expect(response.result.name).to.be.and.object();
+        Code.expect(response.result.name.first).to.equal('Steve');
     });
 });
 
 
-lab.experiment('Accounts Plugin Update', () => {
+lab.experiment('GET /api/accounts/{id}', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
-            method: 'PUT',
-            url: '/accounts/93EP150D35',
-            payload: {
-                name: {
-                    first: 'Muddy',
-                    last: 'Mudskipper'
-                }
-            },
-            credentials: AuthenticatedAdmin
+            method: 'GET',
+            url: '/api/accounts/{id}',
+            credentials: adminCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when update fails', (done) => {
+    lab.test('it returns HTTP 404 when `Account.findById` misses', async () => {
 
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
 
-            callback(Error('update failed'));
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
     });
 
 
-    lab.test('it returns not found when find by id misses', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
+        const account = await Account.create('Steve');
 
-            callback(null, undefined);
-        };
+        request.url = request.url.replace(/{id}/, account._id);
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it updates a document successfully', (done) => {
-
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Steve');
     });
 });
 
 
-lab.experiment('Accounts Plugin (My) Update', () => {
+lab.experiment('PUT /api/accounts/{id}', () => {
 
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'PUT',
-            url: '/accounts/my',
-            payload: {
-                name: {
-                    first: 'Mud',
-                    last: 'Skipper'
-                }
-            },
-            credentials: AuthenticatedAccount
-        };
-
-        done();
-    });
+    let request;
 
 
-    lab.test('it returns an error when update fails', (done) => {
-
-        stub.Account.findByIdAndUpdate = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it updates a document successfully', (done) => {
-
-        stub.Account.findByIdAndUpdate = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result).to.be.an.object();
-
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Accounts Plugin Link User', () => {
-
-    lab.beforeEach((done) => {
+    lab.beforeEach(() => {
 
         request = {
             method: 'PUT',
-            url: '/accounts/93EP150D35/user',
-            payload: {
-                username: 'ren'
-            },
-            credentials: AuthenticatedAdmin
+            url: '/api/accounts/{id}',
+            credentials: adminCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when (Account) find by id fails', (done) => {
+    lab.test('it returns HTTP 404 when `Account.findByIdAndUpdate` misses', async () => {
 
-        stub.Account.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns not found when (Account) find by id misses', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when (User) find by username fails', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            callback(null, {});
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            callback(Error('find by username failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns not found when (User) find by username misses', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            callback(null, {});
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it returns conflict when an account role already exists', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            callback(null, {});
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            const user = {
-                roles: {
-                    account: {
-                        id: '535H0W35',
-                        name: 'Stimpson J Cat'
-                    }
-                }
-            };
-
-            callback(null, user);
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(409);
-            done();
-        });
-    });
-
-
-    lab.test('it returns conflict when the account is linked to another user', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            const account = {
-                _id: 'DUD3N0T1T',
-                user: {
-                    id: '535H0W35',
-                    name: 'ren'
-                }
-            };
-
-            callback(null, account);
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            const user = {
-                _id: 'N0T1TDUD3',
-                roles: {
-                    account: {
-                        id: '93EP150D35',
-                        name: 'Ren Höek'
-                    }
-                }
-            };
-
-            callback(null, user);
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(409);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when find by id and update fails', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            const account = {
-                _id: '93EP150D35',
-                name: {
-                    first: 'Ren',
-                    last: 'Höek'
-                }
-            };
-
-            callback(null, account);
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            const user = {
-                _id: '535H0W35',
-                username: 'ren'
-            };
-
-            callback(null, user);
-        };
-
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it successfuly links an account and user', (done) => {
-
-        const account = {
-            _id: '93EP150D35',
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload =  {
             name: {
-                first: 'Ren',
-                last: 'Höek'
+                first: 'Stephen',
+                middle: '',
+                last: 'Colbert'
             }
         };
-        const user = {
-            _id: '535H0W35',
-            username: 'ren',
-            roles: {}
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const account = await Account.create('Steve');
+
+        request.url = request.url.replace(/{id}/, account._id);
+        request.payload =  {
+            name: {
+                first: 'Stephen',
+                middle: '',
+                last: 'Colbert'
+            }
         };
 
-        stub.Account.findById = function (id, callback) {
+        const response = await server.inject(request);
 
-            callback(null, account);
-        };
-
-        stub.User.findByUsername = function (id, callback) {
-
-            callback(null, user);
-        };
-
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, account);
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, user);
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Stephen');
+        Code.expect(response.result.name.middle).to.equal('');
+        Code.expect(response.result.name.last).to.equal('Colbert');
     });
 });
 
 
-lab.experiment('Accounts Plugin Add Note', () => {
+lab.experiment('DELETE /api/accounts/{id}', () => {
 
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'POST',
-            url: '/accounts/93EP150D35/notes',
-            payload: {
-                data: 'This is a wonderful note.'
-            },
-            credentials: AuthenticatedAdmin
-        };
-
-        done();
-    });
+    let request;
 
 
-    lab.test('it returns an error when find by id and update fails', (done) => {
-
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it successfully adds a note', (done) => {
-
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Accounts Plugin Update Status', () => {
-
-    lab.beforeEach((done) => {
-
-        request = {
-            method: 'POST',
-            url: '/accounts/93EP150D35/status',
-            payload: {
-                status: 'account-happy'
-            },
-            credentials: AuthenticatedAdmin
-        };
-
-        done();
-    });
-
-
-    lab.test('it returns an error when find by id (Status) fails', (done) => {
-
-        stub.Status.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when find by id and update fails', (done) => {
-
-        stub.Status.findById = function (id, callback) {
-
-            callback(null, { _id: 'account-happy', name: 'Happy' });
-        };
-
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it successfully updates the status', (done) => {
-
-        stub.Status.findById = function (id, callback) {
-
-            callback(null, { _id: 'account-happy', name: 'Happy' });
-        };
-
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
-    });
-});
-
-
-lab.experiment('Accounts Plugin Unlink User', () => {
-
-    lab.beforeEach((done) => {
+    lab.beforeEach(() => {
 
         request = {
             method: 'DELETE',
-            url: '/accounts/93EP150D35/user',
-            credentials: AuthenticatedAdmin
+            url: '/api/accounts/{id}',
+            credentials: rootCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when (Account) find by id fails', (done) => {
+    lab.test('it returns HTTP 404 when `Account.findByIdAndDelete` misses', async () => {
 
-        stub.Account.findById = function (id, callback) {
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
 
-            callback(Error('find by id failed'));
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
     });
 
 
-    lab.test('it returns not found when (Account) find by id misses', (done) => {
+    lab.test('it returns HTTP 200 when all is well', async () => {
 
-        stub.Account.findById = function (id, callback) {
+        const account = await Account.create('Steve');
 
-            callback();
-        };
+        request.url = request.url.replace(/{id}/, account._id);
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(404);
-            done();
-        });
-    });
-
-
-    lab.test('it returns early account is void of a user', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            callback(null, {});
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
-    });
-
-
-    lab.test('it returns early account is void of a user.id', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            callback(null, { user: {} });
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when (User) find by id fails', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            const account = {
-                user: {
-                    id: '93EP150D35',
-                    name: 'ren'
-                }
-            };
-
-            callback(null, account);
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            callback(Error('find by id failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it returns not found when (User) find by username misses', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            const account = {
-                user: {
-                    id: '93EP150D35',
-                    name: 'ren'
-                }
-            };
-
-            callback(null, account);
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            callback();
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(404);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns an error when find by id and update fails', (done) => {
-
-        stub.Account.findById = function (id, callback) {
-
-            const account = {
-                _id: '93EP150D35',
-                user: {
-                    id: '535H0W35',
-                    name: 'ren'
-                }
-            };
-
-            callback(null, account);
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            const user = {
-                _id: '535H0W35',
-                roles: {
-                    account: {
-                        id: '93EP150D35',
-                        name: 'Ren Höek'
-                    }
-                }
-            };
-
-            callback(null, user);
-        };
-
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(Error('find by id and update failed'));
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
-    });
-
-
-    lab.test('it successfully unlinks an account from a user', (done) => {
-
-        const user = {
-            _id: '535H0W35',
-            roles: {
-                account: {
-                    id: '93EP150D35',
-                    name: 'Ren Höek'
-                }
-            }
-        };
-        const account = {
-            _id: '93EP150D35',
-            user: {
-                id: '535H0W35',
-                name: 'ren'
-            }
-        };
-
-        stub.Account.findById = function (id, callback) {
-
-            callback(null, account);
-        };
-
-        stub.User.findById = function (id, callback) {
-
-            callback(null, user);
-        };
-
-        stub.Account.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, account);
-        };
-
-        stub.User.findByIdAndUpdate = function (id, update, callback) {
-
-            callback(null, user);
-        };
-
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(200);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.message).to.match(/success/i);
     });
 });
 
 
-lab.experiment('Accounts Plugin Delete', () => {
+lab.experiment('PUT /api/accounts/{id}/user', () => {
 
-    lab.beforeEach((done) => {
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'PUT',
+            url: '/api/accounts/{id}/user',
+            credentials: adminCredentials
+        };
+    });
+
+
+    lab.test('it returns HTTP 404 when `Account.findById` misses', async () => {
+
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload = {
+            username: 'colbert'
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 404 when `User.findByUsername` misses', async () => {
+
+        const account = await Account.create('Stephen Colbert');
+
+        request.url = request.url.replace(/{id}/, account._id);
+        request.payload = {
+            username: 'colbert'
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 409 when the user is linked to another account', async () => {
+
+        const { roles: { account: accountA } } = await Fixtures.Creds.createAccountUser(
+            'Trevor Noah', 'trevor', 'haha', 'trevor@daily.show'
+        );
+
+        const { user: userB } = await Fixtures.Creds.createAccountUser(
+            'Jon Stewart', 'jon', 'stew', 'jon@daily.show'
+        );
+
+        request.url = request.url.replace(/{id}/, accountA._id);
+        request.payload = {
+            username: userB.username
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(409);
+        Code.expect(response.result.message).to.match(/linked to an account/i);
+    });
+
+
+    lab.test('it returns HTTP 409 when the account is currently linked to user', async () => {
+
+        const { roles: { account: account } } = await Fixtures.Creds.createAccountUser(
+            'Mr Horse', 'mrh', 'negh', 'mrh@stimpy.show'
+        );
+
+        request.url = request.url.replace(/{id}/, account._id);
+        request.payload = {
+            username: 'ren'
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(409);
+        Code.expect(response.result.message).to.match(/linked to a user/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const account = await Account.create('Rand Rando');
+        const user = await User.create('random', 'passw0rd', 'random@user.gov');
+
+        request.url = request.url.replace(/{id}/, account._id);
+        request.payload = {
+            username: user.username
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Rand');
+        Code.expect(response.result.name.last).to.equal('Rando');
+        Code.expect(response.result.user).to.be.an.object();
+        Code.expect(response.result.user.name).to.equal('random');
+    });
+});
+
+
+lab.experiment('DELETE /api/accounts/{id}/user', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
 
         request = {
             method: 'DELETE',
-            url: '/accounts/93EP150D35',
-            credentials: AuthenticatedAdmin
+            url: '/api/accounts/{id}/user',
+            credentials: adminCredentials
         };
-
-        done();
     });
 
 
-    lab.test('it returns an error when delete by id fails', (done) => {
+    lab.test('it returns HTTP 404 when `Account.findById` misses', async () => {
 
-        stub.Account.findByIdAndDelete = function (id, callback) {
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
 
-            callback(Error('delete by id failed'));
-        };
+        const response = await server.inject(request);
 
-        server.inject(request, (response) => {
-
-            Code.expect(response.statusCode).to.equal(500);
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
     });
 
 
-    lab.test('it returns a not found when delete by id misses', (done) => {
+    lab.test('it returns HTTP 200 when `account.user` is not present', async () => {
 
-        stub.Account.findByIdAndDelete = function (id, callback) {
+        const account = await Account.create('Randomoni Randomie');
 
-            callback(null, undefined);
-        };
+        request.url = request.url.replace(/{id}/, account._id);
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(404);
-            Code.expect(response.result.message).to.match(/document not found/i);
-
-            done();
-        });
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Randomoni');
+        Code.expect(response.result.name.last).to.equal('Randomie');
     });
 
 
-    lab.test('it deletes a document successfully', (done) => {
+    lab.test('it returns HTTP 404 when `User.findById` misses', async () => {
 
-        stub.Account.findByIdAndDelete = function (id, callback) {
+        const { roles: { account: account }, user } = await Fixtures.Creds.createAccountUser(
+            'Lil Horse', 'lilh', 'negh', 'lilh@stimpy.show'
+        );
 
-            callback(null, 1);
+        await User.findByIdAndDelete(user._id);
+
+        request.url = request.url.replace(/{id}/, account._id);
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is good', async () => {
+
+        const { roles: { account: account }, user } = await Fixtures.Creds.createAccountUser(
+            'Jr Horse', 'jrh', 'negh', 'jrh@stimpy.show'
+        );
+
+        request.url = request.url.replace(/{id}/, account._id);
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Jr');
+        Code.expect(response.result.name.last).to.equal('Horse');
+        Code.expect(response.result.user).to.not.exist();
+
+        const user_ = await User.findByIdAndDelete(user._id);
+
+        Code.expect(user_).to.be.an.object();
+        Code.expect(user_.roles).to.be.an.object();
+        Code.expect(user_.roles.account).to.not.exist();
+    });
+});
+
+
+lab.experiment('POST /api/accounts/{id}/notes', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'POST',
+            url: '/api/accounts/{id}/notes',
+            credentials: adminCredentials
+        };
+    });
+
+
+    lab.test('it returns HTTP 404 when `Account.findByIdAndUpdate` misses', async () => {
+
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload = {
+            data: 'Super duper note!'
         };
 
-        server.inject(request, (response) => {
+        const response = await server.inject(request);
 
-            Code.expect(response.statusCode).to.equal(200);
-            Code.expect(response.result.success).to.be.true();
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
 
-            done();
-        });
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const account = await Account.create('Here And Gone');
+
+        request.url = request.url.replace(/{id}/, account._id);
+        request.payload = {
+            data: 'Super duper note!'
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Here');
+        Code.expect(response.result.name.middle).to.equal('And');
+        Code.expect(response.result.name.last).to.equal('Gone');
+        Code.expect(response.result.notes.length).to.be.greaterThan(0);
+    });
+});
+
+
+lab.experiment('POST /api/accounts/{id}/status', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'POST',
+            url: '/api/accounts/{id}/status',
+            credentials: adminCredentials
+        };
+    });
+
+
+    lab.test('it returns HTTP 404 when `Status.findById` misses', async () => {
+
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload = {
+            status: 'poison-pill'
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 404 when `Account.findByIdAndUpdate` misses', async () => {
+
+        const status = await Status.create('Account', 'Sad');
+
+        request.url = request.url.replace(/{id}/, '555555555555555555555555');
+        request.payload = {
+            status: status._id
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(404);
+        Code.expect(response.result.message).to.match(/not found/i);
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const status = await Status.create('Account', 'Happy');
+        const account = await Account.create('Here And Now');
+
+        request.url = request.url.replace(/{id}/, account._id);
+        request.payload = {
+            status: status._id
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Here');
+        Code.expect(response.result.name.middle).to.equal('And');
+        Code.expect(response.result.name.last).to.equal('Now');
+        Code.expect(response.result.status).to.be.an.object();
+        Code.expect(response.result.status.current).to.be.an.object();
+        Code.expect(response.result.status.current.id).to.equal(`${status._id}`);
+        Code.expect(response.result.status.current.name).to.equal('Happy');
+        Code.expect(response.result.status.log).to.be.an.array();
+        Code.expect(response.result.status.log.length).to.be.greaterThan(0);
+    });
+});
+
+
+lab.experiment('GET /api/accounts/my', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'GET',
+            url: '/api/accounts/my',
+            credentials: accountCredentials
+        };
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Stimpson');
+    });
+});
+
+
+lab.experiment('PUT /api/accounts/my', () => {
+
+    let request;
+
+
+    lab.beforeEach(() => {
+
+        request = {
+            method: 'PUT',
+            url: '/api/accounts/my',
+            credentials: accountCredentials
+        };
+    });
+
+
+    lab.test('it returns HTTP 200 when all is well', async () => {
+
+        request.payload = {
+            name: {
+                first: 'Stimpson',
+                middle: 'J',
+                last: 'Cat'
+            }
+        };
+
+        const response = await server.inject(request);
+
+        Code.expect(response.statusCode).to.equal(200);
+        Code.expect(response.result).to.be.an.object();
+        Code.expect(response.result.name.first).to.equal('Stimpson');
+        Code.expect(response.result.name.middle).to.equal('J');
+        Code.expect(response.result.name.last).to.equal('Cat');
     });
 });

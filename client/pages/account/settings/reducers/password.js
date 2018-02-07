@@ -1,41 +1,48 @@
 'use strict';
 const Constants = require('../constants');
-const ObjectAssign = require('object-assign');
-const ParseValidation = require('../../../../helpers/parse-validation');
 
 
 const initialState = {
+    data: {
+        password: '',
+        passwordConfirm: ''
+    },
     loading: false,
     showSaveSuccess: false,
-    error: undefined,
-    hasError: {},
-    help: {},
-    password: '',
-    passwordConfirm: ''
+    validation: {
+        error: undefined,
+        hasError: {},
+        help: {}
+    }
 };
 const reducer = function (state = initialState, action) {
 
+    if (action.type === Constants.RESET_STORE) {
+        return Object.assign({}, initialState);
+    }
+
     if (action.type === Constants.SAVE_PASSWORD) {
-        return ObjectAssign({}, state, {
+        return Object.assign({}, state, {
+            data: {
+                password: action.request.data.password,
+                passwordConfirm: action.request.data.password
+            },
             loading: true
         });
     }
 
     if (action.type === Constants.SAVE_PASSWORD_RESPONSE) {
-        const validation = ParseValidation(action.response);
+        let data = state.data;
 
-        return ObjectAssign({}, state, {
+        if (Boolean(action.error) === false) {
+            data = initialState.data;
+        }
+
+        return Object.assign({}, state, {
+            data: Object.assign({}, data),
             loading: false,
-            showSaveSuccess: !action.err,
-            error: validation.error,
-            hasError: validation.hasError,
-            help: validation.help
-        });
-    }
-
-    if (action.type === Constants.HIDE_PASSWORD_SAVE_SUCCESS) {
-        return ObjectAssign({}, state, {
-            showSaveSuccess: false
+            showSaveSuccess: Boolean(action.error) === false,
+            validation: action.validation
         });
     }
 

@@ -21,66 +21,66 @@ class Actions {
         );
     }
 
-    static getUserCreds() {
+    static async getUserCreds() {
 
         if (!global.window) {
             return;
         }
 
-        ApiActions.get(
+        const response = await ApiActions.get(
             '/api/users/my',
             undefined,
             LoginStore,
             Constants.GET_USER_CREDS,
             Constants.GET_USER_CREDS_RESPONSE,
-            (err, response) => {
-
-                if (!err) {
-                    const query = Qs.parse(window.location.search.substring(1));
-
-                    if (query.returnUrl) {
-                        window.location.href = query.returnUrl;
-                    }
-                    else if (response && response.roles) {
-                        if (response.roles.admin) {
-                            window.location.href = '/admin';
-                        }
-                        else {
-                            window.location.href = '/account';
-                        }
-                    }
-                }
-            }
         );
+
+        if (response.validation.error) {
+            return;
+        }
+
+        const query = Qs.parse(window.location.search.substring(1));
+
+        if (query.returnUrl) {
+            window.location.href = query.returnUrl;
+        }
+        else if (response.data && response.data.roles) {
+            if (response.data.roles.admin) {
+                window.location.href = '/admin';
+            }
+            else {
+                window.location.href = '/account';
+            }
+        }
     }
 
-    static login(data) {
+    static async login(data) {
 
-        ApiActions.post(
+        const response = await ApiActions.post(
             '/api/login',
             data,
             LoginStore,
             Constants.LOGIN,
             Constants.LOGIN_RESPONSE,
-            (err, response) => {
-
-                if (!err) {
-                    const query = Qs.parse(window.location.search.substring(1));
-
-                    if (query.returnUrl) {
-                        window.location.href = query.returnUrl;
-                    }
-                    else if (response && response.user) {
-                        if (response.user.roles.admin) {
-                            window.location.href = '/admin';
-                        }
-                        else {
-                            window.location.href = '/account';
-                        }
-                    }
-                }
-            }
         );
+
+        if (response.validation.error) {
+            return;
+        }
+
+        const query = Qs.parse(window.location.search.substring(1));
+
+        if (query.returnUrl) {
+            window.location.href = query.returnUrl;
+        }
+        else if (response.data && response.data.user) {
+            if (response.data.user.roles.admin) {
+                window.location.href = '/admin';
+            }
+            else {
+                window.location.href = '/account';
+            }
+        }
     }
 
     static logout() {
@@ -103,6 +103,14 @@ class Actions {
             Constants.RESET,
             Constants.RESET_RESPONSE
         );
+    }
+
+    static resetStore() {
+
+        ForgotStore.dispatch({ type: Constants.RESET_STORE });
+        LoginStore.dispatch({ type: Constants.RESET_STORE });
+        LogoutStore.dispatch({ type: Constants.RESET_STORE });
+        ResetStore.dispatch({ type: Constants.RESET_STORE });
     }
 }
 

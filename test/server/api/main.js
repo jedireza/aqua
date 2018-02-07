@@ -1,10 +1,8 @@
 'use strict';
-const Auth = require('../../../server/auth');
 const Code = require('code');
 const Hapi = require('hapi');
 const Lab = require('lab');
-const Main = require('../../../server/web/main');
-const Manifest = require('../../../manifest');
+const Main = require('../../../server/api/main');
 
 
 const lab = exports.lab = Lab.script();
@@ -15,19 +13,7 @@ lab.before(async () => {
 
     server = Hapi.Server();
 
-    const plugins = Manifest.get('/register/plugins')
-        .filter((entry) => Main.dependencies.includes(entry.plugin))
-        .map((entry) => {
-
-            entry.plugin = require(entry.plugin);
-
-            return entry;
-        });
-
-    plugins.push(Auth);
-    plugins.push(Main);
-
-    await server.register(plugins);
+    await server.register(Main);
     await server.start();
 });
 
@@ -38,7 +24,7 @@ lab.after(async () => {
 });
 
 
-lab.experiment('GET /', () => {
+lab.experiment('GET /api', () => {
 
     let request;
 
@@ -47,7 +33,7 @@ lab.experiment('GET /', () => {
 
         request = {
             method: 'GET',
-            url: '/'
+            url: '/api'
         };
     });
 
@@ -57,6 +43,6 @@ lab.experiment('GET /', () => {
         const response = await server.inject(request);
 
         Code.expect(response.statusCode).to.equal(200);
-        Code.expect(response.result).to.match(/success/i);
+        Code.expect(response.result.message).to.match(/welcome/i);
     });
 });

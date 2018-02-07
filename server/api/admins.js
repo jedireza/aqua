@@ -1,100 +1,50 @@
 'use strict';
-const Async = require('async');
-const AuthPlugin = require('../auth');
+const Admin = require('../models/admin');
 const Boom = require('boom');
-const EscapeRegExp = require('escape-string-regexp');
 const Joi = require('joi');
+const Preware = require('../preware');
+const User = require('../models/user');
 
 
-const internals = {};
-
-
-internals.applyRoutes = function (server, next) {
-
-    const Admin = server.plugins['hapi-mongo-models'].Admin;
-    const User = server.plugins['hapi-mongo-models'].User;
-
+const register = function (server, serverOptions) {
 
     server.route({
         method: 'GET',
-        path: '/admins',
-        config: {
+        path: '/api/admins',
+        options: {
             auth: {
-                strategy: 'session',
                 scope: 'admin'
             },
             validate: {
                 query: {
-                    username: Joi.string().allow(''),
-                    fields: Joi.string(),
                     sort: Joi.string().default('_id'),
                     limit: Joi.number().default(20),
                     page: Joi.number().default(1)
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                Preware.requireAdminGroup('root')
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
             const query = {};
-            if (request.query.username) {
-                query['user.name'] = new RegExp('^.*?' + EscapeRegExp(request.query.username) + '.*$', 'i');
-            }
-            const fields = request.query.fields;
-            const sort = request.query.sort;
             const limit = request.query.limit;
             const page = request.query.page;
+            const options = {
+                sort: Admin.sortAdapter(request.query.sort)
+            };
 
-            Admin.pagedFind(query, fields, sort, limit, page, (err, results) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(results);
-            });
-        }
-    });
-
-
-    server.route({
-        method: 'GET',
-        path: '/admins/{id}',
-        config: {
-            auth: {
-                strategy: 'session',
-                scope: 'admin'
-            },
-            pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
-            ]
-        },
-        handler: function (request, reply) {
-
-            Admin.findById(request.params.id, (err, admin) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                if (!admin) {
-                    return reply(Boom.notFound('Document not found.'));
-                }
-
-                reply(admin);
-            });
+            return await Admin.pagedFind(query, page, limit, options);
         }
     });
 
 
     server.route({
         method: 'POST',
-        path: '/admins',
-        config: {
+        path: '/api/admins',
+        options: {
             auth: {
-                strategy: 'session',
                 scope: 'admin'
             },
             validate: {
@@ -103,31 +53,45 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                Preware.requireAdminGroup('root')
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
-            const name = request.payload.name;
+            return await Admin.create(request.payload.name);
+        }
+    });
 
-            Admin.create(name, (err, admin) => {
 
-                if (err) {
-                    return reply(err);
-                }
+    server.route({
+        method: 'GET',
+        path: '/api/admins/{id}',
+        options: {
+            auth: {
+                scope: 'admin'
+            },
+            pre: [
+                Preware.requireAdminGroup('root')
+            ]
+        },
+        handler: async function (request, h) {
 
-                reply(admin);
-            });
+            const admin = await Admin.findById(request.params.id);
+
+            if (!admin) {
+                throw Boom.notFound('Admin not found.');
+            }
+
+            return admin;
         }
     });
 
 
     server.route({
         method: 'PUT',
-        path: '/admins/{id}',
-        config: {
+        path: '/api/admins/{id}',
+        options: {
             auth: {
-                strategy: 'session',
                 scope: 'admin'
             },
             validate: {
@@ -143,85 +107,57 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                Preware.requireAdminGroup('root')
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
             const id = request.params.id;
             const update = {
                 $set: {
-                    name: {
-                        first: request.payload.name.first,
-                        middle: request.payload.name.middle,
-                        last: request.payload.name.last
-                    }
+                    name: request.payload.name
                 }
             };
+            const admin = await Admin.findByIdAndUpdate(id, update);
 
-            Admin.findByIdAndUpdate(id, update, (err, admin) => {
+            if (!admin) {
+                throw Boom.notFound('Admin not found.');
+            }
 
-                if (err) {
-                    return reply(err);
-                }
-
-                if (!admin) {
-                    return reply(Boom.notFound('Document not found.'));
-                }
-
-                reply(admin);
-            });
+            return admin;
         }
     });
 
 
     server.route({
-        method: 'PUT',
-        path: '/admins/{id}/permissions',
-        config: {
+        method: 'DELETE',
+        path: '/api/admins/{id}',
+        options: {
             auth: {
-                strategy: 'session',
                 scope: 'admin'
             },
-            validate: {
-                params: {
-                    id: Joi.string().invalid('111111111111111111111111')
-                },
-                payload: {
-                    permissions: Joi.object().required()
-                }
-            },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                Preware.requireAdminGroup('root')
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
-            const id = request.params.id;
-            const update = {
-                $set: {
-                    permissions: request.payload.permissions
-                }
-            };
+            const admin = await Admin.findByIdAndDelete(request.params.id);
 
-            Admin.findByIdAndUpdate(id, update, (err, admin) => {
+            if (!admin) {
+                throw Boom.notFound('Admin not found.');
+            }
 
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(admin);
-            });
+            return { message: 'Success.' };
         }
     });
 
 
     server.route({
         method: 'PUT',
-        path: '/admins/{id}/groups',
-        config: {
+        path: '/api/admins/{id}/groups',
+        options: {
             auth: {
-                strategy: 'session',
                 scope: 'admin'
             },
             validate: {
@@ -233,10 +169,10 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
+                Preware.requireAdminGroup('root')
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
             const id = request.params.id;
             const update = {
@@ -244,25 +180,60 @@ internals.applyRoutes = function (server, next) {
                     groups: request.payload.groups
                 }
             };
+            const admin = await Admin.findByIdAndUpdate(id, update);
 
-            Admin.findByIdAndUpdate(id, update, (err, admin) => {
+            if (!admin) {
+                throw Boom.notFound('Admin not found.');
+            }
 
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(admin);
-            });
+            return admin;
         }
     });
 
 
     server.route({
         method: 'PUT',
-        path: '/admins/{id}/user',
-        config: {
+        path: '/api/admins/{id}/permissions',
+        options: {
             auth: {
-                strategy: 'session',
+                scope: 'admin'
+            },
+            validate: {
+                params: {
+                    id: Joi.string().invalid('111111111111111111111111')
+                },
+                payload: {
+                    permissions: Joi.object().required()
+                }
+            },
+            pre: [
+                Preware.requireAdminGroup('root')
+            ]
+        },
+        handler: async function (request, h) {
+
+            const id = request.params.id;
+            const update = {
+                $set: {
+                    permissions: request.payload.permissions
+                }
+            };
+            const admin = await Admin.findByIdAndUpdate(id, update);
+
+            if (!admin) {
+                throw Boom.notFound('Admin not found.');
+            }
+
+            return admin;
+        }
+    });
+
+
+    server.route({
+        method: 'PUT',
+        path: '/api/admins/{id}/user',
+        options: {
+            auth: {
                 scope: 'admin'
             },
             validate: {
@@ -274,112 +245,66 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root'),
+                Preware.requireAdminGroup('root'),
                 {
                     assign: 'admin',
-                    method: function (request, reply) {
+                    method: async function (request, h) {
 
-                        Admin.findById(request.params.id, (err, admin) => {
+                        const admin = await Admin.findById(request.params.id);
 
-                            if (err) {
-                                return reply(err);
-                            }
+                        if (!admin) {
+                            throw Boom.notFound('Admin not found.');
+                        }
 
-                            if (!admin) {
-                                return reply(Boom.notFound('Document not found.'));
-                            }
-
-                            reply(admin);
-                        });
+                        return admin;
                     }
                 }, {
                     assign: 'user',
-                    method: function (request, reply) {
+                    method: async function (request, h) {
 
-                        User.findByUsername(request.payload.username, (err, user) => {
+                        const user = await User.findByUsername(request.payload.username);
 
-                            if (err) {
-                                return reply(err);
-                            }
+                        if (!user) {
+                            throw Boom.notFound('User not found.');
+                        }
 
-                            if (!user) {
-                                return reply(Boom.notFound('User document not found.'));
-                            }
+                        if (user.roles.admin &&
+                            user.roles.admin.id !== request.params.id) {
 
-                            if (user.roles &&
-                                user.roles.admin &&
-                                user.roles.admin.id !== request.params.id) {
-
-                                return reply(Boom.conflict('User is already linked to another admin. Unlink first.'));
-                            }
-
-                            reply(user);
-                        });
-                    }
-                }, {
-                    assign: 'userCheck',
-                    method: function (request, reply) {
+                            throw Boom.conflict('User is linked to an admin. Unlink first.');
+                        }
 
                         if (request.pre.admin.user &&
-                            request.pre.admin.user.id !== request.pre.user._id.toString()) {
+                            request.pre.admin.user.id !== `${user._id}`) {
 
-                            return reply(Boom.conflict('Admin is already linked to another user. Unlink first.'));
+                            throw Boom.conflict('Admin is linked to a user. Unlink first.');
                         }
 
-                        reply(true);
+                        return user;
                     }
                 }
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
-            Async.auto({
-                admin: function (done) {
+            const user = request.pre.user;
+            let admin = request.pre.admin;
 
-                    const id = request.params.id;
-                    const update = {
-                        $set: {
-                            user: {
-                                id: request.pre.user._id.toString(),
-                                name: request.pre.user.username
-                            }
-                        }
-                    };
+            [admin] = await Promise.all([
+                admin.linkUser(`${user._id}`, user.username),
+                user.linkAdmin(`${admin._id}`, admin.fullName())
+            ]);
 
-                    Admin.findByIdAndUpdate(id, update, done);
-                },
-                user: function (done) {
-
-                    const id = request.pre.user._id;
-                    const update = {
-                        $set: {
-                            'roles.admin': {
-                                id: request.pre.admin._id.toString(),
-                                name: request.pre.admin.name.first + ' ' + request.pre.admin.name.last
-                            }
-                        }
-                    };
-
-                    User.findByIdAndUpdate(id, update, done);
-                }
-            }, (err, results) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(results.admin);
-            });
+            return admin;
         }
     });
 
 
     server.route({
         method: 'DELETE',
-        path: '/admins/{id}/user',
-        config: {
+        path: '/api/admins/{id}/user',
+        options: {
             auth: {
-                strategy: 'session',
                 scope: 'admin'
             },
             validate: {
@@ -388,132 +313,59 @@ internals.applyRoutes = function (server, next) {
                 }
             },
             pre: [
-                AuthPlugin.preware.ensureAdminGroup('root'),
+                Preware.requireAdminGroup('root'),
                 {
                     assign: 'admin',
-                    method: function (request, reply) {
+                    method: async function (request, h) {
 
-                        Admin.findById(request.params.id, (err, admin) => {
+                        let admin = await Admin.findById(request.params.id);
 
-                            if (err) {
-                                return reply(err);
-                            }
+                        if (!admin) {
+                            throw Boom.notFound('Admin not found.');
+                        }
 
-                            if (!admin) {
-                                return reply(Boom.notFound('Document not found.'));
-                            }
+                        if (!admin.user || !admin.user.id) {
+                            admin = await admin.unlinkUser();
 
-                            if (!admin.user || !admin.user.id) {
-                                return reply(admin).takeover();
-                            }
+                            return h.response(admin).takeover();
+                        }
 
-                            reply(admin);
-                        });
+                        return admin;
                     }
                 }, {
                     assign: 'user',
-                    method: function (request, reply) {
+                    method: async function (request, h) {
 
-                        User.findById(request.pre.admin.user.id, (err, user) => {
+                        const user = await User.findById(request.pre.admin.user.id);
 
-                            if (err) {
-                                return reply(err);
-                            }
+                        if (!user) {
+                            throw Boom.notFound('User not found.');
+                        }
 
-                            if (!user) {
-                                return reply(Boom.notFound('User document not found.'));
-                            }
-
-                            reply(user);
-                        });
+                        return user;
                     }
                 }
             ]
         },
-        handler: function (request, reply) {
+        handler: async function (request, h) {
 
-            Async.auto({
-                admin: function (done) {
+            const [admin] = await Promise.all([
+                request.pre.admin.unlinkUser(),
+                request.pre.user.unlinkAdmin()
+            ]);
 
-                    const id = request.params.id;
-                    const update = {
-                        $unset: {
-                            user: undefined
-                        }
-                    };
-
-                    Admin.findByIdAndUpdate(id, update, done);
-                },
-                user: function (done) {
-
-                    const id = request.pre.user._id.toString();
-                    const update = {
-                        $unset: {
-                            'roles.admin': undefined
-                        }
-                    };
-
-                    User.findByIdAndUpdate(id, update, done);
-                }
-            }, (err, results) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                reply(results.admin);
-            });
+            return admin;
         }
     });
-
-
-    server.route({
-        method: 'DELETE',
-        path: '/admins/{id}',
-        config: {
-            auth: {
-                strategy: 'session',
-                scope: 'admin'
-            },
-            validate: {
-                params: {
-                    id: Joi.string().invalid('111111111111111111111111')
-                }
-            },
-            pre: [
-                AuthPlugin.preware.ensureAdminGroup('root')
-            ]
-        },
-        handler: function (request, reply) {
-
-            Admin.findByIdAndDelete(request.params.id, (err, admin) => {
-
-                if (err) {
-                    return reply(err);
-                }
-
-                if (!admin) {
-                    return reply(Boom.notFound('Document not found.'));
-                }
-
-                reply({ success: true });
-            });
-        }
-    });
-
-
-    next();
 };
 
 
-exports.register = function (server, options, next) {
-
-    server.dependency(['auth', 'hapi-mongo-models'], internals.applyRoutes);
-
-    next();
-};
-
-
-exports.register.attributes = {
-    name: 'admins'
+module.exports = {
+    name: 'api-admins',
+    dependencies: [
+        'auth',
+        'hapi-auth-cookie',
+        'hapi-mongo-models'
+    ],
+    register
 };

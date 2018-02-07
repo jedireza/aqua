@@ -1,118 +1,112 @@
 'use strict';
 const Account = require('../../../server/models/account');
-const Async = require('async');
 const Code = require('code');
 const Config = require('../../../config');
+const Fixtures = require('../fixtures');
 const Lab = require('lab');
+const User = require('../../../server/models/user');
 
 
 const lab = exports.lab = Lab.script();
-const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
-const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
+const config = Config.get('/hapiMongoModels/mongodb');
 
 
-lab.experiment('Account Class Methods', () => {
+lab.experiment('Account Model', () => {
 
-    lab.before((done) => {
+    lab.before(async () => {
 
-        Account.connect(mongoUri, mongoOptions, (err, db) => {
-
-            done(err);
-        });
+        await Account.connect(config.connection, config.options);
+        await Fixtures.Db.removeAllData();
     });
 
 
-    lab.after((done) => {
+    lab.after(async () => {
 
-        Account.deleteMany({}, (err, count) => {
+        await Fixtures.Db.removeAllData();
 
-            Account.disconnect();
-            done(err);
-        });
+        Account.disconnect();
     });
 
 
-    lab.test('it returns a new instance when create succeeds', (done) => {
+    lab.test('it parses names into name fields', () => {
 
-        Account.create('Ren Höek', (err, result) => {
+        const justFirst = Account.nameAdapter('Steve');
 
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.instanceOf(Account);
+        Code.expect(justFirst).to.be.an.object();
+        Code.expect(justFirst.first).to.equal('Steve');
+        Code.expect(justFirst.middle).to.equal('');
+        Code.expect(justFirst.last).to.equal('');
 
-            done();
-        });
+        const firstAndLast = Account.nameAdapter('Ren Höek');
+
+        Code.expect(firstAndLast).to.be.an.object();
+        Code.expect(firstAndLast.first).to.equal('Ren');
+        Code.expect(firstAndLast.middle).to.equal('');
+        Code.expect(firstAndLast.last).to.equal('Höek');
+
+        const withMiddle = Account.nameAdapter('Stimpson J Cat');
+
+        Code.expect(withMiddle).to.be.an.object();
+        Code.expect(withMiddle.first).to.equal('Stimpson');
+        Code.expect(withMiddle.middle).to.equal('J');
+        Code.expect(withMiddle.last).to.equal('Cat');
     });
 
 
-    lab.test('it correctly sets the middle name when create is called', (done) => {
+    lab.test('it parses returns a full name', async () => {
 
-        Account.create('Stimpson J Cat', (err, account) => {
+        const account = await Account.create('Stan');
+        let name = account.fullName();
 
-            Code.expect(err).to.not.exist();
-            Code.expect(account).to.be.an.instanceOf(Account);
-            Code.expect(account.name.middle).to.equal('J');
+        Code.expect(name).to.equal('Stan');
 
-            done();
-        });
+        account.name = Account.nameAdapter('Ren Höek');
+
+        name = account.fullName();
+
+        Code.expect(name).to.equal('Ren Höek');
     });
 
 
-    lab.test('it returns an error when create fails', (done) => {
+    lab.test('it returns an instance when finding by username', async () => {
 
-        const realInsertOne = Account.insertOne;
-        Account.insertOne = function () {
-
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
-
-            callback(Error('insert failed'));
-        };
-
-        Account.create('Stimpy Cat', (err, result) => {
-
-            Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            Account.insertOne = realInsertOne;
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns a result when finding by username', (done) => {
-
-        Async.auto({
-            account: function (cb) {
-
-                Account.create('Stimpson J Cat', cb);
-            },
-            accountUpdated: ['account', function (results, cb) {
-
-                const fieldsToUpdate = {
-                    $set: {
-                        user: {
-                            id: '95EP150D35',
-                            name: 'stimpy'
-                        }
-                    }
-                };
-
-                Account.findByIdAndUpdate(results.account._id, fieldsToUpdate, cb);
-            }]
-        }, (err, results) => {
-
-            if (err) {
-                return done(err);
+        const document = new Account({
+            name: Account.nameAdapter('Stimpson J Cat'),
+            user: {
+                id: '95EP150D35',
+                name: 'stimpy'
             }
-
-            Account.findByUsername('stimpy', (err, account) => {
-
-                Code.expect(err).to.not.exist();
-                Code.expect(account).to.be.an.instanceOf(Account);
-
-                done();
-            });
         });
+
+        await Account.insertOne(document);
+
+        const account = await Account.findByUsername('stimpy');
+
+        Code.expect(account).to.be.an.instanceOf(Account);
+    });
+
+
+    lab.test('it returns a new instance when create succeeds', async () => {
+
+        const account = await Account.create('Ren Höek');
+
+        Code.expect(account).to.be.an.instanceOf(Account);
+    });
+
+
+    lab.test('it links and unlinks users', async () => {
+
+        let account = await Account.create('Guinea Pig');
+        const user = await User.create('guineapig', 'wheel', 'wood@chips.gov');
+
+        Code.expect(account.user).to.not.exist();
+
+        account = await account.linkUser(`${user._id}`, user.username);
+
+        Code.expect(account.user).to.be.an.object();
+
+        account = await account.unlinkUser();
+
+        Code.expect(account.user).to.not.exist();
     });
 });

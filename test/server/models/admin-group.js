@@ -2,123 +2,57 @@
 const AdminGroup = require('../../../server/models/admin-group');
 const Code = require('code');
 const Config = require('../../../config');
+const Fixtures = require('../fixtures');
 const Lab = require('lab');
 
 
 const lab = exports.lab = Lab.script();
-const mongoUri = Config.get('/hapiMongoModels/mongodb/uri');
-const mongoOptions = Config.get('/hapiMongoModels/mongodb/options');
+const config = Config.get('/hapiMongoModels/mongodb');
 
 
-lab.experiment('AdminGroup Class Methods', () => {
+lab.experiment('AdminGroup Model', () => {
 
-    lab.before((done) => {
+    lab.before(async () => {
 
-        AdminGroup.connect(mongoUri, mongoOptions, (err, db) => {
-
-            done(err);
-        });
+        await AdminGroup.connect(config.connection, config.options);
+        await Fixtures.Db.removeAllData();
     });
 
 
-    lab.after((done) => {
+    lab.after(async () => {
 
-        AdminGroup.deleteMany({}, (err, count) => {
+        await Fixtures.Db.removeAllData();
 
-            AdminGroup.disconnect();
-
-            done(err);
-        });
+        AdminGroup.disconnect();
     });
 
 
-    lab.test('it returns a new instance when create succeeds', (done) => {
+    lab.test('it returns a new instance when create succeeds', async () => {
 
-        AdminGroup.create('Sales', (err, result) => {
+        const adminGroup = await AdminGroup.create('Sales');
 
-            Code.expect(err).to.not.exist();
-            Code.expect(result).to.be.an.instanceOf(AdminGroup);
-
-            done();
-        });
+        Code.expect(adminGroup).to.be.an.instanceOf(AdminGroup);
     });
 
 
-    lab.test('it returns an error when create fails', (done) => {
+    lab.test('it returns false when permissions are missing', async () => {
 
-        const realInsertOne = AdminGroup.insertOne;
-        AdminGroup.insertOne = function () {
+        const adminGroup = await AdminGroup.create('Missing');
 
-            const args = Array.prototype.slice.call(arguments);
-            const callback = args.pop();
+        Code.expect(adminGroup.hasPermissionTo('SPACE_MADNESS')).to.equal(false);
+    });
 
-            callback(Error('insert failed'));
+
+    lab.test('it returns boolean values for set permissions', async () => {
+
+        const adminGroup = await AdminGroup.create('Support');
+
+        adminGroup.permissions = {
+            SPACE_MADNESS: true,
+            UNTAMED_WORLD: false
         };
 
-        AdminGroup.create('Support', (err, result) => {
-
-            Code.expect(err).to.be.an.object();
-            Code.expect(result).to.not.exist();
-
-            AdminGroup.insertOne = realInsertOne;
-
-            done();
-        });
-    });
-});
-
-
-lab.experiment('AdminGroup Instance Methods', () => {
-
-    lab.before((done) => {
-
-        AdminGroup.connect(mongoUri, mongoOptions, (err, db) => {
-
-            done(err);
-        });
-    });
-
-
-    lab.after((done) => {
-
-        AdminGroup.deleteMany({}, (err, result) => {
-
-            AdminGroup.disconnect();
-
-            done(err);
-        });
-    });
-
-
-    lab.test('it returns false when permissions are not found', (done) => {
-
-        AdminGroup.create('Sales', (err, adminGroup) => {
-
-            Code.expect(err).to.not.exist();
-            Code.expect(adminGroup).to.be.an.instanceOf(AdminGroup);
-            Code.expect(adminGroup.hasPermissionTo('SPACE_MADNESS')).to.equal(false);
-
-            done();
-        });
-    });
-
-
-    lab.test('it returns boolean values for set permissions', (done) => {
-
-        AdminGroup.create('Support', (err, adminGroup) => {
-
-            Code.expect(err).to.not.exist();
-            Code.expect(adminGroup).to.be.an.instanceOf(AdminGroup);
-
-            adminGroup.permissions = {
-                SPACE_MADNESS: true,
-                UNTAMED_WORLD: false
-            };
-
-            Code.expect(adminGroup.hasPermissionTo('SPACE_MADNESS')).to.equal(true);
-            Code.expect(adminGroup.hasPermissionTo('UNTAMED_WORLD')).to.equal(false);
-
-            done();
-        });
+        Code.expect(adminGroup.hasPermissionTo('SPACE_MADNESS')).to.equal(true);
+        Code.expect(adminGroup.hasPermissionTo('UNTAMED_WORLD')).to.equal(false);
     });
 });
