@@ -1,3 +1,15 @@
+# No longer maintained
+
+Boilerplates can be a huge time sink to maintain and I've decieded to archive
+this project.
+
+I started the work for upgradting to hapi v17 and using async/await instead of
+callbacks, that work can be found in the `hapi-17-async-await`.
+
+Thanks for your interest in my projects.
+
+- - - - - - - - - -
+
 # Aqua
 
 A website and user system starter.
