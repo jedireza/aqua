@@ -4,7 +4,7 @@ Boilerplates can be a huge time sink to maintain and I've decieded to archive
 this project.
 
 I started the work for upgrading to hapi v17 and using async/await instead of
-callbacks, that work can be found in the `hapi-17-async-await`.
+callbacks, that work can be found in the `hapi-17-async-await` branch.
 
 Thanks for your interest in my projects.
 
